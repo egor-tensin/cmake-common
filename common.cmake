@@ -6,7 +6,7 @@
 # https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-# Version: 2017-05-19T13:51:22+00:00
+# Version: 2019-11-29T22:30:28Z
 
 get_directory_property(parent_directory PARENT_DIRECTORY)
 set(is_root_project $<NOT:parent_directory>)
