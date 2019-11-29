@@ -3,7 +3,7 @@
 # It makes targets link the runtime statically by default + strips debug
 # symbols in release builds.
 # The latest version can be found at
-# https://gist.github.com/egor-tensin/cmake-common.
+# https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
 # Version: 2017-05-19T13:51:22+00:00
