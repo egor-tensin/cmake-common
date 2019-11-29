@@ -21,6 +21,7 @@ endif()
 
 set(USE_STATIC_RUNTIME "${is_root_project}" CACHE BOOL "Link the runtime statically")
 set(STRIP_SYMBOL_TABLE "${is_root_project}" CACHE BOOL "Strip symbol tables")
+set(CXX_STANDARD "17" CACHE BOOL "Set C++ standard version")
 
 if(is_root_project)
     if(MSVC)
@@ -32,7 +33,7 @@ if(is_root_project)
     endif()
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD "${CXX_STANDARD}")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
