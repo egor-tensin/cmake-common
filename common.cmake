@@ -78,15 +78,20 @@ if(parent_directory)
     set(default_value OFF)
 endif()
 
-option(CC_BEST_PRACTICES "Apply useful compilation options" "${default_value}")
-option(CC_STATIC_RUNTIME "Link the runtime statically"      "${default_value}")
-option(CC_STRIP_SYMBOLS  "Strip debug symbols"              "${default_value}")
+option(CC_BEST_PRACTICES "Apply generally useful compilation options" "${default_value}")
+option(CC_STATIC_RUNTIME "Link the runtime statically"    "${default_value}")
+#option(CC_STATIC_BOOST   "Use the static Boost libraries" "${default_value}")
+option(CC_STRIP_SYMBOLS  "Strip debug symbols"            "${default_value}")
 set(CC_CXX_STANDARD "14" CACHE STRING "C++ standard version")
 
-message(STATUS "Best practices: ${CC_BEST_PRACTICES}")
-message(STATUS "Static runtime: ${CC_STATIC_RUNTIME}")
-message(STATUS "Strip symbols:  ${CC_STRIP_SYMBOLS}")
-message(STATUS "C++ standard:   ${CC_CXX_STANDARD}")
+option(Boost_USE_STATIC_LIBS "Use the static Boost libraries" "${default_value}")
+option(Boost_USE_STATIC_RUNTIME "Use Boost libraries linked to the runtime statically" "${CC_STATIC_RUNTIME}")
+
+message(STATUS "C++ standard:                   ${CC_CXX_STANDARD}")
+message(STATUS "Best practices:                 ${CC_BEST_PRACTICES}")
+message(STATUS "Use the static Boost libraries: ${Boost_USE_STATIC_LIBS}")
+message(STATUS "Link the runtime statically:    ${CC_STATIC_RUNTIME}")
+message(STATUS "Strip symbols:                  ${CC_STRIP_SYMBOLS}")
 
 # C++ standard version:
 
