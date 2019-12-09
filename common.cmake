@@ -80,7 +80,6 @@ endif()
 
 option(CC_BEST_PRACTICES "Apply generally useful compilation options" "${default_value}")
 option(CC_STATIC_RUNTIME "Link the runtime statically"    "${default_value}")
-#option(CC_STATIC_BOOST   "Use the static Boost libraries" "${default_value}")
 option(CC_STRIP_SYMBOLS  "Strip debug symbols"            "${default_value}")
 set(CC_CXX_STANDARD "14" CACHE STRING "C++ standard version")
 
