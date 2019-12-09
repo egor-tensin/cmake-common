@@ -40,17 +40,43 @@ else()
     message(WARNING "Unrecognized toolset: ${toolset}")
 endif()
 
-# Compilation options almost always useful:
+# User-defined switches:
+
+set(default_value ON)
+get_directory_property(parent_directory PARENT_DIRECTORY)
+if(parent_directory)
+    set(default_value OFF)
+endif()
+
+set(CC_CXX_STANDARD "14" CACHE STRING "C++ standard version")
+option(CC_BEST_PRACTICES "Set common compiler options" "${default_value}")
+option(CC_WINDOWS_DEF "Define useful Windows macros" "${default_value}")
+option(CC_STATIC_RUNTIME "Link the runtime statically" "${default_value}")
+option(CC_STRIP_SYMBOLS  "Strip debug symbols" "${default_value}")
+
+option(Boost_USE_STATIC_LIBS "Use the static Boost libraries" "${default_value}")
+option(Boost_USE_STATIC_RUNTIME "Use Boost libraries linked to the runtime statically" "${CC_STATIC_RUNTIME}")
+
+message(STATUS "C++ standard:                   ${CC_CXX_STANDARD}")
+message(STATUS "Set common compiler options:    ${CC_BEST_PRACTICES}")
+message(STATUS "Define useful Windows macros:   ${CC_WINDOWS_DEF}")
+message(STATUS "Use the static Boost libraries: ${Boost_USE_STATIC_LIBS}")
+message(STATUS "Link the runtime statically:    ${CC_STATIC_RUNTIME}")
+message(STATUS "Strip symbols:                  ${CC_STRIP_SYMBOLS}")
+
+# C++ standard version:
+
+set(CMAKE_CXX_STANDARD "${CC_CXX_STANDARD}")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Common compiler options routines:
 
 function(best_practices_msvc target)
     set(compile_options /MP /W4)
-    set(compile_definitions WIN32_LEAN_AND_MEAN NOMINMAX)
     get_target_property(target_type "${target}" TYPE)
-    if(target_type STREQUAL "INTERFACE_LIBRARY")
-        target_compile_definitions("${target}" INTERFACE ${compile_definitions})
-    else()
+    if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
         target_compile_options("${target}" PRIVATE ${compile_options})
-        target_compile_definitions("${target}" PRIVATE ${compile_definitions})
     endif()
 endfunction()
 
@@ -70,33 +96,17 @@ function(best_practices target)
     endif()
 endfunction()
 
-# User-defined switches:
+# Useful Windows macros routines:
 
-set(default_value ON)
-get_directory_property(parent_directory PARENT_DIRECTORY)
-if(parent_directory)
-    set(default_value OFF)
-endif()
-
-option(CC_BEST_PRACTICES "Apply generally useful compilation options" "${default_value}")
-option(CC_STATIC_RUNTIME "Link the runtime statically"    "${default_value}")
-option(CC_STRIP_SYMBOLS  "Strip debug symbols"            "${default_value}")
-set(CC_CXX_STANDARD "14" CACHE STRING "C++ standard version")
-
-option(Boost_USE_STATIC_LIBS "Use the static Boost libraries" "${default_value}")
-option(Boost_USE_STATIC_RUNTIME "Use Boost libraries linked to the runtime statically" "${CC_STATIC_RUNTIME}")
-
-message(STATUS "C++ standard:                   ${CC_CXX_STANDARD}")
-message(STATUS "Best practices:                 ${CC_BEST_PRACTICES}")
-message(STATUS "Use the static Boost libraries: ${Boost_USE_STATIC_LIBS}")
-message(STATUS "Link the runtime statically:    ${CC_STATIC_RUNTIME}")
-message(STATUS "Strip symbols:                  ${CC_STRIP_SYMBOLS}")
-
-# C++ standard version:
-
-set(CMAKE_CXX_STANDARD "${CC_CXX_STANDARD}")
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+function(enable_windows_def target)
+    set(compile_definitions WIN32_LEAN_AND_MEAN NOMINMAX)
+    get_target_property(target_type "${target}" TYPE)
+    if(target_type STREQUAL "INTERFACE_LIBRARY")
+        target_compile_definitions("${target}" INTERFACE ${compile_definitions})
+    else()
+        target_compile_definitions("${target}" PRIVATE ${compile_definitions})
+    endif()
+endfunction()
 
 # Static runtime routines:
 
@@ -148,6 +158,9 @@ function(apply_common_settings target)
         if(NOT target_imported)
             if(CC_BEST_PRACTICES)
                 best_practices("${target}")
+            endif()
+            if(CC_WINDOWS_DEF)
+                enable_windows_def("${target}")
             endif()
             if(CC_STRIP_SYMBOLS)
                 strip_symbols("${target}")
