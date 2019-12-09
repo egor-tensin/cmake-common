@@ -23,9 +23,9 @@ cmake_policy(SET CMP0054 NEW)
 
 # Toolset identification:
 
-if(CMAKE_C_COMPILER)
+if(CMAKE_C_COMPILER_ID)
     set(toolset "${CMAKE_C_COMPILER_ID}")
-elseif(CMAKE_CXX_COMPILER)
+elseif(CMAKE_CXX_COMPILER_ID)
     set(toolset "${CMAKE_CXX_COMPILER_ID}")
 else()
     set(toolset "unknown")
