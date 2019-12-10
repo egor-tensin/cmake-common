@@ -1,4 +1,6 @@
 # Copyright (c) 2017 Egor Tensin <Egor.Tensin@gmail.com>
+# This file is part of the "cmake-common" project.
+# For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
 # It's a CMake code snippet I use in all of my CMake projects.
@@ -10,7 +12,7 @@
 #
 #     cmake_minimum_required(VERSION 3.1)
 
-# Otherwise this line:
+# Without this policy set, this line:
 #
 #     if(toolset STREQUAL "MSVC")
 #
