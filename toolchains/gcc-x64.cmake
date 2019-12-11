@@ -1,0 +1,4 @@
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_C_FLAGS -m64)
+set(CMAKE_CXX_COMIPLER g++)
+set(CMAKE_CXX_FLAGS -m64)
