@@ -241,7 +241,6 @@ class BoostDir:
 
 class BoostBuild:
     def __init__(self, args):
-        self.toolchain = args.toolchain
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
         self.runtime_link = args.runtime_link or Linkage.all()
@@ -255,7 +254,6 @@ class BoostBuild:
             platform_params.append(self._address_model(platform))
             platform_params.append(self._runtime_link())
             platform_params.append(self._link())
-            platform_params += self._user_config_optional()
             platform_params += self._with_optional()
             platform_params += self.b2_args
             if _on_windows():
@@ -280,11 +278,6 @@ class BoostBuild:
     def _link(self):
         link = ','.join(map(str, self.link))
         return f'link={link}'
-
-    def _user_config_optional(self):
-        if self.toolchain is None:
-            return []
-        return [f'--user-config={self.toolchain}']
 
     def _with_optional(self):
         return [f'--with-{lib}' for lib in self.libraries]
@@ -317,8 +310,6 @@ def _parse_args(argv=None):
                         help='Boost version (in the MAJOR.MINOR.PATCH format)')
     parser.add_argument('--no-download', action='store_true',
                         help="don't download Boost, attempt to build the existing directory")
-    parser.add_argument('--toolchain', metavar='PATH',
-                        help='Boost user configuration file')
     parser.add_argument('--platform', metavar='PLATFORM',
                         nargs='*', dest='platforms', default=(),
                         type=_parse_platform,
