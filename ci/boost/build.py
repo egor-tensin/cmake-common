@@ -51,7 +51,7 @@ def _run_executable(cmd_line):
 class Platform(Enum):
     X86 = 'x86'
     X64 = 'x64'
-    WIN32 = 'win32'
+    WIN32 = 'Win32'
 
     def __str__(self):
         return self.value
@@ -72,14 +72,14 @@ class Platform(Enum):
 
 def _parse_platform(s):
     try:
-        return Platform(s.lower())
+        return Platform(s)
     except ValueError:
         raise argparse.ArgumentTypeError(f'invalid platform: {s}')
 
 
 class Configuration(Enum):
-    DEBUG = 'debug'
-    RELEASE = 'release'
+    DEBUG = 'Debug'
+    RELEASE = 'Release'
 
     @staticmethod
     def all():
@@ -91,7 +91,7 @@ class Configuration(Enum):
 
 def _parse_configuration(s):
     try:
-        return Configuration(s.lower())
+        return Configuration(s)
     except ValueError:
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
@@ -292,12 +292,12 @@ class BoostBuild:
 
     @staticmethod
     def _windows_variant(configurations):
-        variant = ','.join(map(str, configurations))
+        variant = ','.join((str(config).lower() for config in configurations))
         return f'variant={variant}'
 
     @staticmethod
     def _unix_variant(configuration):
-        return f'variant={configuration}'
+        return f'variant={str(configuration).lower()}'
 
 
 def _parse_args(argv=None):
