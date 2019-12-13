@@ -96,25 +96,6 @@ def _parse_configuration(s):
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
 
-class Linkage(Enum):
-    STATIC = 'static'
-    SHARED = 'shared'
-
-    @staticmethod
-    def all():
-        return tuple(Linkage)
-
-    def __str__(self):
-        return self.value
-
-
-def _parse_linkage(s):
-    try:
-        return Linkage(s)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'invalid linkage settings: {s}')
-
-
 class BoostVersion:
     def __init__(self, major, minor, patch):
         self.major = major
@@ -243,8 +224,6 @@ class BoostBuild:
     def __init__(self, args):
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
-        self.runtime_link = args.runtime_link or Linkage.all()
-        self.link = args.link or Linkage.all()
         self.libraries = args.libraries
         self.b2_args = args.b2_args
 
@@ -252,8 +231,6 @@ class BoostBuild:
         for platform in self.platforms:
             platform_params = []
             platform_params.append(self._address_model(platform))
-            platform_params.append(self._runtime_link())
-            platform_params.append(self._link())
             platform_params += self._with_optional()
             platform_params += self.b2_args
             if _on_windows():
@@ -270,14 +247,6 @@ class BoostBuild:
     @staticmethod
     def _address_model(platform):
         return f'address-model={platform.get_address_model()}'
-
-    def _runtime_link(self):
-        link = ','.join(map(str, self.runtime_link))
-        return f'runtime-link={link}'
-
-    def _link(self):
-        link = ','.join(map(str, self.link))
-        return f'link={link}'
 
     def _with_optional(self):
         return [f'--with-{lib}' for lib in self.libraries]
@@ -318,14 +287,6 @@ def _parse_args(argv=None):
                         nargs='*', dest='configurations', default=(),
                         type=_parse_configuration,
                         help='target platform (e.g. Debug/Release)')
-    parser.add_argument('--runtime-link', metavar='LINKAGE',
-                        nargs='*', dest='runtime_link', default=(),
-                        type=_parse_linkage,
-                        help='runtime linkage options (e.g. static/shared)')
-    parser.add_argument('--link', metavar='LINKAGE',
-                        nargs='*', dest='link', default=(),
-                        type=_parse_linkage,
-                        help='library linkage options (e.g. static/shared)')
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=os.path.abspath, default='.',
                         help='destination directory')
