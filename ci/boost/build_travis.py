@@ -13,7 +13,7 @@ import logging
 import os
 import sys
 
-from build import download_and_build
+from build import BoostVersion, main as build_main
 
 
 def _env(name):
@@ -54,13 +54,20 @@ def build_travis(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
     _check_travis()
+    version = BoostVersion.from_string(_get_boost_version())
     travis_argv = [
+        'download',
         '--build', _get_build_dir(),
-        '--version', _get_boost_version(),
+        '--', str(version)
+    ]
+    build_main(travis_argv)
+    travis_argv = [
+        'build',
         '--configuration', _get_configuration(),
         '--platform', _get_platform(),
+        '--', version.dir_path(_get_build_dir()),
     ]
-    download_and_build(travis_argv + argv)
+    build_main(travis_argv + argv)
 
 
 def main(argv=None):

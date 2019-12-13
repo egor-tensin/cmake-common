@@ -102,6 +102,13 @@ class BoostVersion:
         self.minor = minor
         self.patch = patch
 
+    @staticmethod
+    def from_string(s):
+        result = re.match(r'^(\d+)\.(\d+)\.(\d+)$', s)
+        if result is None:
+            raise ValueError(f'invalid Boost version: {s}')
+        return BoostVersion(result.group(1), result.group(2), result.group(3))
+
     def __str__(self):
         return f'{self.major}.{self.minor}.{self.patch}'
 
@@ -122,13 +129,6 @@ class BoostVersion:
 
     def get_download_url(self):
         return f'https://dl.bintray.com/boostorg/release/{self}/source/{self.archive_name}'
-
-
-def _parse_boost_version(s):
-    result = re.match(r'^(\d+)\.(\d+)\.(\d+)$', s)
-    if result is None:
-        raise argparse.ArgumentTypeError(f'invalid Boost version: {s}')
-    return BoostVersion(result.group(1), result.group(2), result.group(3))
 
 
 class BoostArchive:
@@ -188,10 +188,11 @@ class BoostDir:
         if os.path.isfile(self._b2_path()):
             logging.info('Not going to bootstrap, b2 is already there')
             return
-        self._bootstrap()
+        self.bootstrap()
 
-    def _bootstrap(self):
-        _run_executable(self._bootstrap_path())
+    def bootstrap(self):
+        with self._go():
+            _run_executable(self._bootstrap_path())
 
     def _b2(self, params):
         for b2_params in params.enum_b2_params():
@@ -273,48 +274,61 @@ def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', metavar='VERSION', dest='boost_version',
-                        type=_parse_boost_version, required=True,
-                        help='Boost version (in the MAJOR.MINOR.PATCH format)')
-    parser.add_argument('--no-download', action='store_true',
-                        help="don't download Boost, attempt to build the existing directory")
-    parser.add_argument('--platform', metavar='PLATFORM',
-                        nargs='*', dest='platforms', default=(),
-                        type=_parse_platform,
-                        help='target platform (e.g. x86/x64)')
-    parser.add_argument('--configuration', metavar='CONFIGURATION',
-                        nargs='*', dest='configurations', default=(),
-                        type=_parse_configuration,
-                        help='target platform (e.g. Debug/Release)')
-    parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=os.path.abspath, default='.',
-                        help='destination directory')
-    parser.add_argument('--with', metavar='LIB', dest='libraries',
-                        nargs='*', default=(),
-                        help='only build these libraries')
-    parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=(),
-                        help='additional b2 arguments, to be passed verbatim')
+    subparsers = parser.add_subparsers(dest='command')
+
+    download = subparsers.add_parser('download', help='download Boost')
+    download.add_argument('boost_version', metavar='VERSION',
+                          type=BoostVersion.from_string,
+                          help='Boost version (in the MAJOR.MINOR.PATCH format)')
+    download.add_argument('--build', metavar='DIR', dest='build_dir',
+                          type=os.path.abspath, default='.',
+                          help='destination directory')
+
+    build = subparsers.add_parser('build', help='build Boost libraries')
+    build.add_argument('--platform', metavar='PLATFORM',
+                       nargs='*', dest='platforms', default=(),
+                       type=_parse_platform,
+                       help='target platform (e.g. x86/x64)')
+    build.add_argument('--configuration', metavar='CONFIGURATION',
+                       nargs='*', dest='configurations', default=(),
+                       type=_parse_configuration,
+                       help='target configuration (e.g. Debug/Release)')
+    build.add_argument('--with', metavar='LIB', dest='libraries',
+                       nargs='*', default=(),
+                       help='only build these libraries')
+    build.add_argument('boost_dir', metavar='DIR',
+                       help='Boost root directory')
+    build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=(),
+                       help='additional b2 arguments, to be passed verbatim')
+
     return parser.parse_args(argv)
 
 
-def _build(boost_dir, build_params):
+def build(args):
+    build_params = BoostBuild(args)
+    boost_dir = BoostDir(args.boost_dir)
     boost_dir.build(build_params)
 
 
-def download_and_build(argv=None):
-    args = _parse_args(argv)
-    build_params = BoostBuild(args)
-    if args.no_download:
-        boost_dir = BoostDir(args.boost_version.dir_path(args.build_dir))
-        _build(boost_dir, build_params)
-    else:
-        with BoostArchive.download(args.boost_version) as archive:
-            boost_dir = BoostDir.unpack(archive, args.build_dir)
-            _build(boost_dir, build_params)
+def download(args):
+    with BoostArchive.download(args.boost_version) as archive:
+        boost_dir = BoostDir.unpack(archive, args.build_dir)
+        boost_dir.bootstrap()
 
 
 def main(argv=None):
+    args = _parse_args(argv)
+    if args.command == 'download':
+        download(args)
+    elif args.command == 'build':
+        build(args)
+    else:
+        raise NotImplementedError(f'unsupported command: {args.command}')
+
+
+def _main(argv=None):
     _setup_logging()
     try:
         download_and_build(argv)
@@ -324,4 +338,4 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    main()
+    _main()
