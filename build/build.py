@@ -22,16 +22,6 @@ import sys
 import tempfile
 
 
-@contextmanager
-def _chdir(path):
-    cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
 def _make_tmp_dir(**kwargs):
     path = tempfile.mkdtemp(**kwargs)
     logging.info('Created temporary directory: %s', path)
@@ -83,9 +73,6 @@ class BuildDir:
     @staticmethod
     def _make_build_dir():
         return _make_tmp_dir(prefix='build_')
-
-    def go(self):
-        return _chdir(self.path)
 
     def __enter__(self):
         return self
