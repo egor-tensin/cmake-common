@@ -225,14 +225,12 @@ class BoostBuild:
     def __init__(self, args):
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
-        self.libraries = args.libraries
         self.b2_args = args.b2_args
 
     def enum_b2_params(self):
         for platform in self.platforms:
             platform_params = []
             platform_params.append(self._address_model(platform))
-            platform_params += self._with_optional()
             platform_params += self.b2_args
             if _on_windows():
                 platform_params.append(self._windows_stagedir(platform))
@@ -248,9 +246,6 @@ class BoostBuild:
     @staticmethod
     def _address_model(platform):
         return f'address-model={platform.get_address_model()}'
-
-    def _with_optional(self):
-        return [f'--with-{lib}' for lib in self.libraries]
 
     @staticmethod
     def _windows_stagedir(platform):
@@ -295,9 +290,6 @@ def _parse_args(argv=None):
                        nargs='*', dest='configurations', default=(),
                        type=_parse_configuration,
                        help='target configuration (e.g. Debug/Release)')
-    build.add_argument('--with', metavar='LIB', dest='libraries',
-                       nargs='*', default=(),
-                       help='only build these libraries')
     build.add_argument('boost_dir', metavar='DIR',
                        help='Boost root directory')
     build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=(),
