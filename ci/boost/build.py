@@ -15,7 +15,6 @@ import os.path
 import platform
 import re
 import shutil
-import struct
 import subprocess
 import sys
 import tempfile
@@ -44,8 +43,7 @@ def _on_windows():
 
 def _run_executable(cmd_line):
     logging.info('Running executable: %s', cmd_line)
-    result = subprocess.run(cmd_line)
-    result.check_returncode()
+    return subprocess.run(cmd_line, check=True)
 
 
 class Platform(Enum):
@@ -323,7 +321,7 @@ def main(argv=None):
 def _main(argv=None):
     _setup_logging()
     try:
-        download_and_build(argv)
+        main(argv)
     except Exception as e:
         logging.exception(e)
         raise

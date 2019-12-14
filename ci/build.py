@@ -11,7 +11,6 @@
 # similar, but written in bash and PowerShell, respectively).
 
 import argparse
-from contextlib import contextmanager
 import logging
 from enum import Enum
 import os
@@ -39,8 +38,7 @@ def _remove_dir(path):
 
 def _run_executable(cmd_line):
     logging.info('Running executable: %s', cmd_line)
-    result = subprocess.run(cmd_line)
-    result.check_returncode()
+    return subprocess.run(cmd_line, check=True)
 
 
 def _run_cmake(cmake_args):
@@ -108,7 +106,7 @@ class GenerationPhase:
         if args.boost_librarydir is not None:
             result.append(f'-DBOOST_LIBRARYDIR={args.boost_librarydir}')
         if args.cmake_args is not None:
-            result += [arg for arg in args.cmake_args]
+            result += args.cmake_args
         result += [f'-B{build_dir.path}']
         result += [f'-H{args.src_dir}']
         return result
