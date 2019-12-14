@@ -54,6 +54,7 @@ def build_travis(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
     _check_travis()
+
     version = BoostVersion.from_string(_get_boost_version())
     travis_argv = [
         'download',
@@ -61,6 +62,7 @@ def build_travis(argv=None):
         '--', str(version)
     ]
     build_main(travis_argv)
+
     travis_argv = [
         'build',
         '--configuration', _get_configuration(),

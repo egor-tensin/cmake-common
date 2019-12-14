@@ -91,20 +91,10 @@ class GenerationPhase:
     @staticmethod
     def _to_cmake_args(build_dir, args):
         result = []
-        if args.generator is not None:
-            result += ['-G', args.generator]
-        if args.platform is not None:
-            result += ['-A', args.platform]
         if args.install_dir is not None:
             result.append(f'-DCMAKE_INSTALL_PREFIX={args.install_dir}')
         if args.configuration is not None:
             result.append(f'-DCMAKE_BUILD_TYPE={args.configuration}')
-        if args.toolchain_path is not None:
-            result.append(f'-DCMAKE_TOOLCHAIN_FILE={args.toolchain_path}')
-        if args.boost_root is not None:
-            result.append(f'-DBOOST_ROOT={args.boost_root}')
-        if args.boost_librarydir is not None:
-            result.append(f'-DBOOST_LIBRARYDIR={args.boost_librarydir}')
         if args.cmake_args is not None:
             result += args.cmake_args
         result += [f'-B{build_dir.path}']
@@ -126,8 +116,6 @@ class BuildPhase:
     @staticmethod
     def _to_cmake_args(build_dir, args):
         result = ['--build', build_dir.path]
-        if args.clean_build_dir:
-            result.append('--clean-first')
         if args.configuration is not None:
             result += ['--config', str(args.configuration)]
         if args.install_dir is not None:
@@ -163,9 +151,9 @@ def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
+
     parser = argparse.ArgumentParser(description='Build a CMake project')
-    parser.add_argument('--src', required=True, dest='src_dir',
-                        type=os.path.abspath, metavar='DIR',
+    parser.add_argument('--src', required=True, metavar='DIR', dest='src_dir',
                         help='source directory')
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         help='build directory (temporary directory if not specified)')
@@ -173,17 +161,9 @@ def _parse_args(argv=None):
                         help='install directory')
     parser.add_argument('--clean', action='store_true', dest='clean_build_dir',
                         help='clean the build directory (temporary directory will be removed)')
-    parser.add_argument('--generator', help='build system to use')
-    parser.add_argument('--platform', help='target platform (i.e. Win32/x64)')
     parser.add_argument('--configuration', metavar='CONFIG',
-                        type=_parse_configuration,
+                        type=_parse_configuration, default=Configuration.DEBUG,
                         help='build configuration (i.e. Debug/Release)')
-    parser.add_argument('--toolchain', metavar='PATH', dest='toolchain_path',
-                        help='CMake toolchain file path')
-    parser.add_argument('--boost', metavar='DIR', dest='boost_root',
-                        help='set Boost directory')
-    parser.add_argument('--boost-librarydir', metavar='DIR',
-                        help='set Boost library directory (stage/lib by default)')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG',
                         help='additional CMake arguments, to be passed verbatim')
     args = parser.parse_args(argv)

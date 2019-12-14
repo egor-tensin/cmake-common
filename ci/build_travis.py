@@ -23,12 +23,21 @@ def _env(name):
     return os.environ[name]
 
 
+def _check_travis():
+    if 'TRAVIS' not in os.environ:
+        raise RuntimeError('not running on Travis')
+
+
 def _get_src_dir():
     return _env('TRAVIS_BUILD_DIR')
 
 
 def _get_build_dir():
     return os.path.join(_env('HOME'), 'build')
+
+
+def _get_configuration():
+    return _env('configuration')
 
 
 def _setup_logging():
@@ -41,9 +50,12 @@ def build_travis(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
+    _check_travis()
+
     travis_argv = [
         '--src', _get_src_dir(),
         '--build', _get_build_dir(),
+        '--configuration', _get_configuration(),
     ]
     build(travis_argv + argv)
 

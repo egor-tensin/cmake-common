@@ -9,6 +9,7 @@
 # the AppVeyor-defined environment variables.
 # The project is built in C:\Projects\build.
 
+import argparse
 from enum import Enum
 import logging
 import os
@@ -77,6 +78,11 @@ def _env(name):
     return os.environ[name]
 
 
+def _check_appveyor():
+    if 'APPVEYOR' not in os.environ:
+        raise RuntimeError('not running on AppVeyor')
+
+
 def _get_src_dir():
     return _env('APPVEYOR_BUILD_FOLDER')
 
@@ -104,18 +110,38 @@ def _setup_logging():
         level=logging.INFO)
 
 
-def build_appveyor(argv=None):
+def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
+
+    parser = argparse.ArgumentParser(description='Build a CMake project on AppVeyor')
+    parser.add_argument('--install', metavar='DIR', dest='install_dir',
+                        help='install directory')
+    parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG',
+                        help='additional CMake arguments, to be passed verbatim')
+    return parser.parse_args(argv)
+
+
+def build_appveyor(argv=None):
+    args = _parse_args(argv)
+    _check_appveyor()
+
     appveyor_argv = [
         '--src', _get_src_dir(),
         '--build', _get_build_dir(),
-        '--generator', _get_generator(),
-        '--platform', _get_platform(),
         '--configuration', _get_configuration(),
     ]
-    build(appveyor_argv + argv)
+    if args.install_dir is not None:
+        appveyor_argv += [
+            '--install', args.install_dir,
+        ]
+    appveyor_argv += [
+        '--',
+        '-G', _get_generator(),
+        '-A', _get_platform(),
+    ]
+    build(appveyor_argv + args.cmake_args)
 
 
 def main(argv=None):
