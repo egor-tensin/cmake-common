@@ -9,6 +9,7 @@
 # the Travis-defined environment variables.
 # The project is built in $HOME/build.
 
+import argparse
 import logging
 import os
 import os.path
@@ -46,10 +47,21 @@ def _setup_logging():
         level=logging.INFO)
 
 
-def build_travis(argv=None):
+def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
+
+    parser = argparse.ArgumentParser(description='Build a CMake project on Travis')
+    parser.add_argument('--install', metavar='DIR', dest='install_dir',
+                        help='install directory')
+    parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=(),
+                        help='additional CMake arguments, to be passed verbatim')
+    return parser.parse_args(argv)
+
+
+def build_travis(argv=None):
+    args = _parse_args(argv)
     _check_travis()
 
     travis_argv = [
@@ -57,7 +69,12 @@ def build_travis(argv=None):
         '--build', _get_build_dir(),
         '--configuration', _get_configuration(),
     ]
-    build(travis_argv + argv)
+    if args.install_dir is not None:
+        travis_argv += [
+            '--install', args.install_dir,
+        ]
+    travis_argv.append('--')
+    build(travis_argv + args.cmake_args)
 
 
 def main(argv=None):

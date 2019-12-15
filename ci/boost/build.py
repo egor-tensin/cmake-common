@@ -6,6 +6,9 @@
 # Distributed under the MIT License.
 
 # This script downloads and builds the Boost libraries.
+# It's main utility is being able to download & unpack the Boost distribution
+# archive in a cross-platform way + setting the correct --stagedir parameter
+# value to avoid name clashes.
 
 import argparse
 from contextlib import contextmanager

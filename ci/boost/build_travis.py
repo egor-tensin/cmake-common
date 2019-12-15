@@ -9,6 +9,7 @@
 # the Travis-defined environment variables.
 # Boost is built in $HOME.
 
+import argparse
 import logging
 import os
 import sys
@@ -49,10 +50,19 @@ def _setup_logging():
         level=logging.INFO)
 
 
-def build_travis(argv=None):
+def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=(),
+                        help='additional b2 arguments, to be passed verbatim')
+    return parser.parse_args(argv)
+
+
+def build_travis(argv=None):
+    args = _parse_args(argv)
     _check_travis()
 
     version = BoostVersion.from_string(_get_boost_version())
@@ -69,7 +79,7 @@ def build_travis(argv=None):
         '--platform', _get_platform(),
         '--', version.dir_path(_get_build_dir()),
     ]
-    build_main(travis_argv + argv)
+    build_main(travis_argv + args.b2_args)
 
 
 def main(argv=None):
