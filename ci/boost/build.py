@@ -284,16 +284,16 @@ def _parse_args(argv=None):
 
     build = subparsers.add_parser('build', help='build Boost libraries')
     build.add_argument('--platform', metavar='PLATFORM',
-                       nargs='*', dest='platforms', default=(),
+                       nargs='*', dest='platforms', default=[],
                        type=_parse_platform,
                        help='target platform (e.g. x86/x64)')
     build.add_argument('--configuration', metavar='CONFIGURATION',
-                       nargs='*', dest='configurations', default=(),
+                       nargs='*', dest='configurations', default=[],
                        type=_parse_configuration,
                        help='target configuration (e.g. Debug/Release)')
     build.add_argument('boost_dir', metavar='DIR',
                        help='Boost root directory')
-    build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=(),
+    build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                        help='additional b2 arguments, to be passed verbatim')
 
     return parser.parse_args(argv)

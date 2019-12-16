@@ -55,7 +55,7 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Build a CMake project on Travis')
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
                         help='install directory')
-    parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=(),
+    parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
                         help='additional CMake arguments, to be passed verbatim')
     return parser.parse_args(argv)
 

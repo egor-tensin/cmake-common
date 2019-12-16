@@ -56,7 +56,7 @@ def _parse_args(argv=None):
     logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=(),
+    parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                         help='additional b2 arguments, to be passed verbatim')
     return parser.parse_args(argv)
 
