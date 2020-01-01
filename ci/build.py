@@ -92,13 +92,12 @@ class GenerationPhase:
     def _to_cmake_args(build_dir, args):
         result = []
         if args.install_dir is not None:
-            result.append(f'-DCMAKE_INSTALL_PREFIX={args.install_dir}')
+            result += ['-D', f'CMAKE_INSTALL_PREFIX={args.install_dir}']
         if args.configuration is not None:
-            result.append(f'-DCMAKE_BUILD_TYPE={args.configuration}')
+            result += ['-D', f'CMAKE_BUILD_TYPE={args.configuration}']
         if args.cmake_args is not None:
             result += args.cmake_args
-        result += [f'-B{build_dir.path}']
-        result += [f'-H{args.src_dir}']
+        result += [f'-B{build_dir.path}', f'-H{args.src_dir}']
         return result
 
     def run(self):
