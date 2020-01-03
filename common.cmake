@@ -138,7 +138,14 @@ endfunction()
 function(_cc_static_runtime_gcc target)
     get_target_property(target_type "${target}" TYPE)
     if(target_type STREQUAL "EXECUTABLE")
-        target_link_libraries("${target}" PRIVATE -static)
+        # This causes issues with mixing keyword- and plain- versions of
+        # target_link_libraries:
+        #target_link_libraries("${target}" PRIVATE -static)
+
+        set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -static")
+
+        # Or (haven't tested this), if CMake 3.13+ is used:
+        #target_link_options("${target}" PRIVATE -static)
     endif()
 endfunction()
 
@@ -156,7 +163,13 @@ function(_cc_strip_symbols_gcc target)
     get_target_property(target_type "${target}" TYPE)
     if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
         set(release_build $<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>)
-        target_link_libraries("${target}" PRIVATE $<${release_build}:-s>)
+        if(release_build)
+            # This causes issues with mixing keyword- and plain- versions of
+            # target_link_libraries:
+            #target_link_libraries("${target}" PRIVATE -s)
+
+            set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -s")
+        endif()
     endif()
 endfunction()
 
