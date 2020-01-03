@@ -10,6 +10,7 @@
 # archive in a cross-platform way + setting the correct --stagedir parameter
 # value to avoid name clashes.
 
+import abc
 import argparse
 from contextlib import contextmanager
 from enum import Enum
@@ -137,29 +138,87 @@ class BoostArchive:
         self.version = version
         self.path = path
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        logging.info('Removing temporary file: %s', self.path)
-        os.remove(self.path)
-
     @property
     def dir_name(self):
         return self.version.dir_name
 
-    @staticmethod
-    def download(version):
-        path = None
-        with tempfile.NamedTemporaryFile(prefix='boost_', suffix=version.archive_ext, delete=False) as dest:
-            path = dest.name
-            logging.info('Downloading Boost to: %s', path)
-            url = version.get_download_url()
-            logging.info('Download URL: %s', url)
+    def unpack(self, dest_dir):
+        path = os.path.join(dest_dir, self.dir_name)
+        if os.path.exists(path):
+            raise RuntimeError(f'Boost directory already exists: {path}')
+        logging.info('Unpacking Boost to: %s', path)
+        shutil.unpack_archive(self.path, dest_dir)
+        return BoostDir(path)
 
-            with urllib.request.urlopen(url) as request:
-                dest.write(request.read())
-        return BoostArchive(version, path)
+
+class ArchiveStorage(abc.ABC):
+    @contextmanager
+    def download(self, version):
+        path = self.get_archive(version)
+        if path is not None:
+            logging.info('Using existing Boost archive: %s', path)
+            yield BoostArchive(version, path)
+            return
+
+        url = version.get_download_url()
+        logging.info('Download URL: %s', url)
+
+        with urllib.request.urlopen(url) as request:
+            with self.write_archive(version, request.read()) as path:
+                yield BoostArchive(version, path)
+
+    @abc.abstractmethod
+    def get_archive(self, version):
+        pass
+
+    @contextmanager
+    @abc.abstractmethod
+    def write_archive(self, version, contents):
+        pass
+
+
+class CacheStorage(ArchiveStorage):
+    def __init__(self, cache_dir):
+        self._dir = cache_dir
+
+    def _archive_path(self, version):
+        return os.path.join(self._dir, version.archive_name)
+
+    def get_archive(self, version):
+        path = self._archive_path(version)
+        if os.path.exists(path):
+            return path
+        return None
+
+    @contextmanager
+    def write_archive(self, version, contents):
+        path = self._archive_path(version)
+        logging.info('Writing Boost archive: %s', path)
+        if os.path.exists(path):
+            raise RuntimeError(f'cannot download Boost, file already exists: {path}')
+        with open(path, mode='w+b') as dest:
+            dest.write(contents)
+        yield path
+
+
+class TempStorage(ArchiveStorage):
+    def __init__(self, temp_dir):
+        self._dir = temp_dir
+
+    def get_archive(self, version):
+        return None
+
+    @contextmanager
+    def write_archive(self, version, contents):
+        with tempfile.NamedTemporaryFile(prefix=f'boost_{version}_', suffix=version.archive_ext, dir=self._dir, delete=False) as dest:
+            path = dest.name
+            logging.info('Writing Boost archive: %s', path)
+            dest.write(contents)
+        try:
+            yield path
+        finally:
+            logging.info('Removing temporary Boost archive: %s', path)
+            os.remove(path)
 
 
 class BoostDir:
@@ -167,15 +226,6 @@ class BoostDir:
         if not os.path.isdir(path):
             raise RuntimeError(f"Boost directory doesn't exist: {path}")
         self.path = path
-
-    @staticmethod
-    def unpack(archive, dest):
-        path = os.path.join(dest, archive.dir_name)
-        if os.path.exists(path):
-            raise RuntimeError(f'Boost directory already exists: {path}')
-        logging.info('Unpacking Boost to: %s', path)
-        shutil.unpack_archive(archive.path, dest)
-        return BoostDir(path)
 
     def _go(self):
         return _chdir(self.path)
@@ -274,13 +324,16 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='command')
 
-    download = subparsers.add_parser('download', help='download Boost')
+    download = subparsers.add_parser('download', help='download & bootstrap Boost')
     download.add_argument('boost_version', metavar='VERSION',
                           type=BoostVersion.from_string,
                           help='Boost version (in the MAJOR.MINOR.PATCH format)')
-    download.add_argument('--build', metavar='DIR', dest='build_dir',
+    download.add_argument('--cache', metavar='DIR', dest='cache_dir',
+                          type=os.path.abspath,
+                          help='download directory (will download Boost to a temporary file and delete it unless specified)')
+    download.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
                           type=os.path.abspath, default='.',
-                          help='destination directory')
+                          help='directory to unpack Boost to')
 
     build = subparsers.add_parser('build', help='build Boost libraries')
     build.add_argument('--platform', metavar='PLATFORM',
@@ -306,8 +359,11 @@ def build(args):
 
 
 def download(args):
-    with BoostArchive.download(args.boost_version) as archive:
-        boost_dir = BoostDir.unpack(archive, args.build_dir)
+    storage = TempStorage(args.unpack_dir)
+    if args.cache_dir is not None:
+        storage = CacheStorage(args.cache_dir)
+    with storage.download(args.boost_version) as archive:
+        boost_dir = archive.unpack(args.unpack_dir)
         boost_dir.bootstrap()
 
 
