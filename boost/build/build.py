@@ -12,8 +12,10 @@
 
 import abc
 import argparse
+from collections import namedtuple
 from contextlib import contextmanager
 from enum import Enum
+from functools import total_ordering
 import logging
 import os.path
 import platform
@@ -98,18 +100,41 @@ def _parse_configuration(s):
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
 
+Version = namedtuple('Version', ['major', 'minor', 'patch'])
+
+
+@total_ordering
 class BoostVersion:
     def __init__(self, major, minor, patch):
-        self.major = major
-        self.minor = minor
-        self.patch = patch
+        self._impl = Version(major, minor, patch)
+
+    @property
+    def major(self):
+        return self._impl.major
+
+    @property
+    def minor(self):
+        return self._impl.minor
+
+    @property
+    def patch(self):
+        return self._impl.patch
+
+    def __lt__(self, other):
+        return self._impl < other._impl
+
+    def __eq__(self, other):
+        return self._impl == other._impl
 
     @staticmethod
     def from_string(s):
         result = re.match(r'^(\d+)\.(\d+)\.(\d+)$', s)
         if result is None:
             raise ValueError(f'invalid Boost version: {s}')
-        return BoostVersion(result.group(1), result.group(2), result.group(3))
+        major = int(result.group(1))
+        minor = int(result.group(2))
+        patch = int(result.group(3))
+        return BoostVersion(major, minor, patch)
 
     def __str__(self):
         return f'{self.major}.{self.minor}.{self.patch}'
@@ -130,6 +155,8 @@ class BoostVersion:
         return f'{self.dir_name}{self.archive_ext}'
 
     def get_download_url(self):
+        if self._impl < Version(1, 63, 0):
+            return f'https://sourceforge.net/projects/boost/files/boost/{self}/{self.archive_name}/download'
         return f'https://dl.bintray.com/boostorg/release/{self}/source/{self.archive_name}'
 
 
