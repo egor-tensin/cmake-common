@@ -29,7 +29,7 @@ def _check_appveyor():
 
 
 def _get_build_dir():
-    return R'(C:\)'
+    return 'C:\\'
 
 
 def _get_boost_version():
