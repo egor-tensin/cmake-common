@@ -8,12 +8,10 @@ addons:
     packages:
       - g++-multilib
 
-env:
-
 script:
   - ./boost/build/build.py download           1.58.0
   - ./boost/build/build.py build --configuration Debug         --platform x86     -- ./boost_1_58_0             --with-filesystem
   - ./boost/build/build.py download --cache . 1.71.0
   - ./boost/build/build.py build --configuration Debug Release --platform x86 x64 -- ./boost_1_71_0 link=static --with-filesystem
 
-  - travis_boost_version=1.71.0 configuration=Release platform=x64 ./boost/build/ci/travis.py -- --with-filesystem
+  - travis_boost_version=1.66.0 configuration=Release platform=x64 ./boost/build/ci/travis.py -- --with-filesystem
