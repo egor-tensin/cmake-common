@@ -12,10 +12,10 @@ build_script:
   - '"%python_exe%" ./boost/build/build.py download           1.58.0'
   - '"%python_exe%" ./boost/build/build.py download --cache . 1.72.0'
 
-  - '"%python_exe%" ./boost/build/build.py build --configuration Debug         --platform x86     -- ./boost_1_58_0             --with-filesystem --with-program_options'
+  - '"%python_exe%" ./boost/build/build.py build --configuration Debug         --platform x86                   -- ./boost_1_58_0 --with-filesystem --with-program_options'
   - dir /a-D /S /B boost_1_58_0\stage
-  - '"%python_exe%" ./boost/build/build.py build --configuration Debug Release --platform x86 x64 -- ./boost_1_72_0 link=static --with-filesystem --with-program_options'
+  - '"%python_exe%" ./boost/build/build.py build --configuration Debug Release --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options'
   - dir /a-D /S /B boost_1_72_0\stage
 
-  - cmd: set "appveyor_boost_version=1.65.0" && set "CONFIGURATION=Release" && set "PLATFORM=x64" && "%python_exe%" ./boost/build/ci/appveyor.py -- --with-filesystem --with-program_options
+  - cmd: set "appveyor_boost_version=1.65.0" && set "CONFIGURATION=Release" && set "PLATFORM=x64" && "%python_exe%" ./boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options
   - dir /a-D /S /B C:\boost_1_65_0\stage

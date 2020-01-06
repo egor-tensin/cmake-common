@@ -56,6 +56,8 @@ def _parse_args(argv=None):
     logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--link', metavar='LINKAGE', nargs='*',
+                        help='how the libraries are linked (i.e. static/shared)')
     parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                         help='additional b2 arguments, to be passed verbatim')
     return parser.parse_args(argv)
@@ -71,20 +73,25 @@ def build_appveyor(argv=None):
     from build import BoostVersion, main as build_main
 
     version = BoostVersion.from_string(_get_boost_version())
-    travis_argv = [
+    appveyor_argv = [
         'download',
         '--unpack', _get_build_dir(),
         '--', str(version)
     ]
-    build_main(travis_argv)
+    build_main(appveyor_argv)
 
-    travis_argv = [
+    appveyor_argv = [
         'build',
         '--configuration', _get_configuration(),
         '--platform', _get_platform(),
+    ]
+    if args.link is not None:
+        appveyor_argv.append('--link')
+        appveyor_argv += args.link
+    appveyor_argv += [
         '--', version.dir_path(_get_build_dir()),
     ]
-    build_main(travis_argv + args.b2_args)
+    build_main(appveyor_argv + args.b2_args)
 
 
 def main(argv=None):

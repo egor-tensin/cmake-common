@@ -100,6 +100,25 @@ def _parse_configuration(s):
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
 
+class Link(Enum):
+    STATIC = 'static'
+    SHARED = 'shared'
+
+    @staticmethod
+    def all():
+        return tuple(Link)
+
+    def __str__(self):
+        return self.value
+
+
+def _parse_link(s):
+    try:
+        return Link(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f'invalid linkage: {s}')
+
+
 Version = namedtuple('Version', ['major', 'minor', 'patch'])
 
 
@@ -303,6 +322,7 @@ class BoostBuild:
     def __init__(self, args):
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
+        self.link = args.link or Link.all()
 
         self.stage_dir = 'stage'
 
@@ -316,6 +336,7 @@ class BoostBuild:
             for platform in self.platforms:
                 platform_params = [f'--build-dir={build_dir}']
                 platform_params.append(self._address_model(platform))
+                platform_params.append(self._linkage())
                 platform_params += self.b2_args
                 if _on_windows():
                     platform_params.append(self._windows_stagedir(platform))
@@ -342,6 +363,10 @@ class BoostBuild:
             finally:
                 logging.info('Removing build directory: %s', build_dir)
             return
+
+    def _linkage(self):
+        link = ','.join(map(str, self.link))
+        return f'link={link}'
 
     @staticmethod
     def _address_model(platform):
@@ -389,6 +414,8 @@ def _parse_args(argv=None):
 
     build = subparsers.add_parser('build', help='build Boost libraries')
 
+    # These are used to put the built libraries into proper stage/
+    # subdirectories (to avoid name clashes).
     build.add_argument('--platform', metavar='PLATFORM',
                        nargs='*', dest='platforms', default=[],
                        type=_parse_platform,
@@ -397,6 +424,13 @@ def _parse_args(argv=None):
                        nargs='*', dest='configurations', default=[],
                        type=_parse_configuration,
                        help='target configuration (e.g. Debug/Release)')
+    # This is needed because the default behaviour on Linux and Windows is
+    # different: static & dynamic libs are built on Linux, but only static libs
+    # are built on Windows by default.
+    build.add_argument('--link', metavar='LINKAGE',
+                       nargs='*', default=[],
+                       type=_parse_link,
+                       help='how the libraries are linked (i.e. static/shared)')
 
     build.add_argument('--build', metavar='DIR', dest='build_dir',
                        type=_parse_dir,
