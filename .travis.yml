@@ -16,3 +16,7 @@ script:
   - ./boost/build/build.py build --configuration Debug Release --platform x86 x64 -- ./boost_1_72_0 link=static --with-filesystem --with-program_options
 
   - travis_boost_version=1.65.0 configuration=Release platform=x64 ./boost/build/ci/travis.py -- --with-filesystem --with-program_options
+
+  - find boost_1_58_0/stage -type f
+  - find boost_1_72_0/stage -type f
+  - find "$HOME/boost_1_65_0/stage" -type f
