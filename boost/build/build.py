@@ -303,36 +303,57 @@ class BoostBuild:
     def __init__(self, args):
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
-        self.stage_base = 'stage'
+
+        self.stage_dir = 'stage'
         if args.stage_prefix is not None:
-            self.stage_base = os.path.join(self.stage_base, args.stage_prefix)
+            self.stage_dir = os.path.join(self.stage_dir, args.stage_prefix)
+
+        self.build_dir = args.build_dir
+        self.boost_dir = args.boost_dir
+
         self.b2_args = args.b2_args
 
     def enum_b2_params(self):
-        for platform in self.platforms:
-            platform_params = []
-            platform_params.append(self._address_model(platform))
-            platform_params += self.b2_args
-            if _on_windows():
-                platform_params.append(self._windows_stagedir(platform))
-                platform_params.append(self._windows_variant(self.configurations))
-                yield platform_params
-            else:
-                for configuration in self.configurations:
-                    variant_params = list(platform_params)
-                    variant_params.append(self._unix_stagedir(platform, configuration))
-                    variant_params.append(self._unix_variant(configuration))
-                    yield variant_params
+        with self._create_build_dir() as build_dir:
+            for platform in self.platforms:
+                platform_params = [f'--build-dir={build_dir}']
+                platform_params.append(self._address_model(platform))
+                platform_params += self.b2_args
+                if _on_windows():
+                    platform_params.append(self._windows_stagedir(platform))
+                    platform_params.append(self._windows_variant(self.configurations))
+                    yield platform_params
+                else:
+                    for configuration in self.configurations:
+                        variant_params = list(platform_params)
+                        variant_params.append(self._unix_stagedir(platform, configuration))
+                        variant_params.append(self._unix_variant(configuration))
+                        yield variant_params
+
+    @contextmanager
+    def _create_build_dir(self):
+        if self.build_dir is not None:
+            logging.info('Build directory: %s', self.build_dir)
+            yield self.build_dir
+            return
+
+        with tempfile.TemporaryDirectory(dir=os.path.dirname(self.boost_dir)) as build_dir:
+            logging.info('Build directory: %s', build_dir)
+            try:
+                yield build_dir
+            finally:
+                logging.info('Removing build directory: %s', build_dir)
+            return
 
     @staticmethod
     def _address_model(platform):
         return f'address-model={platform.get_address_model()}'
 
     def _windows_stagedir(self, platform):
-        return f'--stagedir={os.path.join(self.stage_base, str(platform))}'
+        return f'--stagedir={os.path.join(self.stage_dir, str(platform))}'
 
     def _unix_stagedir(self, platform, configuration):
-        return f'--stagedir={os.path.join(self.stage_base, str(platform), str(configuration))}'
+        return f'--stagedir={os.path.join(self.stage_dir, str(platform), str(configuration))}'
 
     @staticmethod
     def _windows_variant(configurations):
@@ -344,6 +365,10 @@ class BoostBuild:
         return f'variant={str(configuration).lower()}'
 
 
+def _parse_dir(s):
+    return os.path.abspath(os.path.normpath(s))
+
+
 def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -353,17 +378,19 @@ def _parse_args(argv=None):
     subparsers = parser.add_subparsers(dest='command')
 
     download = subparsers.add_parser('download', help='download & bootstrap Boost')
+
+    download.add_argument('--cache', metavar='DIR', dest='cache_dir',
+                          type=_parse_dir,
+                          help='download directory (temporary file unless specified)')
+    download.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
+                          type=_parse_dir, default='.',
+                          help='directory to unpack Boost to')
     download.add_argument('boost_version', metavar='VERSION',
                           type=BoostVersion.from_string,
                           help='Boost version (in the MAJOR.MINOR.PATCH format)')
-    download.add_argument('--cache', metavar='DIR', dest='cache_dir',
-                          type=os.path.abspath,
-                          help='download directory (will download Boost to a temporary file and delete it unless specified)')
-    download.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
-                          type=os.path.abspath, default='.',
-                          help='directory to unpack Boost to')
 
     build = subparsers.add_parser('build', help='build Boost libraries')
+
     build.add_argument('--platform', metavar='PLATFORM',
                        nargs='*', dest='platforms', default=[],
                        type=_parse_platform,
@@ -372,11 +399,18 @@ def _parse_args(argv=None):
                        nargs='*', dest='configurations', default=[],
                        type=_parse_configuration,
                        help='target configuration (e.g. Debug/Release)')
+
     build.add_argument('--label', metavar='LABEL',
                        dest='stage_prefix',
-                       help="staging directory prefix (it'll be stage/LABEL/.../lib")
+                       help="build label (the output directory will be stage/LABEL/.../lib")
+
+    build.add_argument('--build', metavar='DIR', dest='build_dir',
+                       type=_parse_dir,
+                       help='Boost build directory (temporary directory unless specified)')
     build.add_argument('boost_dir', metavar='DIR',
-                       help='Boost root directory')
+                       type=_parse_dir,
+                       help='root Boost directory')
+
     build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                        help='additional b2 arguments, to be passed verbatim')
 
