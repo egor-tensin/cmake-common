@@ -303,6 +303,9 @@ class BoostBuild:
     def __init__(self, args):
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
+        self.stage_base = 'stage'
+        if args.stage_prefix is not None:
+            self.stage_base = os.path.join(self.stage_base, args.stage_prefix)
         self.b2_args = args.b2_args
 
     def enum_b2_params(self):
@@ -325,13 +328,11 @@ class BoostBuild:
     def _address_model(platform):
         return f'address-model={platform.get_address_model()}'
 
-    @staticmethod
-    def _windows_stagedir(platform):
-        return f'--stagedir=stage/{platform}'
+    def _windows_stagedir(self, platform):
+        return f'--stagedir={os.path.join(self.stage_base, str(platform))}'
 
-    @staticmethod
-    def _unix_stagedir(platform, configuration):
-        return f'--stagedir=stage/{platform}/{configuration}'
+    def _unix_stagedir(self, platform, configuration):
+        return f'--stagedir={os.path.join(self.stage_base, str(platform), str(configuration))}'
 
     @staticmethod
     def _windows_variant(configurations):
@@ -371,6 +372,9 @@ def _parse_args(argv=None):
                        nargs='*', dest='configurations', default=[],
                        type=_parse_configuration,
                        help='target configuration (e.g. Debug/Release)')
+    build.add_argument('--label', metavar='LABEL',
+                       dest='stage_prefix',
+                       help="staging directory prefix (it'll be stage/LABEL/.../lib")
     build.add_argument('boost_dir', metavar='DIR',
                        help='Boost root directory')
     build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
