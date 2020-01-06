@@ -305,8 +305,6 @@ class BoostBuild:
         self.configurations = args.configurations or Configuration.all()
 
         self.stage_dir = 'stage'
-        if args.stage_prefix is not None:
-            self.stage_dir = os.path.join(self.stage_dir, args.stage_prefix)
 
         self.build_dir = args.build_dir
         self.boost_dir = args.boost_dir
@@ -399,10 +397,6 @@ def _parse_args(argv=None):
                        nargs='*', dest='configurations', default=[],
                        type=_parse_configuration,
                        help='target configuration (e.g. Debug/Release)')
-
-    build.add_argument('--label', metavar='LABEL',
-                       dest='stage_prefix',
-                       help="build label (the output directory will be stage/LABEL/.../lib")
 
     build.add_argument('--build', metavar='DIR', dest='build_dir',
                        type=_parse_dir,
