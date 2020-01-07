@@ -10,16 +10,28 @@ addons:
 
 jobs:
   include:
+
+    - name: Simple CMake projects
+      script:
+        - ./cmake/build/build.py --install "$HOME/install/simple" --configuration Release -- cmake/examples/simple
+        - "$HOME/install/simple/bin/foo"
+        - ./cmake/build/build.py --install "$HOME/install/static" --configuration Debug -- cmake/examples/static
+        - "$HOME/install/static/bin/foo"
+        - ./cmake/build/build.py --install "$HOME/install/dynamic" --configuration Release -- cmake/examples/dynamic
+        - LD_LIBRARY_PATH="$HOME/install/dynamic/lib" "$HOME/install/dynamic/bin/foo"
+
     - name: Boost 1.58
       script:
         - ./boost/build/build.py download 1.58.0
         - ./boost/build/build.py build --configuration Debug --platform x86 -- ./boost_1_58_0 --with-filesystem --with-program_options
         - find boost_1_58_0/stage -type f | sort
+
     - name: Boost 1.72
       script:
         - ./boost/build/build.py download --cache . 1.72.0
         - ./boost/build/build.py build --configuration Debug Release --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options
         - find boost_1_72_0/stage -type f | sort
+
     - name: Boost 1.65
       script:
         - ./boost/build/ci/travis.py --link static -- --with-filesystem --with-program_options
