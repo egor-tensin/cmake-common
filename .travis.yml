@@ -12,11 +12,23 @@ jobs:
   include:
     - name: Simple CMake projects
       script:
-        - ./cmake/build/build.py --install "$HOME/install/simple" --configuration Release -- cmake/examples/simple
+        - |-
+          ./cmake/build/build.py \
+              --install "$HOME/install/simple" --configuration Release \
+              -- cmake/examples/simple
         - "$HOME/install/simple/bin/foo"
-        - ./cmake/build/build.py --install "$HOME/install/static" --configuration Debug -- cmake/examples/static
+
+        - |-
+          ./cmake/build/build.py \
+              --install "$HOME/install/static" --configuration Debug \
+              -- cmake/examples/static \
+              -D "CMAKE_TOOLCHAIN_FILE=$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
         - "$HOME/install/static/bin/foo"
-        - ./cmake/build/build.py --install "$HOME/install/dynamic" --configuration Release -- cmake/examples/dynamic
+
+        - |-
+          ./cmake/build/build.py \
+              --install "$HOME/install/dynamic" --configuration Release \
+              -- cmake/examples/dynamic
         - LD_LIBRARY_PATH="$HOME/install/dynamic/lib" "$HOME/install/dynamic/bin/foo"
 
     - name: Boost 1.58
@@ -29,10 +41,12 @@ jobs:
               --with-filesystem --with-program_options
         - bash -o pipefail -c 'find boost_1_58_0/stage -type f | sort'
         - |-
-          ./cmake/build/build.py --install "$HOME/install/boost" \
+          ./cmake/build/build.py \
+              --configuration Debug --install "$HOME/install/boost" \
               -- cmake/examples/boost \
-              -D BOOST_ROOT="$TRAVIS_BUILD_DIR/boost_1_58_0" \
-              -D BOOST_LIBRARYDIR="$TRAVIS_BUILD_DIR/boost_1_58_0/stage/x86/Debug/lib"
+              -D "BOOST_ROOT=$TRAVIS_BUILD_DIR/boost_1_58_0" \
+              -D "BOOST_LIBRARYDIR=$TRAVIS_BUILD_DIR/boost_1_58_0/stage/x86/Debug/lib" \
+              -D "CMAKE_TOOLCHAIN_FILE=$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
         - "$HOME/install/boost/bin/foo"
 
     - name: Boost 1.72
@@ -44,6 +58,14 @@ jobs:
               -- ./boost_1_72_0 \
               --with-filesystem --with-program_options
         - bash -o pipefail -c 'find boost_1_72_0/stage -type f | sort'
+        - |-
+          ./cmake/build/build.py \
+              --configuration Release --install "$HOME/install/boost" \
+              -- cmake/examples/boost \
+              -D "BOOST_ROOT=$TRAVIS_BUILD_DIR/boost_1_72_0" \
+              -D "BOOST_LIBRARYDIR=$TRAVIS_BUILD_DIR/boost_1_72_0/stage/x64/Release/lib" \
+              -D Boost_USE_STATIC_LIBS=OFF
+        - LD_LIBRARY_PATH="$TRAVIS_BUILD_DIR/boost_1_72_0/stage/x64/Release/lib" "$HOME/install/boost/bin/foo"
 
     - name: Boost 1.65
       script:
