@@ -6,6 +6,6 @@ include(../../common.cmake)
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 add_executable(foo foo.cpp)
-target_link_libraries(foo PRIVATE Boost::filesystem)
+target_link_libraries(foo PRIVATE Boost::disable_autolinking Boost::filesystem)
 
 install(TARGETS foo RUNTIME DESTINATION bin)
