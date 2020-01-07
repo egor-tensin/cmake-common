@@ -18,14 +18,17 @@ environment:
 build_script:
   - echo Simple CMake projects
 
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\simple --configuration Release -- cmake/examples/simple'
+  - '"%python_exe%" ./cmake/build/build.py --install C:\install\simple --configuration Release -- cmake/examples/simple -A x64'
   - C:\install\simple\bin\foo.exe
+  - ps: .\.ci\verify_arch.ps1 -Path C:\install\simple\bin\foo.exe -Arch x64
 
   - '"%python_exe%" ./cmake/build/build.py --install C:\install\static --configuration Debug -- cmake/examples/static -A Win32'
   - C:\install\static\bin\foo.exe
+  - ps: .\.ci\verify_arch.ps1 -Path C:\install\static\bin\foo.exe -Arch x86
 
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\dynamic --configuration Release -- cmake/examples/dynamic'
+  - '"%python_exe%" ./cmake/build/build.py --install C:\install\dynamic --configuration Release -- cmake/examples/dynamic -A x64'
   - C:\install\dynamic\bin\foo.exe
+  - ps: .\.ci\verify_arch.ps1 -Path C:\install\dynamic\bin\foo.exe -Arch x64
 
   - '"%python_exe%" ./boost/build/build.py download           1.58.0'
   - '"%python_exe%" ./boost/build/build.py download --cache . 1.72.0'
