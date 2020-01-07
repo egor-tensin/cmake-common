@@ -18,31 +18,79 @@ environment:
 build_script:
   - echo Simple CMake projects
 
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\simple --configuration Release -- cmake/examples/simple -A x64'
+  - >-
+    "%python_exe%" ./cmake/build/build.py
+    --install C:\install\simple
+    --configuration Release
+    -- cmake/examples/simple
+    -A x64
   - C:\install\simple\bin\foo.exe
   - ps: .\.ci\verify_arch.ps1 -Path C:\install\simple\bin\foo.exe -Arch x64
 
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\static --configuration Debug -- cmake/examples/static -A Win32'
+  - >-
+    "%python_exe%" ./cmake/build/build.py
+    --install C:\install\static
+    --configuration Debug
+    -- cmake/examples/static
+    -A Win32
   - C:\install\static\bin\foo.exe
   - ps: .\.ci\verify_arch.ps1 -Path C:\install\static\bin\foo.exe -Arch x86
 
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\dynamic --configuration Release -- cmake/examples/dynamic -A x64'
+  - >-
+    "%python_exe%" ./cmake/build/build.py
+    --install C:\install\dynamic
+    --configuration Release
+    -- cmake/examples/dynamic
+    -A x64
   - C:\install\dynamic\bin\foo.exe
   - ps: .\.ci\verify_arch.ps1 -Path C:\install\dynamic\bin\foo.exe -Arch x64
 
   - echo Boost 1.58.0
+
   - '"%python_exe%" ./boost/build/build.py download 1.58.0'
-  - '"%python_exe%" ./boost/build/build.py build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 runtime-link=static --with-filesystem --with-program_options'
+  - >-
+    "%python_exe%" ./boost/build/build.py build
+    --configuration Debug
+    --platform x86
+    --link static
+    -- ./boost_1_58_0
+    runtime-link=static
+    --with-filesystem --with-program_options
   - dir /a-D /S /B boost_1_58_0\stage
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\boost_1_58_0 --configuration Debug -- cmake/examples/boost -A Win32 -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_58_0" -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_58_0\stage\x86\lib"'
+
+  - >-
+    "%python_exe%" ./cmake/build/build.py
+    --install C:\install\boost_1_58_0
+    --configuration Debug
+    -- cmake/examples/boost
+    -A Win32
+    -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_58_0"
+    -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_58_0\stage\x86\lib"
   - C:\install\boost_1_58_0\bin\foo.exe
   - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_58_0\bin\foo.exe -Arch x86
 
   - echo Boost 1.72.0
+
   - '"%python_exe%" ./boost/build/build.py download --cache . 1.72.0'
-  - '"%python_exe%" ./boost/build/build.py build --configuration Debug Release --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options'
+  - >-
+    "%python_exe%" ./boost/build/build.py build
+    --configuration Debug Release
+    --platform x86 x64
+    --link shared
+    -- ./boost_1_72_0
+    --with-filesystem --with-program_options
   - dir /a-D /S /B boost_1_72_0\stage
-  - '"%python_exe%" ./cmake/build/build.py --install C:\install\boost_1_72_0 --configuration Release -- cmake/examples/boost -A x64 -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0" -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0\stage\x64\lib" -D Boost_USE_STATIC_LIBS=OFF -D CC_STATIC_RUNTIME=OFF'
+
+  - >-
+    "%python_exe%" ./cmake/build/build.py
+    --install C:\install\boost_1_72_0
+    --configuration Release
+    -- cmake/examples/boost
+    -A x64
+    -D CC_STATIC_RUNTIME=OFF
+    -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0"
+    -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0\stage\x64\lib"
+    -D Boost_USE_STATIC_LIBS=OFF
   - set "PATH=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0\stage\x64\lib;%PATH%" && C:\install\boost_1_72_0\bin\foo.exe
   - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_72_0\bin\foo.exe -Arch x64
 
