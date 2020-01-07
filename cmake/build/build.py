@@ -11,6 +11,7 @@
 # similar, but written in bash and PowerShell, respectively).
 
 import argparse
+from contextlib import contextmanager
 import logging
 from enum import Enum
 import os
@@ -19,21 +20,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-
-
-def _make_tmp_dir(**kwargs):
-    path = tempfile.mkdtemp(**kwargs)
-    logging.info('Created temporary directory: %s', path)
-    return path
-
-
-def _log_rmtree_error(function, path, exc_info):
-    logging.error("Couldn't remove path '%s': %s", path, exc_info)
-
-
-def _remove_dir(path):
-    logging.info('Removing directory: %s', path)
-    shutil.rmtree(path, onerror=_log_rmtree_error)
 
 
 def _run_executable(cmd_line):
@@ -60,24 +46,20 @@ def _parse_configuration(s):
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
 
-class BuildDir:
-    def __init__(self, args):
-        self.path = args.build_dir
-        self.clean = args.clean_build_dir
-        self.tmp_dir = self.path is None
-        if self.tmp_dir:
-            self.path = self._make_build_dir()
+@contextmanager
+def _create_build_dir(args):
+    if args.build_dir is not None:
+        logging.info('Build directory: %s', args.build_dir)
+        yield args.build_dir
+        return
 
-    @staticmethod
-    def _make_build_dir():
-        return _make_tmp_dir(prefix='build_')
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        if self.tmp_dir and self.clean:
-            _remove_dir(self.path)
+    with tempfile.TemporaryDirectory(dir=os.path.dirname(args.src_dir)) as build_dir:
+        logging.info('Build directory: %s', build_dir)
+        try:
+            yield build_dir
+        finally:
+            logging.info('Removing build directory: %s', build_dir)
+        return
 
 
 class GenerationPhase:
@@ -97,7 +79,7 @@ class GenerationPhase:
             result += ['-D', f'CMAKE_BUILD_TYPE={args.configuration}']
         if args.cmake_args is not None:
             result += args.cmake_args
-        result += [f'-B{build_dir.path}', f'-H{args.src_dir}']
+        result += [f'-B{build_dir}', f'-H{args.src_dir}']
         return result
 
     def run(self):
@@ -114,7 +96,7 @@ class BuildPhase:
 
     @staticmethod
     def _to_cmake_args(build_dir, args):
-        result = ['--build', build_dir.path]
+        result = ['--build', build_dir]
         if args.configuration is not None:
             result += ['--config', str(args.configuration)]
         if args.install_dir is not None:
@@ -125,25 +107,8 @@ class BuildPhase:
         _run_cmake(self._cmake_args())
 
 
-class CleanPhase:
-    def __init__(self, build_dir, args):
-        self.build_dir = build_dir
-        self.args = args
-
-    def _cmake_args(self):
-        return self._to_cmake_args(self.build_dir, self.args)
-
-    @staticmethod
-    def _to_cmake_args(build_dir, args):
-        result = ['--build', build_dir.path]
-        if args.configuration is not None:
-            result += ['--config', str(args.configuration)]
-        result += ['--target', 'clean']
-        return result
-
-    def run(self):
-        if self.args.clean_build_dir:
-            _run_cmake(self._cmake_args())
+def _parse_dir(s):
+    return os.path.abspath(os.path.normpath(s))
 
 
 def _parse_args(argv=None):
@@ -152,17 +117,18 @@ def _parse_args(argv=None):
     logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser(description='Build a CMake project')
-    parser.add_argument('--src', required=True, metavar='DIR', dest='src_dir',
-                        help='source directory')
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        help='build directory (temporary directory if not specified)')
+                        type=_parse_dir,
+                        help='build directory (temporary directory unless specified)')
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
+                        type=_parse_dir,
                         help='install directory')
-    parser.add_argument('--clean', action='store_true', dest='clean_build_dir',
-                        help='clean the build directory (temporary directory will be removed)')
     parser.add_argument('--configuration', metavar='CONFIG',
                         type=_parse_configuration, default=Configuration.DEBUG,
                         help='build configuration (i.e. Debug/Release)')
+    parser.add_argument('src_dir', metavar='DIR',
+                        type=_parse_dir,
+                        help='source directory')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG',
                         help='additional CMake arguments, to be passed verbatim')
     args = parser.parse_args(argv)
@@ -177,13 +143,11 @@ def _setup_logging():
 
 def build(argv=None):
     args = _parse_args(argv)
-    with BuildDir(args) as build_dir:
+    with _create_build_dir(args) as build_dir:
         gen_phase = GenerationPhase(build_dir, args)
         gen_phase.run()
         build_phase = BuildPhase(build_dir, args)
         build_phase.run()
-        clean_phase = CleanPhase(build_dir, args)
-        clean_phase.run()
 
 
 def main(argv=None):
