@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-int main() {
-    std::cout << boost::filesystem::path{argv0}.absolute().string(); << "\n";
+int main(int argc, char* argv[]) {
+    std::cout << boost::filesystem::absolute(boost::filesystem::path{argv[0]}).string() << "\n";
     return 0;
 }
