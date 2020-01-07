@@ -10,7 +10,6 @@ addons:
 
 jobs:
   include:
-
     - name: Simple CMake projects
       script:
         - ./cmake/build/build.py --install "$HOME/install/simple" --configuration Release -- cmake/examples/simple
@@ -23,13 +22,27 @@ jobs:
     - name: Boost 1.58
       script:
         - ./boost/build/build.py download 1.58.0
-        - ./boost/build/build.py build --configuration Debug --platform x86 -- ./boost_1_58_0 --with-filesystem --with-program_options
+        - |-
+          ./boost/build/build.py build \
+              --configuration Debug --platform x86 \
+              -- ./boost_1_58_0 \
+              --with-filesystem --with-program_options
         - bash -o pipefail -c 'find boost_1_58_0/stage -type f | sort'
+        - |-
+          ./cmake/build/build.py --install "$HOME/install/boost" \
+              -- cmake/examples/boost \
+              -D BOOST_ROOT="$TRAVIS_BUILD_DIR/boost_1_58_0" \
+              -D BOOST_LIBRARYDIR="$TRAVIS_BUILD_DIR/boost_1_58_0/stage/x86/Debug/lib"
+        - "$HOME/install/boost/bin/foo"
 
     - name: Boost 1.72
       script:
         - ./boost/build/build.py download --cache . 1.72.0
-        - ./boost/build/build.py build --configuration Debug Release --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options
+        - |-
+          ./boost/build/build.py build \
+              --configuration Debug Release --platform x86 x64 --link shared \
+              -- ./boost_1_72_0 \
+              --with-filesystem --with-program_options
         - bash -o pipefail -c 'find boost_1_72_0/stage -type f | sort'
 
     - name: Boost 1.65
