@@ -1,6 +1,6 @@
-#include <bar.hpp>
+#include <baz.hpp>
 
 int main() {
-    bar();
+    baz();
     return 0;
 }

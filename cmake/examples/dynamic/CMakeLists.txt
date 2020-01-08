@@ -4,10 +4,10 @@ project(example_dynamic)
 
 include(../../common.cmake)
 
-add_library(bar SHARED bar.cpp)
-target_include_directories(bar PUBLIC .)
+add_library(baz SHARED baz.cpp)
+target_include_directories(baz PUBLIC .)
 
 add_executable(foo foo.cpp)
-target_link_libraries(foo PRIVATE bar)
+target_link_libraries(foo PRIVATE baz)
 
-install(TARGETS foo bar RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
+install(TARGETS foo baz RUNTIME DESTINATION bin LIBRARY DESTINATION lib)

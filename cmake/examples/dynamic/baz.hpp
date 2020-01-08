@@ -3,4 +3,4 @@
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-void bar();
+void baz();
