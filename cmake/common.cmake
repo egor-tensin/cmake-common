@@ -63,9 +63,9 @@ if(NOT DEFINED CC_STATIC_RUNTIME)
     if(DEFINED Boost_USE_STATIC_LIBS AND NOT Boost_USE_STATIC_LIBS)
         # Linking to dynamic Boost libs and the static runtime is a no-no:
         set(static_runtime_default_value OFF)
-    endif()
-    if(UNIX)
-        # Linking to the GNU C library statically is dangerous:
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR MINGW)
+    else()
+        # At this point, Linux-like environment & the GNU C Library are assumed.
         set(static_runtime_default_value OFF)
     endif()
     option(CC_STATIC_RUNTIME "Link the runtime statically" "${static_runtime_default_value}")
