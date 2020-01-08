@@ -90,6 +90,15 @@ jobs:
       script:
         - ./boost/build/ci/travis.py --link static -- --with-filesystem --with-program_options
         - bash -o pipefail -c 'find "$HOME/boost_1_65_0/stage" -type f | sort'
+        - >-
+          TRAVIS_BUILD_DIR="$TRAVIS_BUILD_DIR/cmake/examples/boost"
+          ./cmake/build/ci/travis.py
+          --install "$HOME/install/boost_1_65_0"
+          --
+          -D BOOST_ROOT="$HOME/boost_1_65_0"
+          -D BOOST_LIBRARYDIR="$HOME/boost_1_65_0/stage/x64/Release/lib"
+        - "$HOME/install/boost_1_65_0/bin/foo"
+        - ./.ci/verify_arch.sh "$HOME/install/boost_1_65_0/bin/foo" x64
       env:
         travis_boost_version: 1.65.0
         configuration: Release

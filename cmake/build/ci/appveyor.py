@@ -15,8 +15,6 @@ import logging
 import os
 import sys
 
-from build import build
-
 
 class Image(Enum):
     VS_2013 = 'Visual Studio 2013'
@@ -127,8 +125,12 @@ def build_appveyor(argv=None):
     args = _parse_args(argv)
     _check_appveyor()
 
+    this_module_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_module_dir = os.path.dirname(this_module_dir)
+    sys.path.insert(1, parent_module_dir)
+    from build import build
+
     appveyor_argv = [
-        '--src', _get_src_dir(),
         '--build', _get_build_dir(),
         '--configuration', _get_configuration(),
     ]
@@ -138,6 +140,7 @@ def build_appveyor(argv=None):
         ]
     appveyor_argv += [
         '--',
+        _get_src_dir(),
         '-G', _get_generator(),
         '-A', _get_platform(),
     ]

@@ -15,8 +15,6 @@ import os
 import os.path
 import sys
 
-from build import build
-
 
 def _env(name):
     if name not in os.environ:
@@ -64,8 +62,12 @@ def build_travis(argv=None):
     args = _parse_args(argv)
     _check_travis()
 
+    this_module_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_module_dir = os.path.dirname(this_module_dir)
+    sys.path.insert(1, parent_module_dir)
+    from build import build
+
     travis_argv = [
-        '--src', _get_src_dir(),
         '--build', _get_build_dir(),
         '--configuration', _get_configuration(),
     ]
@@ -73,7 +75,10 @@ def build_travis(argv=None):
         travis_argv += [
             '--install', args.install_dir,
         ]
-    travis_argv.append('--')
+    travis_argv += [
+        '--',
+        _get_src_dir(),
+    ]
     build(travis_argv + args.cmake_args)
 
 

@@ -95,5 +95,16 @@ build_script:
   - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_72_0\bin\foo.exe -Arch x64
 
   - echo Boost 1.65.0
-  - '"%python_exe%" ./boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options'
+
+  - '"%python_exe%" ./boost/build/ci/appveyor.py --link static -- runtime-link=static --with-filesystem --with-program_options'
   - dir /a-D /S /B C:\boost_1_65_0\stage
+
+  - >-
+    set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\cmake\examples\boost" &&
+    "%python_exe%" ./cmake/build/ci/appveyor.py
+    --install C:\install\boost_1_65_0
+    --
+    -D BOOST_ROOT=C:\boost_1_65_0
+    -D BOOST_LIBRARYDIR=C:\boost_1_65_0\stage\x64\lib
+  - C:\install\boost_1_65_0\bin\foo.exe
+  - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_65_0\bin\foo.exe -Arch x64
