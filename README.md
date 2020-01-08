@@ -20,8 +20,18 @@ Using the scripts in this project, you can build
 
 All in a relatively cross-platform way.
 
+It's used in a bunch of projects of mine, namely in
+
+* [aes-tools],
+* [math-server]
+
+and a few others.
+
 [Boost]: boost/build/README.md
 [CMake project]: cmake/build/README.md
+
+[aes-tools]: https://github.com/egor-tensin/aes-tools
+[math-server]: https://github.com/egor-tensin/math-server
 
 License
 -------
