@@ -89,7 +89,7 @@ def build_travis(argv=None):
         travis_argv.append('--link')
         travis_argv += args.link
     if args.runtime_link is not None:
-        appveyor_argv += ['--runtime-link', args.runtime_link]
+        travis_argv += ['--runtime-link', args.runtime_link]
     travis_argv += [
         '--', version.dir_path(_get_build_dir()),
     ]

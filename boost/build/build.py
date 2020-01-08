@@ -375,7 +375,7 @@ class BuildParameters:
         params.append(self._build_dir(build_dir))
         params.append(self._stagedir(platform, configuration))
         params.append(self._link(link))
-        params.append(self._runtime_link(link))
+        params.append(self._runtime_link(runtime_link))
         params.append(self._address_model(platform))
         params.append(self._variant(configuration))
         params += self.b2_args
@@ -388,8 +388,7 @@ class BuildParameters:
     def _stagedir(self, platform, configuration):
         if _on_windows():
             return self._windows_stagedir(platform)
-        else:
-            return self._unix_stagedir(platform, configuration)
+        return self._unix_stagedir(platform, configuration)
 
     def _windows_stagedir(self, platform):
         platform = str(platform)

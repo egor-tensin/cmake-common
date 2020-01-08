@@ -16,7 +16,6 @@ import logging
 from enum import Enum
 import os
 import os.path
-import shutil
 import subprocess
 import sys
 import tempfile
