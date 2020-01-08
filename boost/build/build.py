@@ -100,21 +100,21 @@ def _parse_configuration(s):
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
 
-class Link(Enum):
+class Linkage(Enum):
     STATIC = 'static'
     SHARED = 'shared'
 
     @staticmethod
     def all():
-        return tuple(Link)
+        return tuple(Linkage)
 
     def __str__(self):
         return self.value
 
 
-def _parse_link(s):
+def _parse_linkage(s):
     try:
-        return Link(s)
+        return Linkage(s)
     except ValueError:
         raise argparse.ArgumentTypeError(f'invalid linkage: {s}')
 
@@ -292,7 +292,7 @@ class BoostDir:
             _run_executable(self._bootstrap_path())
 
     def _b2(self, params):
-        for b2_params in params.enum_b2_params():
+        for b2_params in params.enum_b2_args():
             _run_executable([self._b2_path()] + b2_params)
 
     @staticmethod
@@ -318,11 +318,11 @@ class BoostDir:
         return f'b2{ext}'
 
 
-class BoostBuild:
+class BuildParameters:
     def __init__(self, args):
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
-        self.link = args.link or Link.all()
+        self.link = args.link or Linkage.all()
 
         self.stage_dir = 'stage'
 
@@ -331,7 +331,7 @@ class BoostBuild:
 
         self.b2_args = args.b2_args
 
-    def enum_b2_params(self):
+    def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
                 platform_params = [f'--build-dir={build_dir}']
@@ -429,7 +429,7 @@ def _parse_args(argv=None):
     # are built on Windows by default.
     build.add_argument('--link', metavar='LINKAGE',
                        nargs='*', default=[],
-                       type=_parse_link,
+                       type=_parse_linkage,
                        help='how the libraries are linked (i.e. static/shared)')
 
     build.add_argument('--build', metavar='DIR', dest='build_dir',
@@ -446,7 +446,7 @@ def _parse_args(argv=None):
 
 
 def build(args):
-    build_params = BoostBuild(args)
+    build_params = BuildParameters(args)
     boost_dir = BoostDir(args.boost_dir)
     boost_dir.build(build_params)
 
