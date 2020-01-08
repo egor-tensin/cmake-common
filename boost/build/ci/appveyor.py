@@ -58,6 +58,8 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--link', metavar='LINKAGE', nargs='*',
                         help='how the libraries are linked (i.e. static/shared)')
+    parser.add_argument('--runtime-link', metavar='LINKAGE',
+                        help='how the libraries link to the runtime')
     parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                         help='additional b2 arguments, to be passed verbatim')
     return parser.parse_args(argv)
@@ -88,6 +90,8 @@ def build_appveyor(argv=None):
     if args.link is not None:
         appveyor_argv.append('--link')
         appveyor_argv += args.link
+    if args.runtime_link is not None:
+        appveyor_argv += ['--runtime-link', args.runtime_link]
     appveyor_argv += [
         '--', version.dir_path(_get_build_dir()),
     ]

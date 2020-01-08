@@ -54,7 +54,6 @@ build_script:
     --platform x86
     --link static
     -- ./boost_1_58_0
-    runtime-link=static
     --with-filesystem --with-program_options
   - dir /a-D /S /B boost_1_58_0\stage
 
@@ -96,7 +95,7 @@ build_script:
 
   - echo Boost 1.65.0
 
-  - '"%python_exe%" ./boost/build/ci/appveyor.py --link static -- runtime-link=static --with-filesystem --with-program_options'
+  - '"%python_exe%" ./boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options'
   - dir /a-D /S /B C:\boost_1_65_0\stage
 
   - >-

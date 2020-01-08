@@ -47,6 +47,10 @@ def _on_windows():
     return platform.system() == 'Windows'
 
 
+def _on_linux():
+    return not _on_windows()
+
+
 def _run_executable(cmd_line):
     logging.info('Running executable: %s', cmd_line)
     return subprocess.run(cmd_line, check=True)
@@ -323,6 +327,7 @@ class BuildParameters:
         self.platforms = args.platforms or Platform.all()
         self.configurations = args.configurations or Configuration.all()
         self.link = args.link or Linkage.all()
+        self.runtime_link = args.runtime_link
 
         self.stage_dir = 'stage'
 
@@ -334,20 +339,21 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                platform_params = [f'--build-dir={build_dir}']
-                platform_params.append(self._address_model(platform))
-                platform_params.append(self._linkage())
-                platform_params += self.b2_args
-                if _on_windows():
-                    platform_params.append(self._windows_stagedir(platform))
-                    platform_params.append(self._windows_variant(self.configurations))
-                    yield platform_params
-                else:
-                    for configuration in self.configurations:
-                        variant_params = list(platform_params)
-                        variant_params.append(self._unix_stagedir(platform, configuration))
-                        variant_params.append(self._unix_variant(configuration))
-                        yield variant_params
+                for configuration in self.configurations:
+                    for link, runtime_link in self._linkage_options():
+                        yield self._build_params(build_dir, platform, configuration, link, runtime_link)
+
+    def _linkage_options(self):
+        for link in self.link:
+            runtime_link = self.runtime_link
+            if runtime_link is Linkage.STATIC:
+                if link is Linkage.SHARED:
+                    logging.warning("Cannot link the runtime statically to a dynamic library, going to link dynamically")
+                    runtime_link = Linkage.SHARED
+                elif _on_linux():
+                    logging.warning("Cannot link to the GNU C Library (which is assumed) statically, going to link dynamically")
+                    runtime_link = Linkage.SHARED
+            yield link, runtime_link
 
     @contextmanager
     def _create_build_dir(self):
@@ -364,27 +370,50 @@ class BuildParameters:
                 logging.info('Removing build directory: %s', build_dir)
             return
 
-    def _linkage(self):
-        link = ','.join(map(str, self.link))
+    def _build_params(self, build_dir, platform, configuration, link, runtime_link):
+        params = []
+        params.append(self._build_dir(build_dir))
+        params.append(self._stagedir(platform, configuration))
+        params.append(self._link(link))
+        params.append(self._runtime_link(link))
+        params.append(self._address_model(platform))
+        params.append(self._variant(configuration))
+        params += self.b2_args
+        return params
+
+    @staticmethod
+    def _build_dir(build_dir):
+        return f'--build-dir={build_dir}'
+
+    def _stagedir(self, platform, configuration):
+        if _on_windows():
+            return self._windows_stagedir(platform)
+        else:
+            return self._unix_stagedir(platform, configuration)
+
+    def _windows_stagedir(self, platform):
+        platform = str(platform)
+        return f'--stagedir={os.path.join(self.stage_dir, platform)}'
+
+    def _unix_stagedir(self, platform, configuration):
+        platform = str(platform)
+        configuration = str(configuration)
+        return f'--stagedir={os.path.join(self.stage_dir, platform, configuration)}'
+
+    @staticmethod
+    def _link(link):
         return f'link={link}'
+
+    @staticmethod
+    def _runtime_link(runtime_link):
+        return f'runtime-link={runtime_link}'
 
     @staticmethod
     def _address_model(platform):
         return f'address-model={platform.get_address_model()}'
 
-    def _windows_stagedir(self, platform):
-        return f'--stagedir={os.path.join(self.stage_dir, str(platform))}'
-
-    def _unix_stagedir(self, platform, configuration):
-        return f'--stagedir={os.path.join(self.stage_dir, str(platform), str(configuration))}'
-
     @staticmethod
-    def _windows_variant(configurations):
-        variant = ','.join((str(config).lower() for config in configurations))
-        return f'variant={variant}'
-
-    @staticmethod
-    def _unix_variant(configuration):
+    def _variant(configuration):
         return f'variant={str(configuration).lower()}'
 
 
@@ -431,6 +460,11 @@ def _parse_args(argv=None):
                        nargs='*', default=[],
                        type=_parse_linkage,
                        help='how the libraries are linked (i.e. static/shared)')
+    # This is used to omit runtime-link=static I'd have to otherwise use a lot,
+    # plus the script validates the link= and runtime-link= combinations.
+    build.add_argument('--runtime-link', metavar='LINKAGE',
+                       type=_parse_linkage, default=Linkage.STATIC,
+                       help='how the libraries link to the runtime')
 
     build.add_argument('--build', metavar='DIR', dest='build_dir',
                        type=_parse_dir,
