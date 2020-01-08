@@ -22,6 +22,7 @@ jobs:
           --configuration Release
           -- cmake/examples/simple
         - "$HOME/install/simple/bin/foo"
+        - ./.ci/verify_arch.sh "$HOME/install/simple/bin/foo" x64
 
         - >-
           ./cmake/build/build.py
@@ -30,6 +31,7 @@ jobs:
           -- cmake/examples/static
           -D "CMAKE_TOOLCHAIN_FILE=$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
         - "$HOME/install/static/bin/foo"
+        - ./.ci/verify_arch.sh "$HOME/install/static/bin/foo" x86
 
         - >-
           ./cmake/build/build.py
@@ -37,6 +39,7 @@ jobs:
           --configuration Release
           -- cmake/examples/dynamic
         - LD_LIBRARY_PATH="$HOME/install/dynamic/lib" "$HOME/install/dynamic/bin/foo"
+        - ./.ci/verify_arch.sh "$HOME/install/dynamic/bin/foo" x64
 
     - name: Boost 1.58
       script:
@@ -57,6 +60,7 @@ jobs:
           -D "BOOST_LIBRARYDIR=$TRAVIS_BUILD_DIR/boost_1_58_0/stage/x86/Debug/lib"
           -D "CMAKE_TOOLCHAIN_FILE=$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
         - "$HOME/install/boost_1_58_0/bin/foo"
+        - ./.ci/verify_arch.sh "$HOME/install/boost_1_58_0/bin/foo" x86
 
     - name: Boost 1.72
       script:
@@ -80,6 +84,7 @@ jobs:
         - >-
           LD_LIBRARY_PATH="$TRAVIS_BUILD_DIR/boost_1_72_0/stage/x64/Release/lib"
           "$HOME/install/boost_1_72_0/bin/foo"
+        - ./.ci/verify_arch.sh "$HOME/install/boost_1_72_0/bin/foo" x64
 
     - name: Boost 1.65
       script:
