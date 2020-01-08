@@ -5,9 +5,13 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-# This is similar to build.py, but auto-fills some parameters for build.py from
-# the Travis-defined environment variables.
-# Boost is built in $HOME.
+'''Download & build Boost on Travis.
+
+This is similar to build.py, but auto-fills some parameters for build.py from
+the Travis-defined environment variables.
+
+Boost is built in $HOME.
+'''
 
 import argparse
 import logging
@@ -53,9 +57,11 @@ def _parse_args(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--link', metavar='LINKAGE', nargs='*',
-                        help='how the libraries are linked (i.e. static/shared)')
+                        help='how the libraries are linked')
     parser.add_argument('--runtime-link', metavar='LINKAGE',
                         help='how the libraries link to the runtime')
     parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],

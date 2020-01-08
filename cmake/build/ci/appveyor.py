@@ -5,9 +5,14 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-# This is similar to build.py, but auto-fills some parameters for build.py from
-# the AppVeyor-defined environment variables.
-# The project is built in C:\Projects\build.
+'''Build a CMake project on AppVeyor.
+
+This is similar to build.py, but auto-fills some parameters for build.py from
+the AppVeyor-defined environment variables.
+
+
+The project is built in C:\Projects\build.
+'''
 
 import argparse
 from enum import Enum
@@ -113,7 +118,10 @@ def _parse_args(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
-    parser = argparse.ArgumentParser(description='Build a CMake project on AppVeyor')
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
                         help='install directory')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],

@@ -5,11 +5,15 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-# This is similar to build.py, but auto-fills some parameters for build.py from
-# the AppVeyor-defined environment variables.
-# This script is rarely usefull, since AppVeyor images come with lots of
-# pre-built Boost distributions, but still.
-# Boost is built in C:\.
+'''Download & build Boost on AppVeyor.
+
+This is similar to build.py, but auto-fills some parameters for build.py from
+the AppVeyor-defined environment variables.  This script is rarely usefull,
+since AppVeyor images come with lots of pre-built Boost distributions, but
+still.
+
+Boost is built in C:\.
+'''
 
 import argparse
 import logging
@@ -55,7 +59,9 @@ def _parse_args(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--link', metavar='LINKAGE', nargs='*',
                         help='how the libraries are linked (i.e. static/shared)')
     parser.add_argument('--runtime-link', metavar='LINKAGE',

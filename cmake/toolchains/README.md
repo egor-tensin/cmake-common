@@ -1,3 +1,3 @@
 Use the toolchain files by passing something like
-`-DCMAKE_TOOLCHAIN_FILE=path/to/cmake-common/toolchains/toolchain.cmake` to
-`cmake`.
+`-D CMAKE_TOOLCHAIN_FILE=PATH/TO/cmake-common/cmake/toolchains/TOOLCHAIN.cmake`
+to `cmake`.

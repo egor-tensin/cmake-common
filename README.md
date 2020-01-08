@@ -10,6 +10,19 @@ guide] to help you through.
 
 [an excellent guide]: https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
 
+Usage
+-----
+
+Using the scripts in this project, you can build
+
+* [Boost],
+* a [CMake project].
+
+All in a relatively cross-platform way.
+
+[Boost]: boost/build/README.md
+[CMake project]: cmake/build/README.md
+
 License
 -------
 

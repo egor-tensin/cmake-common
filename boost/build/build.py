@@ -5,10 +5,24 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-# This script downloads and builds the Boost libraries.
-# It's main utility is being able to download & unpack the Boost distribution
-# archive in a cross-platform way + setting the correct --stagedir parameter
-# value to avoid name clashes.
+'''Download & build Boost.
+
+This script downloads and builds the Boost libraries.  It's main purpose is to:
+1) provide a cross-platform way to download & unpack the Boost distribution
+archive,
+2) set the correct --stagedir parameter value to avoid name clashes.
+
+Please pick a command below.  You can execute `%(prog)s COMMAND --help` to view
+its usage message.
+
+A simple usage example:
+
+    $ %(prog)s download 1.71.0
+    ...
+
+    $ %(prog)s build -- boost_1_71_0/ --with-filesystem --with-program_options
+    ...
+'''
 
 import abc
 import argparse
@@ -123,13 +137,13 @@ def _parse_linkage(s):
         raise argparse.ArgumentTypeError(f'invalid linkage: {s}')
 
 
-Version = namedtuple('Version', ['major', 'minor', 'patch'])
+_Version = namedtuple('_Version', ['major', 'minor', 'patch'])
 
 
 @total_ordering
 class BoostVersion:
     def __init__(self, major, minor, patch):
-        self._impl = Version(major, minor, patch)
+        self._impl = _Version(major, minor, patch)
 
     @property
     def major(self):
@@ -178,7 +192,7 @@ class BoostVersion:
         return f'{self.dir_name}{self.archive_ext}'
 
     def get_download_url(self):
-        if self._impl < Version(1, 63, 0):
+        if self._impl < _Version(1, 63, 0):
             return f'https://sourceforge.net/projects/boost/files/boost/{self}/{self.archive_name}/download'
         return f'https://dl.bintray.com/boostorg/release/{self}/source/{self.archive_name}'
 
@@ -425,7 +439,10 @@ def _parse_args(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
     subparsers = parser.add_subparsers(dest='command')
 
     download = subparsers.add_parser('download', help='download & bootstrap Boost')
@@ -435,35 +452,35 @@ def _parse_args(argv=None):
                           help='download directory (temporary file unless specified)')
     download.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
                           type=_parse_dir, default='.',
-                          help='directory to unpack Boost to')
+                          help='directory to unpack the archive to')
     download.add_argument('boost_version', metavar='VERSION',
                           type=BoostVersion.from_string,
                           help='Boost version (in the MAJOR.MINOR.PATCH format)')
 
-    build = subparsers.add_parser('build', help='build Boost libraries')
+    build = subparsers.add_parser('build', help='build the libraries')
 
     # These are used to put the built libraries into proper stage/
     # subdirectories (to avoid name clashes).
     build.add_argument('--platform', metavar='PLATFORM',
                        nargs='*', dest='platforms', default=[],
                        type=_parse_platform,
-                       help='target platform (e.g. x86/x64)')
+                       help=f'target platform ({"/".join(map(str, Platform))})')
     build.add_argument('--configuration', metavar='CONFIGURATION',
                        nargs='*', dest='configurations', default=[],
                        type=_parse_configuration,
-                       help='target configuration (e.g. Debug/Release)')
+                       help=f'target configuration ({"/".join(map(str, Configuration))})')
     # This is needed because the default behaviour on Linux and Windows is
     # different: static & dynamic libs are built on Linux, but only static libs
     # are built on Windows by default.
     build.add_argument('--link', metavar='LINKAGE',
                        nargs='*', default=[],
                        type=_parse_linkage,
-                       help='how the libraries are linked (i.e. static/shared)')
+                       help=f'how the libraries are linked ({"/".join(map(str, Linkage))})')
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
     build.add_argument('--runtime-link', metavar='LINKAGE',
                        type=_parse_linkage, default=Linkage.STATIC,
-                       help='how the libraries link to the runtime')
+                       help=f'how the libraries link to the runtime ({"/".join(map(str, Linkage))})')
 
     build.add_argument('--build', metavar='DIR', dest='build_dir',
                        type=_parse_dir,
@@ -475,7 +492,10 @@ def _parse_args(argv=None):
     build.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                        help='additional b2 arguments, to be passed verbatim')
 
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.command is None:
+        parser.error("please specify a command")
+    return args
 
 
 def build(args):

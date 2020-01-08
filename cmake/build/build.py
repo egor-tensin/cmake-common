@@ -5,10 +5,33 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-# This script is used basically to invoke the CMake executable in a
-# cross-platform way (provided the platform has Python 3, of course).
-# The motivation was to merge my Travis and AppVeyor build scripts (largely
-# similar, but written in bash and PowerShell, respectively).
+R'''Build a CMake project.
+
+This script is used basically to invoke the CMake executable in a
+cross-platform way (provided the platform has Python 3, of course).  The
+motivation was to merge my Travis and AppVeyor build scripts (largely similar,
+but written in bash and PowerShell, respectively).
+
+A simple usage example:
+
+    $ %(prog)s --configuration Release --install path/to/somewhere -- ../examples/simple
+    ...
+
+    $ ./path/to/somewhere/bin/foo
+    foo
+
+Picking the target platform is build system-specific.  On Visual Studio, pass
+the target platform using the `-A` flag like this:
+
+    > %(prog)s --install path\to\somewhere -- ..\examples\simple -A Win32
+    ...
+
+Using GCC-like compilers, the best way is to use CMake toolchain files (see
+cmake/toolchains in this repository for examples).
+
+    $ %(prog)s --install path/to/somewhere -- ../examples/simple -D CMAKE_TOOLCHAIN_FILE="$( pwd )/../toolchains/mingw-x86.cmake"
+    ...
+'''
 
 import argparse
 from contextlib import contextmanager
@@ -115,7 +138,10 @@ def _parse_args(argv=None):
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
-    parser = argparse.ArgumentParser(description='Build a CMake project')
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=_parse_dir,
                         help='build directory (temporary directory unless specified)')
@@ -124,7 +150,7 @@ def _parse_args(argv=None):
                         help='install directory')
     parser.add_argument('--configuration', metavar='CONFIG',
                         type=_parse_configuration, default=Configuration.DEBUG,
-                        help='build configuration (i.e. Debug/Release)')
+                        help=f'build configuration ({"/".join(map(str, Configuration))})')
     parser.add_argument('src_dir', metavar='DIR',
                         type=_parse_dir,
                         help='source directory')
