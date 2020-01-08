@@ -48,6 +48,7 @@ jobs:
           ./boost/build/build.py build
           --configuration Debug
           --platform x86
+          --link static
           -- ./boost_1_58_0
           --with-filesystem --with-program_options
         - bash -o pipefail -c 'find boost_1_58_0/stage -type f | sort'
@@ -56,9 +57,9 @@ jobs:
           --install "$HOME/install/boost_1_58_0"
           --configuration Debug
           -- cmake/examples/boost
+          -D "CMAKE_TOOLCHAIN_FILE=$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
           -D "BOOST_ROOT=$TRAVIS_BUILD_DIR/boost_1_58_0"
           -D "BOOST_LIBRARYDIR=$TRAVIS_BUILD_DIR/boost_1_58_0/stage/x86/Debug/lib"
-          -D "CMAKE_TOOLCHAIN_FILE=$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
         - "$HOME/install/boost_1_58_0/bin/foo"
         - ./.ci/verify_arch.sh "$HOME/install/boost_1_58_0/bin/foo" x86
 

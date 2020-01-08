@@ -60,7 +60,12 @@ if(NOT DEFINED CC_WINDOWS_DEF)
 endif()
 if(NOT DEFINED CC_STATIC_RUNTIME)
     set(static_runtime_default_value "${default_value}")
+    if(DEFINED Boost_USE_STATIC_LIBS AND NOT Boost_USE_STATIC_LIBS)
+        # Linking to dynamic Boost libs and the static runtime is a no-no:
+        set(static_runtime_default_value OFF)
+    endif()
     if(UNIX)
+        # Linking to the GNU C library statically is dangerous:
         set(static_runtime_default_value OFF)
     endif()
     option(CC_STATIC_RUNTIME "Link the runtime statically" "${static_runtime_default_value}")

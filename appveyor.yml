@@ -86,7 +86,6 @@ build_script:
     --configuration Release
     -- cmake/examples/boost
     -A x64
-    -D CC_STATIC_RUNTIME=OFF
     -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0"
     -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0\stage\x64\lib"
     -D Boost_USE_STATIC_LIBS=OFF
