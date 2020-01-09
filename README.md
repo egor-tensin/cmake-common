@@ -1,6 +1,9 @@
 cmake-common
 ============
 
+[![Travis (.com) branch](https://img.shields.io/travis/com/egor-tensin/cmake-common/master?label=Travis)](https://travis-ci.com/egor-tensin/cmake-common)
+[![AppVeyor branch](https://img.shields.io/appveyor/ci/egor-tensin/cmake-common/master?label=AppVeyor)](https://ci.appveyor.com/project/egor-tensin/cmake-common/branch/master)
+
 Various utility files to build my CMake projects, as those seem to overlap
 between different projects quite a bit.
 
