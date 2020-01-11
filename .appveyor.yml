@@ -5,15 +5,18 @@ image:
   - Visual Studio 2017
   - Visual Studio 2019
 
+environment:
+  appveyor_boost_version: 1.65.0
+  python_exe: C:\Python36-x64\python.exe
+
 configuration:
   - Release
 
 platform:
   - x64
 
-environment:
-  appveyor_boost_version: 1.65.0
-  python_exe: C:\Python36-x64\python.exe
+matrix:
+  fast_finish: true
 
 build_script:
   - echo Simple CMake projects
