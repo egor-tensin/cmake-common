@@ -1,6 +1,9 @@
 #pragma once
 
 #ifdef _MSC_VER
-__declspec(dllexport)
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT
 #endif
-void baz();
+
+DLLEXPORT void baz();
