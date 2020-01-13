@@ -1,0 +1,15 @@
+---
+Language: Cpp
+BasedOnStyle: Chromium
+
+AccessModifierOffset: -4
+IndentWidth: 4
+
+IncludeCategories:
+  - Regex: '^".*'
+    Priority: 1
+  - Regex: '^<boost/'
+    Priority: 2
+  - Regex: '*.'
+    Priority: 3
+...
