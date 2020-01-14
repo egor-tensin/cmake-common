@@ -19,7 +19,7 @@ jobs:
   include:
     - name: Run clang-format
       script:
-        - ./tools/clang-format/clang-format.sh --clang-format clang-format-9 --diff
+        - ./tools/clang-format.py --clang-format clang-format-9
 
     - name: Simple CMake projects
       script:
