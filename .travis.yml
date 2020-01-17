@@ -43,7 +43,7 @@ jobs:
         - >-
           ./cmake/build/build.py
           --install "$HOME/install/dynamic"
-          --configuration Release
+          --configuration RelWithDebInfo
           -- cmake/examples/dynamic
         - LD_LIBRARY_PATH="$HOME/install/dynamic/lib" "$HOME/install/dynamic/bin/foo"
         - ./.ci/verify_arch.sh "$HOME/install/dynamic/bin/foo" x64
@@ -75,7 +75,6 @@ jobs:
         - ./boost/build/build.py download --cache . 1.72.0
         - >-
           ./boost/build/build.py build
-          --configuration Debug Release
           --platform x86 x64
           --link shared
           -- ./boost_1_72_0
@@ -109,5 +108,5 @@ jobs:
         - ./.ci/verify_arch.sh "$HOME/install/boost_1_65_0/bin/foo" x64
       env:
         travis_boost_version: 1.65.0
-        configuration: Release
+        configuration: MinSizeRel
         platform: x64

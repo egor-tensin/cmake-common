@@ -10,7 +10,7 @@ environment:
   python_exe: C:\Python36-x64\python.exe
 
 configuration:
-  - Release
+  - MinSizeRel
 
 platform:
   - x64
@@ -42,7 +42,7 @@ build_script:
   - >-
     "%python_exe%" ./cmake/build/build.py
     --install C:\install\dynamic
-    --configuration Release
+    --configuration RelWithDebInfo
     -- cmake/examples/dynamic
     -A x64
   - C:\install\dynamic\bin\foo.exe
@@ -76,7 +76,6 @@ build_script:
   - '"%python_exe%" ./boost/build/build.py download --cache . 1.72.0'
   - >-
     "%python_exe%" ./boost/build/build.py build
-    --configuration Debug Release
     --platform x86 x64
     --link shared
     -- ./boost_1_72_0

@@ -100,12 +100,23 @@ def _parse_platform(s):
 
 
 class Configuration(Enum):
+    # AFAIK, Boost only supports debug/release, MinSizeRel and RelWithDebInfo
+    # are for compatibility with CMake, they map to Release.
     DEBUG = 'Debug'
+    MINSIZEREL = 'MinSizeRel'
+    RELWITHDEBINFO = 'RelWithDebInfo'
     RELEASE = 'Release'
+
+    def normalize(self):
+        if self is Configuration.MINSIZEREL:
+            return Configuration.RELEASE
+        if self is Configuration.RELWITHDEBINFO:
+            return Configuration.RELEASE
+        return self
 
     @staticmethod
     def all():
-        return tuple(Configuration)
+        return set(map(Configuration.normalize, Configuration))
 
     def __str__(self):
         return self.value
@@ -113,7 +124,7 @@ class Configuration(Enum):
 
 def _parse_configuration(s):
     try:
-        return Configuration(s)
+        return Configuration(s).normalize()
     except ValueError:
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 

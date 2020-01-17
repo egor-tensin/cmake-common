@@ -55,6 +55,8 @@ def _run_cmake(cmake_args):
 
 class Configuration(Enum):
     DEBUG = 'Debug'
+    MINSIZEREL = 'MinSizeRel'
+    RELWITHDEBINFO = 'RelWithDebInfo'
     RELEASE = 'Release'
 
     def __str__(self):
