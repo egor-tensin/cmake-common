@@ -1,1 +1,1 @@
-using gcc : : i686-w64-mingw32-g++ ;
+using gcc : : i686-w64-mingw32-g++ : <target-os>windows ;
