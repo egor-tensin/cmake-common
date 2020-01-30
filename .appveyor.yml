@@ -7,7 +7,7 @@ image:
 
 environment:
   appveyor_boost_version: 1.65.0
-  python_exe: C:\Python36-x64\python.exe
+  appveyor_python_exe: C:\Python36-x64\python.exe
 
 configuration:
   - MinSizeRel
@@ -18,93 +18,20 @@ platform:
 matrix:
   fast_finish: true
 
+install:
+  - choco install make
+
 build_script:
   - echo Simple CMake projects
-
-  - >-
-    "%python_exe%" ./cmake/build/build.py
-    --install C:\install\simple
-    --configuration Release
-    -- cmake/examples/simple
-    -A x64
-  - C:\install\simple\bin\foo.exe
-  - ps: .\.ci\verify_arch.ps1 -Path C:\install\simple\bin\foo.exe -Arch x64
-
-  - >-
-    "%python_exe%" ./cmake/build/build.py
-    --install C:\install\static
-    --configuration Debug
-    -- cmake/examples/static
-    -A Win32
-  - C:\install\static\bin\foo.exe
-  - ps: .\.ci\verify_arch.ps1 -Path C:\install\static\bin\foo.exe -Arch x86
-
-  - >-
-    "%python_exe%" ./cmake/build/build.py
-    --install C:\install\dynamic
-    --configuration RelWithDebInfo
-    -- cmake/examples/dynamic
-    -A x64
-  - C:\install\dynamic\bin\foo.exe
-  - ps: .\.ci\verify_arch.ps1 -Path C:\install\dynamic\bin\foo.exe -Arch x64
+  - make simple
+  - make static
+  - make dynamic
 
   - echo Boost 1.58.0
-
-  - '"%python_exe%" ./boost/build/build.py download 1.58.0'
-  - >-
-    "%python_exe%" ./boost/build/build.py build
-    --configuration Debug
-    --platform x86
-    --link static
-    -- ./boost_1_58_0
-    --with-filesystem --with-program_options
-  - dir /a-D /S /B boost_1_58_0\stage
-
-  - >-
-    "%python_exe%" ./cmake/build/build.py
-    --install C:\install\boost_1_58_0
-    --configuration Debug
-    -- cmake/examples/boost
-    -A Win32
-    -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_58_0"
-    -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_58_0\stage\x86\lib"
-  - C:\install\boost_1_58_0\bin\foo.exe
-  - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_58_0\bin\foo.exe -Arch x86
+  - make boost/58
 
   - echo Boost 1.72.0
-
-  - '"%python_exe%" ./boost/build/build.py download --cache . 1.72.0'
-  - >-
-    "%python_exe%" ./boost/build/build.py build
-    --platform x86 x64
-    --link shared
-    -- ./boost_1_72_0
-    --with-filesystem --with-program_options
-  - dir /a-D /S /B boost_1_72_0\stage
-
-  - >-
-    "%python_exe%" ./cmake/build/build.py
-    --install C:\install\boost_1_72_0
-    --configuration Release
-    -- cmake/examples/boost
-    -A x64
-    -D "BOOST_ROOT=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0"
-    -D "BOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0\stage\x64\lib"
-    -D Boost_USE_STATIC_LIBS=OFF
-  - set "PATH=%APPVEYOR_BUILD_FOLDER%\boost_1_72_0\stage\x64\lib;%PATH%" && C:\install\boost_1_72_0\bin\foo.exe
-  - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_72_0\bin\foo.exe -Arch x64
+  - make boost/72
 
   - echo Boost 1.65.0
-
-  - '"%python_exe%" ./boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options'
-  - dir /a-D /S /B C:\boost_1_65_0\stage
-
-  - >-
-    set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\cmake\examples\boost" &&
-    "%python_exe%" ./cmake/build/ci/appveyor.py
-    --install C:\install\boost_1_65_0
-    --
-    -D BOOST_ROOT=C:\boost_1_65_0
-    -D BOOST_LIBRARYDIR=C:\boost_1_65_0\stage\x64\lib
-  - C:\install\boost_1_65_0\bin\foo.exe
-  - ps: .\.ci\verify_arch.ps1 -Path C:\install\boost_1_65_0\bin\foo.exe -Arch x64
+  - make boost/65
