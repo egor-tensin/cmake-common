@@ -411,15 +411,15 @@ class BuildParameters:
         return f'--build-dir={build_dir}'
 
     def _stagedir(self, platform, configuration):
-        if _on_windows():
-            return self._windows_stagedir(platform)
-        return self._unix_stagedir(platform, configuration)
-
-    def _windows_stagedir(self, platform):
-        platform = str(platform)
-        return f'--stagedir={os.path.join(self.stage_dir, platform)}'
-
-    def _unix_stagedir(self, platform, configuration):
+        # Having different --stagedir values for every configuration/platform
+        # combination is unnecessary on Windows.
+        # Even for older Boost versions (when the binaries weren't tagged with
+        # their target platform) only a single --stagedir for every platform
+        # would suffice.
+        # For newer versions, just a single --stagedir would do, as the
+        # binaries are tagged with the target platform, as well as their
+        # configuration (a.k.a. "variant" in Boost's terminology).
+        # Still, uniformity helps.
         platform = str(platform)
         configuration = str(configuration)
         return f'--stagedir={os.path.join(self.stage_dir, platform, configuration)}'
