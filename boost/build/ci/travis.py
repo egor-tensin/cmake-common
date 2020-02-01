@@ -10,12 +10,13 @@
 This is similar to build.py, but auto-fills some parameters for build.py from
 the Travis-defined environment variables.
 
-Boost is built in $HOME.
+Boost is built in $HOME/boost.
 '''
 
 import argparse
 import logging
 import os
+import os.path
 import sys
 
 
@@ -32,6 +33,10 @@ def _check_travis():
 
 def _get_build_dir():
     return _env('HOME')
+
+
+def _get_boost_dir():
+    return os.path.join(_get_build_dir(), 'boost')
 
 
 def _get_boost_version():
@@ -86,6 +91,10 @@ def build_travis(argv=None):
     ]
     build_main(travis_argv)
 
+    unpacked_boost_dir = version.dir_path(_get_build_dir())
+    boost_dir = _get_boost_dir()
+    os.rename(unpacked_boost_dir, boost_dir)
+
     travis_argv = [
         'build',
         '--configuration', _get_configuration(),
@@ -96,9 +105,7 @@ def build_travis(argv=None):
         travis_argv += args.link
     if args.runtime_link is not None:
         travis_argv += ['--runtime-link', args.runtime_link]
-    travis_argv += [
-        '--', version.dir_path(_get_build_dir()),
-    ]
+    travis_argv += ['--', boost_dir]
     build_main(travis_argv + args.b2_args)
 
 
