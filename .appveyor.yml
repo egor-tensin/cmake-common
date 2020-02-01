@@ -22,16 +22,12 @@ install:
   - choco install make
 
 build_script:
-  - echo Simple CMake projects
   - make simple
   - make static
   - make dynamic
 
-  - echo Boost 1.58.0
   - make boost/58
 
-  - echo Boost 1.72.0
   - make boost/72
 
-  - echo Boost 1.65.0
   - make boost/65
