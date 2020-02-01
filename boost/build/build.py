@@ -101,13 +101,16 @@ def _parse_platform(s):
 
 class Configuration(Enum):
     # AFAIK, Boost only supports debug/release, MinSizeRel and RelWithDebInfo
-    # are for compatibility with CMake, they map to Release.
+    # are for compatibility with CMake, they map to "release".
+    # The libraries will still reside in stage/PLATFORM/CONFIGURATION/lib, even
+    # if CONFIGURATION is MinSizeRel/RelWithDebInfo.
     DEBUG = 'Debug'
     MINSIZEREL = 'MinSizeRel'
     RELWITHDEBINFO = 'RelWithDebInfo'
     RELEASE = 'Release'
 
     def normalize(self):
+        '''Roughly maps CMake's CMAKE_BUILD_TYPE to Boost's variant.'''
         if self is Configuration.MINSIZEREL:
             return Configuration.RELEASE
         if self is Configuration.RELWITHDEBINFO:
@@ -116,7 +119,7 @@ class Configuration(Enum):
 
     @staticmethod
     def all():
-        return set(map(Configuration.normalize, Configuration))
+        return (Configuration.DEBUG, Configuration.RELEASE)
 
     def __str__(self):
         return self.value
@@ -124,7 +127,7 @@ class Configuration(Enum):
 
 def _parse_configuration(s):
     try:
-        return Configuration(s).normalize()
+        return Configuration(s)
     except ValueError:
         raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
@@ -438,7 +441,7 @@ class BuildParameters:
 
     @staticmethod
     def _variant(configuration):
-        return f'variant={str(configuration).lower()}'
+        return f'variant={str(configuration.normalize()).lower()}'
 
 
 def _parse_dir(s):
