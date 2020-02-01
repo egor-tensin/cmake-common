@@ -1,5 +1,7 @@
 # Travis/AppVeyor commands.
 
+boost_quiet = -d0
+
 ifeq ($(OS),Windows_NT)
 windows = 1
 else
@@ -92,7 +94,7 @@ boost/58/download:
 	"$(python)" boost/build/build.py download 1.58.0
 
 boost/58/build:
-	"$(python)" boost/build/build.py build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options
+	"$(python)" boost/build/build.py build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options $(boost_quiet)
 
 boost/58/ls:
 	$(ls) "./boost_1_58_0/stage"
@@ -123,7 +125,7 @@ boost/72/download:
 	"$(python)" boost/build/build.py download --cache . 1.72.0
 
 boost/72/build:
-	"$(python)" boost/build/build.py build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options
+	"$(python)" boost/build/build.py build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options $(boost_quiet)
 
 boost/72/ls:
 	$(ls) "./boost_1_72_0/stage"
@@ -156,7 +158,7 @@ boost/72: boost/72/download boost/72/build boost/72/ls boost/72/exe
 
 ifdef TRAVIS
 boost/65/build:
-	"$(python)" boost/build/ci/travis.py --link static -- --with-filesystem --with-program_options
+	"$(python)" boost/build/ci/travis.py --link static -- --with-filesystem --with-program_options $(boost_quiet)
 
 boost/65/ls:
 	$(ls) "$$HOME/boost/stage"
@@ -166,7 +168,7 @@ boost/65/exe/build:
 endif
 ifdef APPVEYOR
 boost/65/build:
-	"$(python)" boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options
+	"$(python)" boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options $(boost_quiet)
 
 boost/65/ls:
 	$(ls) "C:/projects/boost/stage"
