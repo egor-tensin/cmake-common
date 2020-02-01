@@ -1,57 +1,90 @@
 # Travis/AppVeyor commands.
+# Basically, make is used as a kinda-portable shell.
 
-boost_quiet = -d0
+.DEFAULT_GOAL := all
+.SUFFIXES:
 
+windows := 0
 ifeq ($(OS),Windows_NT)
-windows = 1
-else
-windows = 0
+windows := 1
 endif
 
+# Shell
 ifeq ($(windows),1)
-SHELL = cmd
-ext = .exe
+# Make might pick up sh.exe if it's available:
+SHELL := cmd
+else
+SHELL := bash
+.SHELLFLAGS := -eu -o pipefail -c
+endif
+
+# Shut Boost.Build's executable up:
+b2_flags = -d0
+
+# Basic stuff that needed to be abstracted away:
+ifeq ($(windows),1)
+ext := .exe
+newline := @echo.
+cwd := $(shell cd)
+ls := dir /a-D /S /B
+else
+ext :=
+newline := @echo
+cwd := $(shell pwd)
+ls := ls --almost-all -R
+endif
+
+# Python executable might be named differently, depending on the environment:
+ifeq ($(windows),1)
+ifdef appveyor_python_exe
+python := $(appveyor_python_exe)
+else
+python := python
+endif
+else
+python := python3
+endif
+
+# The build scripts are not completely OS-agnostic, unfortunately:
+ifeq ($(windows),1)
 x64_args = -A x64
 x86_args = -A Win32
 install_prefix = C:/install
-verify_arch = powershell -file ./.ci/verify_arch.ps1
-python = python
-ls = dir /a-D /S /B
-cwd = $(shell cd)
-newline = @echo.
 else
-ext =
-x64_args =
-x86_args = -D "CMAKE_TOOLCHAIN_FILE=$(TRAVIS_BUILD_DIR)/cmake/toolchains/gcc-x86.cmake"
-install_prefix = $(HOME)/install
-verify_arch = ./.ci/verify_arch.sh
-python = python3
-ls = ls --almost-all -R
-cwd = $(shell pwd)
-newline = @echo
+x64_args := -D "CMAKE_TOOLCHAIN_FILE=$$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x64.cmake"
+x86_args := -D "CMAKE_TOOLCHAIN_FILE=$$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
+install_prefix := $$HOME/install
 endif
 
-ifdef appveyor_python_exe
-python = $(appveyor_python_exe)
+# Script to verify executable's target architecture:
+ifeq ($(windows),1)
+verify_arch = powershell -file ./.ci/verify_arch.ps1
+else
+verify_arch := ./.ci/verify_arch.sh
 endif
 
-echo/%/build:
+.PHONY: all
+all: simple static dynamic
+
+FORCE:
+
+echo/%/build: FORCE
 	$(newline)
 	@echo =====================================================================
 	@echo Building cmake/examples/$*
 	@echo =====================================================================
 
-echo/%/run:
+echo/%/run: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Running $*/bin/foo
 	@echo ---------------------------------------------------------------------
 
-echo/%/verify:
+echo/%/verify: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Verifying $*/bin/foo
 	@echo ---------------------------------------------------------------------
 
-echo/%/finished:
+echo/%/finished: FORCE
 	@echo =====================================================================
 	$(newline)
 
@@ -106,33 +139,33 @@ dynamic: dynamic/build dynamic/run dynamic/verify echo/dynamic/finished
 
 .PHONY: dynamic dynamic/build dynamic/run dynamic/verify
 
-echo/boost/%/build:
+echo/boost/%/build: FORCE
 	$(newline)
 	@echo =====================================================================
 	@echo Building Boost 1.$*.0
 	@echo =====================================================================
 
-echo/boost/%/ls:
+echo/boost/%/ls: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Boost 1.$*.0: stage/
 	@echo ---------------------------------------------------------------------
 
-echo/boost/%/exe/build:
+echo/boost/%/exe/build: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Boost 1.$*.0: building cmake/examples/boost
 	@echo ---------------------------------------------------------------------
 
-echo/boost/%/exe/run:
+echo/boost/%/exe/run: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Boost 1.$*.0: running boost_1_$*_0/bin/foo
 	@echo ---------------------------------------------------------------------
 
-echo/boost/%/exe/verify:
+echo/boost/%/exe/verify: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Boost 1.$*.0: verifying boost_1_$*_0/bin/foo
 	@echo ---------------------------------------------------------------------
 
-echo/boost/%/finished:
+echo/boost/%/finished: FORCE
 	@echo =====================================================================
 	$(newline)
 
@@ -146,7 +179,7 @@ boost/58/download: echo/boost/58/build
 	"$(python)" boost/build/build.py download 1.58.0
 
 boost/58/build:
-	"$(python)" boost/build/build.py build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options $(boost_quiet)
+	"$(python)" boost/build/build.py build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options $(b2_flags)
 
 boost/58/ls: echo/boost/58/ls
 	$(ls) "./boost_1_58_0/stage"
@@ -177,7 +210,7 @@ boost/72/download: echo/boost/72/build
 	"$(python)" boost/build/build.py download --cache . 1.72.0
 
 boost/72/build:
-	"$(python)" boost/build/build.py build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options $(boost_quiet)
+	"$(python)" boost/build/build.py build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options $(b2_flags)
 
 boost/72/ls: echo/boost/72/ls
 	$(ls) "./boost_1_72_0/stage"
@@ -203,14 +236,14 @@ boost/72: boost/72/download boost/72/build boost/72/ls boost/72/exe echo/boost/7
 .PHONY: boost/72 boost/72/download boost/72/build boost/72/ls boost/72/exe boost/72/exe/build boost/72/exe/run boost/72/exe/verify
 
 # Boost 1.65.0:
-# * download to $HOME (on Travis), C:\ (on AppVeyor),
-# x64, Release, static & shared libraries.
+# * download to $HOME (on Travis), C:\projects (on AppVeyor),
+# * x64, MinSizeRel (= Release), static & shared libraries.
 # examples/boost:
 # * x64/MinSizeRel build (set in .travis.yml and .appveyor.yml).
 
 ifdef TRAVIS
 boost/65/build: echo/boost/65/build
-	"$(python)" boost/build/ci/travis.py --link static -- --with-filesystem --with-program_options $(boost_quiet)
+	"$(python)" boost/build/ci/travis.py --link static -- --with-filesystem --with-program_options $(b2_flags)
 
 boost/65/ls: echo/boost/65/ls
 	$(ls) "$$HOME/boost/stage"
@@ -220,13 +253,13 @@ boost/65/exe/build: echo/boost/65/exe/build
 endif
 ifdef APPVEYOR
 boost/65/build: echo/boost/65/build
-	"$(python)" boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options $(boost_quiet)
+	"$(python)" boost/build/ci/appveyor.py --link static -- --with-filesystem --with-program_options $(b2_flags)
 
 boost/65/ls: echo/boost/65/ls
 	$(ls) "C:/projects/boost/stage"
 
 boost/65/exe/build: echo/boost/65/exe/build
-	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\cmake\examples\boost" && "$(python)" cmake/build/ci/appveyor.py --install "$(install_prefix)/boost_1_65_0" -- -D "BOOST_ROOT=C:\projects\boost" -D "BOOST_LIBRARYDIR=C:\projects\boost\stage\%platform%\%configuration%\lib"
+	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\cmake\examples\boost" && "$(python)" cmake/build/ci/appveyor.py --install "$(install_prefix)/boost_1_65_0" -- -D "BOOST_ROOT=C:\projects\boost" -D "BOOST_LIBRARYDIR=C:\projects\boost\stage\%PLATFORM%\%CONFIGURATION%\lib"
 endif
 
 boost/65/exe/run: echo/boost/65/exe/run
@@ -238,3 +271,5 @@ boost/65/exe/verify: echo/boost/65/exe/verify
 boost/65/exe: boost/65/exe/build boost/65/exe/run boost/65/exe/verify
 
 boost/65: boost/65/build boost/65/ls boost/65/exe echo/boost/65/finished
+
+.PHONY: boost/65 boost/65/build boost/65/ls boost/65/exe boost/65/exe/build boost/65/exe/run boost/65/exe/verify
