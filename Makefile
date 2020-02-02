@@ -31,7 +31,7 @@ else
 ext :=
 newline := @echo
 cwd := $(shell pwd)
-ls := ls --almost-all -R
+ls := function my_ls() { find "$$@" -type f | sort ; } ; my_ls
 endif
 
 # Python executable might be named differently, depending on the environment:
