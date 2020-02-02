@@ -13,6 +13,7 @@ endif
 ifeq ($(windows),1)
 # Make might pick up sh.exe if it's available:
 SHELL := cmd
+.SHELLFLAGS := /c
 else
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
@@ -51,8 +52,9 @@ x64_args = -A x64
 x86_args = -A Win32
 install_prefix = C:/install
 else
-x64_args := -D "CMAKE_TOOLCHAIN_FILE=$$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x64.cmake"
-x86_args := -D "CMAKE_TOOLCHAIN_FILE=$$TRAVIS_BUILD_DIR/cmake/toolchains/gcc-x86.cmake"
+makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+x64_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/cmake/toolchains/gcc-x64.cmake"
+x86_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/cmake/toolchains/gcc-x86.cmake"
 install_prefix := $$HOME/install
 endif
 
