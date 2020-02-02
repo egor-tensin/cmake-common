@@ -53,8 +53,8 @@ x86_args = -A Win32
 install_prefix = C:/install
 else
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-x64_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/cmake/toolchains/gcc-x64.cmake"
-x86_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/cmake/toolchains/gcc-x86.cmake"
+x64_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/../cmake/toolchains/gcc-x64.cmake"
+x86_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/../cmake/toolchains/gcc-x86.cmake"
 install_prefix := $$HOME/install
 endif
 

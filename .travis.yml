@@ -28,18 +28,18 @@ jobs:
 
     - name: Simple CMake projects
       script:
-        - make simple
-        - make static
-        - make dynamic
+        - make -f .ci/Makefile simple
+        - make -f .ci/Makefile static
+        - make -f .ci/Makefile dynamic
 
     - name: Boost 1.58
-      script: make boost/58
+      script: make -f .ci/Makefile boost/58
 
     - name: Boost 1.72
-      script: make boost/72
+      script: make -f .ci/Makefile boost/72
 
     - name: Boost 1.65
-      script: make boost/65
+      script: make -f .ci/Makefile boost/65
       env:
         travis_boost_version: 1.65.0
         configuration: MinSizeRel
