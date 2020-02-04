@@ -10,7 +10,6 @@
 This is similar to build.py, but auto-fills some parameters for build.py from
 the AppVeyor-defined environment variables.
 
-
 The project is built in C:\Projects\build.
 '''
 
