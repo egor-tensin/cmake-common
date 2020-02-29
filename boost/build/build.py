@@ -251,7 +251,7 @@ class ArchiveStorage(abc.ABC):
         for url in urls:
             logging.info('Trying URL: %s', url)
             try:
-                with urllib.request.urlopen(url) as request:
+                with urllib.request.urlopen(url, timeout=20) as request:
                     with self.write_archive(version, request.read()) as path:
                         yield BoostArchive(version, path)
                         return
