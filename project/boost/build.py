@@ -40,6 +40,10 @@ import sys
 import tempfile
 import urllib.request
 
+from project.configuration import Configuration
+from project.linkage import Linkage
+from project.platform import Platform
+
 
 @contextmanager
 def _chdir(path):
@@ -68,87 +72,6 @@ def _on_linux():
 def _run_executable(cmd_line):
     logging.info('Running executable: %s', cmd_line)
     return subprocess.run(cmd_line, check=True)
-
-
-class Platform(Enum):
-    X86 = 'x86'
-    X64 = 'x64'
-    WIN32 = 'Win32'
-
-    def __str__(self):
-        return self.value
-
-    @staticmethod
-    def all():
-        return (Platform.X86, Platform.X64)
-
-    def get_address_model(self):
-        if self is Platform.X86:
-            return 32
-        if self is Platform.X64:
-            return 64
-        if self is Platform.WIN32:
-            return 32
-        raise NotImplementedError(f'unsupported platform: {self}')
-
-
-def _parse_platform(s):
-    try:
-        return Platform(s)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'invalid platform: {s}')
-
-
-class Configuration(Enum):
-    # AFAIK, Boost only supports debug/release, MinSizeRel and RelWithDebInfo
-    # are for compatibility with CMake, they map to "release".
-    # The libraries will still reside in stage/PLATFORM/CONFIGURATION/lib, even
-    # if CONFIGURATION is MinSizeRel/RelWithDebInfo.
-    DEBUG = 'Debug'
-    MINSIZEREL = 'MinSizeRel'
-    RELWITHDEBINFO = 'RelWithDebInfo'
-    RELEASE = 'Release'
-
-    def normalize(self):
-        '''Roughly maps CMake's CMAKE_BUILD_TYPE to Boost's variant.'''
-        if self is Configuration.MINSIZEREL:
-            return Configuration.RELEASE
-        if self is Configuration.RELWITHDEBINFO:
-            return Configuration.RELEASE
-        return self
-
-    @staticmethod
-    def all():
-        return (Configuration.DEBUG, Configuration.RELEASE)
-
-    def __str__(self):
-        return self.value
-
-
-def _parse_configuration(s):
-    try:
-        return Configuration(s)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
-
-
-class Linkage(Enum):
-    STATIC = 'static'
-    SHARED = 'shared'
-
-    @staticmethod
-    def all():
-        return tuple(Linkage)
-
-    def __str__(self):
-        return self.value
-
-
-def _parse_linkage(s):
-    try:
-        return Linkage(s)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'invalid linkage: {s}')
 
 
 _Version = namedtuple('_Version', ['major', 'minor', 'patch'])
@@ -457,7 +380,7 @@ class BuildParameters:
 
     @staticmethod
     def _variant(configuration):
-        return f'variant={str(configuration.normalize()).lower()}'
+        return f'variant={configuration.to_boost_variant()}'
 
 
 def _parse_dir(s):
@@ -493,23 +416,23 @@ def _parse_args(argv=None):
     # subdirectories (to avoid name clashes).
     build.add_argument('--platform', metavar='PLATFORM',
                        nargs='*', dest='platforms', default=[],
-                       type=_parse_platform,
+                       type=Platform.parse,
                        help=f'target platform ({"/".join(map(str, Platform))})')
     build.add_argument('--configuration', metavar='CONFIGURATION',
                        nargs='*', dest='configurations', default=[],
-                       type=_parse_configuration,
+                       type=Configuration.parse,
                        help=f'target configuration ({"/".join(map(str, Configuration))})')
     # This is needed because the default behaviour on Linux and Windows is
     # different: static & dynamic libs are built on Linux, but only static libs
     # are built on Windows by default.
     build.add_argument('--link', metavar='LINKAGE',
                        nargs='*', default=[],
-                       type=_parse_linkage,
+                       type=Linkage.parse,
                        help=f'how the libraries are linked ({"/".join(map(str, Linkage))})')
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
     build.add_argument('--runtime-link', metavar='LINKAGE',
-                       type=_parse_linkage, default=Linkage.STATIC,
+                       type=Linkage.parse, default=Linkage.STATIC,
                        help=f'how the libraries link to the runtime ({"/".join(map(str, Linkage))})')
 
     build.add_argument('--build', metavar='DIR', dest='build_dir',

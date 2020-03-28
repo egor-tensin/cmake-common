@@ -43,6 +43,8 @@ import subprocess
 import sys
 import tempfile
 
+from project.configuration import Configuration
+
 
 def _run_executable(cmd_line):
     logging.info('Running executable: %s', cmd_line)
@@ -51,23 +53,6 @@ def _run_executable(cmd_line):
 
 def _run_cmake(cmake_args):
     _run_executable(['cmake'] + cmake_args)
-
-
-class Configuration(Enum):
-    DEBUG = 'Debug'
-    MINSIZEREL = 'MinSizeRel'
-    RELWITHDEBINFO = 'RelWithDebInfo'
-    RELEASE = 'Release'
-
-    def __str__(self):
-        return self.value
-
-
-def _parse_configuration(s):
-    try:
-        return Configuration(s)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
 
 
 @contextmanager
@@ -151,7 +136,7 @@ def _parse_args(argv=None):
                         type=_parse_dir,
                         help='install directory')
     parser.add_argument('--configuration', metavar='CONFIG',
-                        type=_parse_configuration, default=Configuration.DEBUG,
+                        type=Configuration.parse, default=Configuration.DEBUG,
                         help=f'build configuration ({"/".join(map(str, Configuration))})')
     parser.add_argument('src_dir', metavar='DIR',
                         type=_parse_dir,
