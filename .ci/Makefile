@@ -186,11 +186,11 @@ echo/boost/%/finished: FORCE
 
 .PHONY: boost/58/download
 boost/58/download: echo/boost/58/build
-	"$(python)" -m project.boost.build download 1.58.0
+	"$(python)" -m project.boost.download 1.58.0
 
 .PHONY: boost/58/build
 boost/58/build:
-	"$(python)" -m project.boost.build build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options $(b2_flags)
+	"$(python)" -m project.boost.build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options $(b2_flags)
 
 .PHONY: boost/58/ls
 boost/58/ls: echo/boost/58/ls
@@ -223,11 +223,11 @@ boost/58: boost/58/download boost/58/build boost/58/ls boost/58/exe echo/boost/5
 
 .PHONY: boost/72/download
 boost/72/download: echo/boost/72/build
-	"$(python)" -m project.boost.build download --cache . 1.72.0
+	"$(python)" -m project.boost.download --cache . 1.72.0
 
 .PHONY: boost/72/build
 boost/72/build:
-	"$(python)" -m project.boost.build build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options $(b2_flags)
+	"$(python)" -m project.boost.build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options $(b2_flags)
 
 .PHONY: boost/72/ls
 boost/72/ls: echo/boost/72/ls

@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2020 Egor Tensin <Egor.Tensin@gmail.com>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Download & build Boost on AppVeyor.
+R'''Download & build Boost on AppVeyor.
 
 This is similar to build.py, but auto-fills some parameters for build.py from
 the AppVeyor-defined environment variables.  This script is rarely usefull,
@@ -22,7 +20,12 @@ import os.path
 import sys
 
 from project.boost.version import Version
-from project.boost.build import main as build_main
+from project.boost.download import DownloadParameters, download
+from project.boost.build import BuildParameters, build
+from project.configuration import Configuration
+from project.linkage import Linkage
+from project.platform import Platform
+import project.utils
 
 
 def _env(name):
@@ -37,7 +40,7 @@ def _check_appveyor():
 
 
 def _get_build_dir():
-    return 'C:\\projects'
+    return R'C:\projects'
 
 
 def _get_boost_dir():
@@ -45,21 +48,15 @@ def _get_boost_dir():
 
 
 def _get_boost_version():
-    return _env('appveyor_boost_version')
+    return Version.from_string(_env('appveyor_boost_version'))
 
 
 def _get_configuration():
-    return _env('CONFIGURATION')
+    return Configuration.parse(_env('CONFIGURATION'))
 
 
 def _get_platform():
-    return _env('PLATFORM')
-
-
-def _setup_logging():
-    logging.basicConfig(
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        level=logging.INFO)
+    return Platform.parse(_env('PLATFORM'))
 
 
 def _parse_args(argv=None):
@@ -70,9 +67,9 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--link', metavar='LINKAGE', nargs='*',
+    parser.add_argument('--link', metavar='LINKAGE', nargs='*', type=Linkage.parse,
                         help='how the libraries are linked (i.e. static/shared)')
-    parser.add_argument('--runtime-link', metavar='LINKAGE',
+    parser.add_argument('--runtime-link', metavar='LINKAGE', type=Linkage.parse,
                         help='how the libraries link to the runtime')
     parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
                         help='additional b2 arguments, to be passed verbatim')
@@ -83,39 +80,26 @@ def build_appveyor(argv=None):
     args = _parse_args(argv)
     _check_appveyor()
 
-    version = Version.from_string(_get_boost_version())
-    appveyor_argv = [
-        'download',
-        '--unpack', _get_build_dir(),
-        '--', str(version)
-    ]
-    build_main(appveyor_argv)
+    version = _get_boost_version()
+    build_dir = _get_build_dir()
+    download(DownloadParameters(version, unpack_dir=build_dir))
 
-    unpacked_boost_dir = version.dir_path(_get_build_dir())
+    unpacked_boost_dir = version.dir_path(build_dir)
     boost_dir = _get_boost_dir()
     os.rename(unpacked_boost_dir, boost_dir)
 
-    appveyor_argv = [
-        'build',
-        '--configuration', _get_configuration(),
-        '--platform', _get_platform(),
-    ]
-    if args.link is not None:
-        appveyor_argv.append('--link')
-        appveyor_argv += args.link
-    if args.runtime_link is not None:
-        appveyor_argv += ['--runtime-link', args.runtime_link]
-    appveyor_argv += ['--', boost_dir]
-    build_main(appveyor_argv + args.b2_args)
+    params = BuildParameters(boost_dir,
+                             platforms=(_get_platform(),),
+                             configurations=(_get_configuration(),),
+                             link=args.link,
+                             runtime_link=args.runtime_link,
+                             b2_args=args.b2_args)
+    build(params)
 
 
 def main(argv=None):
-    _setup_logging()
-    try:
+    with project.utils.setup_logging():
         build_appveyor(argv)
-    except Exception as e:
-        logging.exception(e)
-        raise
 
 
 if __name__ == '__main__':
