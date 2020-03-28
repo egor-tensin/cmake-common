@@ -19,6 +19,8 @@ import os
 import os.path
 import sys
 
+from project.boost.build import BoostVersion, main as build_main
+
 
 def _env(name):
     if name not in os.environ:
@@ -77,11 +79,6 @@ def _parse_args(argv=None):
 def build_travis(argv=None):
     args = _parse_args(argv)
     _check_travis()
-
-    this_module_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_module_dir = os.path.dirname(this_module_dir)
-    sys.path.insert(1, parent_module_dir)
-    from build import BoostVersion, main as build_main
 
     version = BoostVersion.from_string(_get_boost_version())
     travis_argv = [

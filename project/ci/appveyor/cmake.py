@@ -19,6 +19,8 @@ import logging
 import os
 import sys
 
+from project.cmake.build import build
+
 
 class Image(Enum):
     VS_2013 = 'Visual Studio 2013'
@@ -131,11 +133,6 @@ def _parse_args(argv=None):
 def build_appveyor(argv=None):
     args = _parse_args(argv)
     _check_appveyor()
-
-    this_module_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_module_dir = os.path.dirname(this_module_dir)
-    sys.path.insert(1, parent_module_dir)
-    from build import build
 
     appveyor_argv = [
         '--build', _get_build_dir(),
