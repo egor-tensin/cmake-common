@@ -21,7 +21,8 @@ import os
 import os.path
 import sys
 
-from project.boost.build import BoostVersion, main as build_main
+from project.boost.version import Version
+from project.boost.build import main as build_main
 
 
 def _env(name):
@@ -82,7 +83,7 @@ def build_appveyor(argv=None):
     args = _parse_args(argv)
     _check_appveyor()
 
-    version = BoostVersion.from_string(_get_boost_version())
+    version = Version.from_string(_get_boost_version())
     appveyor_argv = [
         'download',
         '--unpack', _get_build_dir(),
