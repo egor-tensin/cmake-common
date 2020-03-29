@@ -45,6 +45,10 @@ from project.configuration import Configuration
 import project.utils
 
 
+def run_cmake(cmake_args):
+    return project.utils.run(['cmake'] + cmake_args)
+
+
 class GenerationPhase:
     def __init__(self, build_dir, params):
         self.build_dir = build_dir
@@ -66,7 +70,7 @@ class GenerationPhase:
         return result
 
     def run(self):
-        project.utils.run_cmake(self._cmake_args())
+        run_cmake(self._cmake_args())
 
 
 class BuildPhase:
@@ -87,7 +91,7 @@ class BuildPhase:
         return result
 
     def run(self):
-        project.utils.run_cmake(self._cmake_args())
+        run_cmake(self._cmake_args())
 
 
 class BuildParameters:

@@ -8,9 +8,9 @@ from contextlib import contextmanager
 import logging
 import os.path
 import shutil
-import tempfile
 
 from project.boost.directory import BoostDir
+from project.utils import temp_file
 
 
 class Archive:
@@ -75,15 +75,7 @@ class TemporaryStorage(ArchiveStorage):
 
     @contextmanager
     def write_archive(self, version, contents):
-        temp = tempfile.NamedTemporaryFile(prefix=f'boost_{version}_',
-                                           suffix=version.archive_ext,
-                                           dir=self._dir, delete=False)
-        with temp as dest:
-            path = dest.name
-            logging.info('Writing Boost archive: %s', path)
-            dest.write(contents)
-        try:
+        tmp = temp_file(contents, prefix=f'boost_{version}_',
+                        suffix=version.archive_ext, dir=self._dir)
+        with tmp as path:
             yield path
-        finally:
-            logging.info('Removing temporary Boost archive: %s', path)
-            os.remove(path)

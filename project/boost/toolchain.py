@@ -17,9 +17,9 @@ parameter.
 import abc
 from contextlib import contextmanager
 import logging
-import tempfile
 
 import project.os
+from project.utils import temp_file
 
 
 class Toolchain(abc.ABC):
@@ -30,13 +30,28 @@ class Toolchain(abc.ABC):
     def get_b2_args(self):
         pass
 
+    @staticmethod
+    @contextmanager
+    def detect(platform, mingw=False):
+        if mingw:
+            with MinGW.setup(platform) as toolchain:
+                yield toolchain
+        else:
+            yield Native(platform)
 
-class NativeToolchain(Toolchain):
+    @staticmethod
+    def _format_user_config(tag, compiler, **kwargs):
+        features = (f'<{k}>{v}' for k, v in kwargs.items())
+        features = ' '.join(features)
+        return f'using gcc : {tag} : {compiler} : {features} ;'
+
+
+class Native(Toolchain):
     def get_b2_args(self):
         return [f'address-model={self.platform.get_address_model()}']
 
 
-class MingwToolchain(Toolchain):
+class MinGW(Toolchain):
     TAG = 'custom'
 
     def __init__(self, platform, config_path):
@@ -44,65 +59,41 @@ class MingwToolchain(Toolchain):
         self.config_path = config_path
 
     def get_b2_args(self):
-        return [f'--user-config={self.config_path}', f'toolset=gcc-{MingwToolchain.TAG}']
+        return [f'--user-config={self.config_path}', f'toolset=gcc-{MinGW.TAG}']
 
+    @staticmethod
+    def _get_compiler_prefix(platform):
+        target_arch = platform.get_address_model()
+        if target_arch == 32:
+            return 'i686'
+        if target_arch == 64:
+            return 'x86_64'
+        raise RuntimeError(f'unexpected address model: {target_arch}')
 
-def _native_toolchain(platform):
-    return NativeToolchain(platform)
+    @staticmethod
+    def _get_compiler_path(platform):
+        prefix = MinGW._get_compiler_prefix(platform)
+        ext = ''
+        if project.os.on_windows_like():
+            # Boost.Build wants the .exe extension at the end on Cygwin.
+            ext = '.exe'
+        path = f'{prefix}-w64-mingw32-g++{ext}'
+        return path
 
+    @staticmethod
+    def _format_mingw_user_config(platform):
+        compiler = MinGW._get_compiler_path(platform)
+        features = {
+            'target-os': 'windows',
+            'address-model': platform.get_address_model(),
+        }
+        return Toolchain._format_user_config(MinGW.TAG, compiler, **features)
 
-def _get_mingw_prefix(platform):
-    target_arch = platform.get_address_model()
-    if target_arch == 32:
-        return 'i686'
-    if target_arch == 64:
-        return 'x86_64'
-    raise RuntimeError(f'unexpected address model: {target_arch}')
-
-
-def _get_mingw_path(platform):
-    prefix = _get_mingw_prefix(platform)
-    ext = ''
-    if project.os.on_windows_like():
-        # Boost.Build wants the .exe extension at the end on Cygwin.
-        ext = '.exe'
-    path = f'{prefix}-w64-mingw32-g++{ext}'
-    return path
-
-
-def _format_user_config(tag, compiler, **kwargs):
-    features = (f'<{k}>{v}' for k, v in kwargs.items())
-    features = ' '.join(features)
-    return f'using gcc : {tag} : {compiler} : {features} ;'
-
-
-def _format_mingw_user_config(platform):
-    compiler = _get_mingw_path(platform)
-    features = {
-        'target-os': 'windows',
-        'address-model': platform.get_address_model(),
-    }
-    return _format_user_config(MingwToolchain.TAG, compiler, **features)
-
-
-@contextmanager
-def _mingw_toolchain(platform):
-    tmp = tempfile.NamedTemporaryFile(mode='w', prefix='mingw_w64_', suffix='.jam')
-    with tmp as file:
-        config = _format_mingw_user_config(platform)
+    @staticmethod
+    @contextmanager
+    def setup(platform):
+        config = MinGW._format_mingw_user_config(platform)
         logging.info('Using user config:\n%s', config)
-        file.write(config)
-        file.flush()
-        try:
-            yield MingwToolchain(platform, file.name)
-        finally:
-            logging.info('Removing temporary user config file')
-
-
-@contextmanager
-def detect_toolchain(platform, mingw=False):
-    if mingw:
-        with _mingw_toolchain(platform) as toolchain:
-            yield toolchain
-    else:
-        yield _native_toolchain(platform)
+        tmp = temp_file(config, mode='w', prefix='mingw_w64_', suffix='.jam')
+        with tmp as path:
+            yield MinGW(platform, path)

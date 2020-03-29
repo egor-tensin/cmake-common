@@ -22,7 +22,7 @@ import sys
 import tempfile
 
 from project.boost.directory import BoostDir
-from project.boost.toolchain import detect_toolchain
+from project.boost.toolchain import Toolchain
 from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
@@ -71,7 +71,7 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                with detect_toolchain(platform, mingw=self.mingw) as toolchain:
+                with Toolchain.detect(platform, mingw=self.mingw) as toolchain:
                     for configuration in self.configurations:
                         for link, runtime_link in self._linkage_options():
                             yield self._build_params(build_dir, toolchain,

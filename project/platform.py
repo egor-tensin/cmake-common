@@ -5,37 +5,43 @@
 
 import argparse
 from enum import Enum
+import platform
 
 
 class Platform(Enum):
-    '''I only build for x86(-64), so here it goes.
-
-    Win32 is just Visual Studio convention, it's effectively an alias for x86.
-    '''
+    '''I only build for x86(-64), so here it goes.'''
 
     X86 = 'x86'
     X64 = 'x64'
-    WIN32 = 'Win32'
 
     def __str__(self):
         return self.value
 
     @staticmethod
+    def native():
+        # Source: https://stackoverflow.com/a/12578715/514684
+        if platform.machine().endswith('64'):
+            return Platform.X64
+        return Platform.X86
+
+    @staticmethod
     def all():
-        return (Platform.X86, Platform.X64)
+        return tuple(Platform)
 
     @staticmethod
     def parse(s):
         try:
+            if s == 'Win32':
+                # AppVeyor convention:
+                return Platform.X86
             return Platform(s)
         except ValueError:
             raise argparse.ArgumentTypeError(f'invalid platform: {s}')
 
     def get_address_model(self):
+        '''Maps to Boost's address-model.'''
         if self is Platform.X86:
             return 32
         if self is Platform.X64:
             return 64
-        if self is Platform.WIN32:
-            return 32
         raise NotImplementedError(f'unsupported platform: {self}')

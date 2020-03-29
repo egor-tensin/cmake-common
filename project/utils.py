@@ -7,6 +7,7 @@ from contextlib import contextmanager
 import logging
 import os.path
 import subprocess
+import tempfile
 
 
 def normalize_path(s):
@@ -41,5 +42,35 @@ def run(cmd_line):
     return subprocess.run(cmd_line, check=True)
 
 
-def run_cmake(cmake_args):
-    return run(['cmake'] + cmake_args)
+@contextmanager
+def delete_on_error(path):
+    try:
+        yield
+    except:
+        logging.info('Removing temporary file: %s', path)
+        os.remove(path)
+        raise
+
+
+@contextmanager
+def delete(path):
+    try:
+        yield
+    finally:
+        logging.info('Removing temporary file: %s', path)
+        os.remove(path)
+
+
+@contextmanager
+def temp_file(contents, **kwargs):
+    '''Make NamedTemporaryFile usable on Windows.
+
+    It can't be opened a second time on Windows, hence this silliness.
+    '''
+    tmp = tempfile.NamedTemporaryFile(delete=False, **kwargs)
+    with tmp as file, delete_on_error(file.name):
+        path = file.name
+        logging.info('Writing temporary file: %s', path)
+        file.write(contents)
+    with delete(path):
+        yield path

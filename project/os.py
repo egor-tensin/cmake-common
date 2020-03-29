@@ -36,6 +36,14 @@ def on_windows_like():
     return os is OS.WINDOWS or os is OS.CYGWIN
 
 
+def on_linux():
+    return OS.current() is OS.LINUX
+
+
 def on_linux_like():
     os = OS.current()
     return os is OS.LINUX or os is OS.CYGWIN
+
+
+def on_cygwin():
+    return OS.current() is OS.CYGWIN
