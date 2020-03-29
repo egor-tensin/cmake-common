@@ -25,7 +25,7 @@ from project.boost.build import BuildParameters, build
 from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
-import project.utils
+from project.utils import setup_logging
 
 
 def _env(name):
@@ -106,7 +106,7 @@ def build_appveyor(argv=None):
 
 
 def main(argv=None):
-    with project.utils.setup_logging():
+    with setup_logging():
         build_appveyor(argv)
 
 

@@ -25,7 +25,7 @@ import urllib.request
 
 from project.boost.archive import Archive, PermanentStorage, TemporaryStorage
 from project.boost.version import Version
-import project.utils
+from project.utils import normalize_path, setup_logging
 
 
 def _download_try_url(url):
@@ -65,10 +65,10 @@ def _download_if_necessary(version, storage):
 class DownloadParameters:
     def __init__(self, version, unpack_dir='.', cache_dir=None):
         self.version = version
-        self.unpack_dir = project.utils.normalize_path(unpack_dir)
+        self.unpack_dir = normalize_path(unpack_dir)
         self.storage = TemporaryStorage(unpack_dir)
         if cache_dir is not None:
-            cache_dir = project.utils.normalize_path(cache_dir)
+            cache_dir = normalize_path(cache_dir)
             self.storage = PermanentStorage(cache_dir)
 
     @staticmethod
@@ -93,10 +93,10 @@ def _parse_args(argv=None):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
-                        type=project.utils.normalize_path, default='.',
+                        type=normalize_path, default='.',
                         help='directory to unpack the archive to')
     parser.add_argument('--cache', metavar='DIR', dest='cache_dir',
-                        type=project.utils.normalize_path,
+                        type=normalize_path,
                         help='download directory (temporary file unless specified)')
     parser.add_argument('version', metavar='VERSION',
                         type=Version.from_string,
@@ -106,7 +106,7 @@ def _parse_args(argv=None):
 
 
 def _main(argv=None):
-    with project.utils.setup_logging():
+    with setup_logging():
         download(DownloadParameters.from_args(_parse_args(argv)))
 
 

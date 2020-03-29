@@ -36,7 +36,7 @@ from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
 from project.os import on_linux_like
-import project.utils
+from project.utils import normalize_path, setup_logging
 
 
 DEFAULT_PLATFORMS = (Platform.native(),)
@@ -51,9 +51,9 @@ class BuildParameters:
                  configurations=None, link=None, runtime_link=None,
                  mingw=False, b2_args=None):
 
-        boost_dir = project.utils.normalize_path(boost_dir)
+        boost_dir = normalize_path(boost_dir)
         if build_dir is not None:
-            build_dir = project.utils.normalize_path(build_dir)
+            build_dir = normalize_path(build_dir)
         platforms = platforms or DEFAULT_PLATFORMS
         configurations = configurations or DEFAULT_CONFIGURATIONS
         link = link or DEFAULT_LINK
@@ -196,10 +196,10 @@ def _parse_args(argv=None):
                         help='build using MinGW-w64')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=project.utils.normalize_path,
+                        type=normalize_path,
                         help='Boost build directory (temporary directory unless specified)')
     parser.add_argument('boost_dir', metavar='DIR',
-                        type=project.utils.normalize_path,
+                        type=normalize_path,
                         help='root Boost directory')
 
     parser.add_argument('b2_args', metavar='B2_ARG',
@@ -210,7 +210,7 @@ def _parse_args(argv=None):
 
 
 def _main(argv=None):
-    with project.utils.setup_logging():
+    with setup_logging():
         build(BuildParameters.from_args(_parse_args(argv)))
 
 
