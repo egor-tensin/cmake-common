@@ -22,6 +22,7 @@ import sys
 import tempfile
 
 from project.boost.directory import BoostDir
+from project.boost.toolchain import detect_toolchain
 from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
@@ -39,7 +40,7 @@ DEFAULT_B2_ARGS = ['-d0']
 class BuildParameters:
     def __init__(self, boost_dir, build_dir=None, platforms=None,
                  configurations=None, link=None, runtime_link=None,
-                 b2_args=None):
+                 b2_args=None, mingw=False):
 
         boost_dir = project.utils.normalize_path(boost_dir)
         if build_dir is not None:
@@ -61,6 +62,7 @@ class BuildParameters:
         self.link = link
         self.runtime_link = runtime_link
         self.b2_args = b2_args
+        self.mingw = mingw
 
     @staticmethod
     def from_args(args):
@@ -69,11 +71,12 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                for configuration in self.configurations:
-                    for link, runtime_link in self._linkage_options():
-                        yield self._build_params(build_dir, platform,
-                                                 configuration, link,
-                                                 runtime_link)
+                with detect_toolchain(platform, mingw=self.mingw) as toolchain:
+                    for configuration in self.configurations:
+                        for link, runtime_link in self._linkage_options():
+                            yield self._build_params(build_dir, toolchain,
+                                                     configuration, link,
+                                                     runtime_link)
 
     def _linkage_options(self):
         for link in self.link:
@@ -102,13 +105,13 @@ class BuildParameters:
                 logging.info('Removing build directory: %s', build_dir)
             return
 
-    def _build_params(self, build_dir, platform, configuration, link, runtime_link):
+    def _build_params(self, build_dir, toolchain, configuration, link, runtime_link):
         params = []
         params.append(self._build_dir(build_dir))
-        params.append(self._stagedir(platform, configuration))
+        params.append(self._stagedir(toolchain, configuration))
+        params += toolchain.get_b2_args()
         params.append(self._link(link))
         params.append(self._runtime_link(runtime_link))
-        params.append(self._address_model(platform))
         params.append(self._variant(configuration))
         params += self.b2_args
         return params
@@ -117,7 +120,7 @@ class BuildParameters:
     def _build_dir(build_dir):
         return f'--build-dir={build_dir}'
 
-    def _stagedir(self, platform, configuration):
+    def _stagedir(self, toolchain, configuration):
         # Having different --stagedir values for every configuration/platform
         # combination is unnecessary on Windows.  Even for older Boost versions
         # (when the binaries weren't tagged with their target platform) only a
@@ -125,7 +128,7 @@ class BuildParameters:
         # versions, just a single --stagedir would do, as the binaries are
         # tagged with the target platform, as well as their configuration
         # (a.k.a. "variant" in Boost's terminology).  Still, uniformity helps.
-        platform = str(platform)
+        platform = str(toolchain.platform)
         configuration = str(configuration)
         return f'--stagedir={os.path.join(self.stage_dir, platform, configuration)}'
 
@@ -136,10 +139,6 @@ class BuildParameters:
     @staticmethod
     def _runtime_link(runtime_link):
         return f'runtime-link={runtime_link}'
-
-    @staticmethod
-    def _address_model(platform):
-        return f'address-model={platform.get_address_model()}'
 
     @staticmethod
     def _variant(configuration):
@@ -194,6 +193,9 @@ def _parse_args(argv=None):
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
+
+    parser.add_argument('--mingw', action='store_true',
+                        help='build using MinGW-w64')
 
     return parser.parse_args(argv)
 
