@@ -13,6 +13,7 @@ formatting the files in-place.
 '''
 
 import argparse
+from contextlib import contextmanager
 import difflib
 import logging
 import os.path
@@ -20,10 +21,17 @@ import subprocess
 import sys
 
 
+@contextmanager
 def _setup_logging():
     logging.basicConfig(
         format='%(asctime)s | %(levelname)s | %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
         level=logging.INFO)
+    try:
+        yield
+    except Exception as e:
+        logging.exception(e)
+        raise
 
 
 def _run_executable(cmd_line):
@@ -132,13 +140,9 @@ def _parse_args(argv=None):
 
 
 def main(argv=None):
-    _setup_logging()
-    try:
+    with _setup_logging():
         args = _parse_args(argv)
         _process_cpp_files(args)
-    except Exception as e:
-        logging.exception(e)
-        raise
 
 
 if __name__ == '__main__':
