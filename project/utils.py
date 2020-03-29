@@ -42,6 +42,10 @@ def run(cmd_line):
     return subprocess.run(cmd_line, check=True)
 
 
+def run_cmake(cmake_args):
+    return run(['cmake'] + cmake_args)
+
+
 def on_windows():
     return platform.system() == 'Windows'
 

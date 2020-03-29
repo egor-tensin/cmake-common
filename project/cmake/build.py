@@ -36,23 +36,13 @@ cmake/toolchains in this repository for examples).
 import argparse
 from contextlib import contextmanager
 import logging
-from enum import Enum
 import os
 import os.path
-import subprocess
 import sys
 import tempfile
 
 from project.configuration import Configuration
-
-
-def _run_executable(cmd_line):
-    logging.info('Running executable: %s', cmd_line)
-    return subprocess.run(cmd_line, check=True)
-
-
-def _run_cmake(cmake_args):
-    _run_executable(['cmake'] + cmake_args)
+import project.utils
 
 
 @contextmanager
@@ -92,7 +82,7 @@ class GenerationPhase:
         return result
 
     def run(self):
-        _run_cmake(self._cmake_args())
+        project.utils.run_cmake(self._cmake_args())
 
 
 class BuildPhase:
@@ -113,11 +103,7 @@ class BuildPhase:
         return result
 
     def run(self):
-        _run_cmake(self._cmake_args())
-
-
-def _parse_dir(s):
-    return os.path.abspath(os.path.normpath(s))
+        project.utils.run_cmake(self._cmake_args())
 
 
 def _parse_args(argv=None):
@@ -130,27 +116,21 @@ def _parse_args(argv=None):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=_parse_dir,
+                        type=project.utils.normalize_path,
                         help='build directory (temporary directory unless specified)')
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
-                        type=_parse_dir,
+                        type=project.utils.normalize_path,
                         help='install directory')
     parser.add_argument('--configuration', metavar='CONFIG',
                         type=Configuration.parse, default=Configuration.DEBUG,
                         help=f'build configuration ({"/".join(map(str, Configuration))})')
     parser.add_argument('src_dir', metavar='DIR',
-                        type=_parse_dir,
+                        type=project.utils.normalize_path,
                         help='source directory')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG',
                         help='additional CMake arguments, to be passed verbatim')
     args = parser.parse_args(argv)
     return args
-
-
-def _setup_logging():
-    logging.basicConfig(
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        level=logging.INFO)
 
 
 def build(argv=None):
@@ -163,12 +143,8 @@ def build(argv=None):
 
 
 def main(argv=None):
-    _setup_logging()
-    try:
+    with project.utils.setup_logging():
         build(argv)
-    except Exception as e:
-        logging.exception(e)
-        raise
 
 
 if __name__ == '__main__':

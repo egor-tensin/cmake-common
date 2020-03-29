@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2019 Egor Tensin <Egor.Tensin@gmail.com>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Build a CMake project on Travis.
+R'''Build a CMake project on Travis.
 
 This is similar to build.py, but auto-fills some parameters for build.py from
 the Travis-defined environment variables.
@@ -20,6 +18,7 @@ import os.path
 import sys
 
 from project.cmake.build import build
+import project.utils
 
 
 def _env(name):
@@ -43,12 +42,6 @@ def _get_build_dir():
 
 def _get_configuration():
     return _env('configuration')
-
-
-def _setup_logging():
-    logging.basicConfig(
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        level=logging.INFO)
 
 
 def _parse_args(argv=None):
@@ -87,12 +80,8 @@ def build_travis(argv=None):
 
 
 def main(argv=None):
-    _setup_logging()
-    try:
+    with project.utils.setup_logging():
         build_travis(argv)
-    except Exception as e:
-        logging.exception(e)
-        raise
 
 
 if __name__ == '__main__':

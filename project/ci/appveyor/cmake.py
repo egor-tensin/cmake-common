@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2019 Egor Tensin <Egor.Tensin@gmail.com>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Build a CMake project on AppVeyor.
+R'''Build a CMake project on AppVeyor.
 
 This is similar to build.py, but auto-fills some parameters for build.py from
 the AppVeyor-defined environment variables.
@@ -20,6 +18,7 @@ import os
 import sys
 
 from project.cmake.build import build
+import project.utils
 
 
 class Image(Enum):
@@ -108,12 +107,6 @@ def _get_configuration():
     return _env('CONFIGURATION')
 
 
-def _setup_logging():
-    logging.basicConfig(
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        level=logging.INFO)
-
-
 def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -152,12 +145,8 @@ def build_appveyor(argv=None):
 
 
 def main(argv=None):
-    _setup_logging()
-    try:
+    with project.utils.setup_logging():
         build_appveyor(argv)
-    except Exception as e:
-        logging.exception(e)
-        raise
 
 
 if __name__ == '__main__':
