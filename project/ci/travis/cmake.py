@@ -17,7 +17,8 @@ import os
 import os.path
 import sys
 
-from project.cmake.build import build
+from project.cmake.build import BuildParameters, build
+from project.configuration import Configuration
 import project.utils
 
 
@@ -41,7 +42,7 @@ def _get_build_dir():
 
 
 def _get_configuration():
-    return _env('configuration')
+    return Configuration.parse(_env('configuration'))
 
 
 def _parse_args(argv=None):
@@ -64,19 +65,12 @@ def build_travis(argv=None):
     args = _parse_args(argv)
     _check_travis()
 
-    travis_argv = [
-        '--build', _get_build_dir(),
-        '--configuration', _get_configuration(),
-    ]
-    if args.install_dir is not None:
-        travis_argv += [
-            '--install', args.install_dir,
-        ]
-    travis_argv += [
-        '--',
-        _get_src_dir(),
-    ]
-    build(travis_argv + args.cmake_args)
+    params = BuildParameters(_get_src_dir(),
+                             build_dir=_get_build_dir(),
+                             install_dir=args.install_dir,
+                             configuration=_get_configuration(),
+                             cmake_args=args.cmake_args)
+    build(params)
 
 
 def main(argv=None):

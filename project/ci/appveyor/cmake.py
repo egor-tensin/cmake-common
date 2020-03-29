@@ -17,7 +17,9 @@ import logging
 import os
 import sys
 
-from project.cmake.build import build
+from project.cmake.build import BuildParameters, build
+from project.configuration import Configuration
+from project.platform import Platform
 import project.utils
 
 
@@ -30,12 +32,12 @@ class Image(Enum):
     def __str__(self):
         return self.value
 
-
-def _parse_image(s):
-    try:
-        return Image(s)
-    except ValueError as e:
-        raise ValueError(f'unsupported AppVeyor image: {s}') from e
+    @staticmethod
+    def parse(s):
+        try:
+            return Image(s)
+        except ValueError as e:
+            raise ValueError(f'unsupported AppVeyor image: {s}') from e
 
 
 class Generator(Enum):
@@ -60,21 +62,6 @@ class Generator(Enum):
         raise RuntimeError(f"don't know which generator to use for image: {image}")
 
 
-class Platform(Enum):
-    x86 = 'Win32'
-    X64 = 'x64'
-
-    def __str__(self):
-        return self.value
-
-
-def _parse_platform(s):
-    try:
-        return Platform(s)
-    except ValueError as e:
-        raise ValueError(f'unsupported AppVeyor platform: {s}') from e
-
-
 def _env(name):
     if name not in os.environ:
         raise RuntimeError(f'undefined environment variable: {name}')
@@ -95,16 +82,16 @@ def _get_build_dir():
 
 
 def _get_generator():
-    image = _parse_image(_env('APPVEYOR_BUILD_WORKER_IMAGE'))
-    return str(Generator.from_image(image))
+    image = Image.parse(_env('APPVEYOR_BUILD_WORKER_IMAGE'))
+    return Generator.from_image(image)
 
 
 def _get_platform():
-    return str(_parse_platform(_env('PLATFORM')))
+    return Platform.parse(_env('PLATFORM'))
 
 
 def _get_configuration():
-    return _env('CONFIGURATION')
+    return Configuration.parse(_env('CONFIGURATION'))
 
 
 def _parse_args(argv=None):
@@ -127,21 +114,15 @@ def build_appveyor(argv=None):
     args = _parse_args(argv)
     _check_appveyor()
 
-    appveyor_argv = [
-        '--build', _get_build_dir(),
-        '--configuration', _get_configuration(),
-    ]
-    if args.install_dir is not None:
-        appveyor_argv += [
-            '--install', args.install_dir,
-        ]
-    appveyor_argv += [
-        '--',
-        _get_src_dir(),
-        '-G', _get_generator(),
-        '-A', _get_platform(),
-    ]
-    build(appveyor_argv + args.cmake_args)
+    cmake_args = ['-G', str(_get_generator()), '-A', str(_get_platform())]
+    cmake_args += args.cmake_args
+
+    params = BuildParameters(_get_src_dir(),
+                             build_dir=_get_build_dir(),
+                             install_dir=args.install_dir,
+                             configuration=_get_configuration(),
+                             cmake_args=cmake_args)
+    build(params)
 
 
 def main(argv=None):

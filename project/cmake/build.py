@@ -45,40 +45,24 @@ from project.configuration import Configuration
 import project.utils
 
 
-@contextmanager
-def _create_build_dir(args):
-    if args.build_dir is not None:
-        logging.info('Build directory: %s', args.build_dir)
-        yield args.build_dir
-        return
-
-    with tempfile.TemporaryDirectory(dir=os.path.dirname(args.src_dir)) as build_dir:
-        logging.info('Build directory: %s', build_dir)
-        try:
-            yield build_dir
-        finally:
-            logging.info('Removing build directory: %s', build_dir)
-        return
-
-
 class GenerationPhase:
-    def __init__(self, build_dir, args):
+    def __init__(self, build_dir, params):
         self.build_dir = build_dir
-        self.args = args
+        self.params = params
 
     def _cmake_args(self):
-        return self._to_cmake_args(self.build_dir, self.args)
+        return self._to_cmake_args(self.build_dir, self.params)
 
     @staticmethod
-    def _to_cmake_args(build_dir, args):
+    def _to_cmake_args(build_dir, params):
         result = []
-        if args.install_dir is not None:
-            result += ['-D', f'CMAKE_INSTALL_PREFIX={args.install_dir}']
-        if args.configuration is not None:
-            result += ['-D', f'CMAKE_BUILD_TYPE={args.configuration}']
-        if args.cmake_args is not None:
-            result += args.cmake_args
-        result += [f'-B{build_dir}', f'-H{args.src_dir}']
+        if params.install_dir is not None:
+            result += ['-D', f'CMAKE_INSTALL_PREFIX={params.install_dir}']
+        if params.configuration is not None:
+            result += ['-D', f'CMAKE_BUILD_TYPE={params.configuration}']
+        if params.cmake_args is not None:
+            result += params.cmake_args
+        result += [f'-B{build_dir}', f'-H{params.src_dir}']
         return result
 
     def run(self):
@@ -86,24 +70,70 @@ class GenerationPhase:
 
 
 class BuildPhase:
-    def __init__(self, build_dir, args):
+    def __init__(self, build_dir, params):
         self.build_dir = build_dir
-        self.args = args
+        self.params = params
 
     def _cmake_args(self):
-        return self._to_cmake_args(self.build_dir, self.args)
+        return self._to_cmake_args(self.build_dir, self.params)
 
     @staticmethod
-    def _to_cmake_args(build_dir, args):
+    def _to_cmake_args(build_dir, params):
         result = ['--build', build_dir]
-        if args.configuration is not None:
-            result += ['--config', str(args.configuration)]
-        if args.install_dir is not None:
+        if params.configuration is not None:
+            result += ['--config', str(params.configuration)]
+        if params.install_dir is not None:
             result += ['--target', 'install']
         return result
 
     def run(self):
         project.utils.run_cmake(self._cmake_args())
+
+
+class BuildParameters:
+    def __init__(self, src_dir, build_dir=None, install_dir=None,
+                 configuration=Configuration.DEBUG, cmake_args=None):
+
+        src_dir = project.utils.normalize_path(src_dir)
+        if build_dir is not None:
+            build_dir = project.utils.normalize_path(build_dir)
+        if install_dir is not None:
+            install_dir = project.utils.normalize_path(install_dir)
+        if cmake_args is None:
+            cmake_args = []
+
+        self.src_dir = src_dir
+        self.build_dir = build_dir
+        self.install_dir = install_dir
+        self.configuration = configuration
+        self.cmake_args = cmake_args
+
+    @staticmethod
+    def from_args(args):
+        return BuildParameters(**vars(args))
+
+    @contextmanager
+    def create_build_dir(self):
+        if self.build_dir is not None:
+            logging.info('Build directory: %s', self.build_dir)
+            yield self.build_dir
+            return
+
+        with tempfile.TemporaryDirectory(dir=os.path.dirname(self.src_dir)) as build_dir:
+            logging.info('Build directory: %s', build_dir)
+            try:
+                yield build_dir
+            finally:
+                logging.info('Removing build directory: %s', build_dir)
+            return
+
+
+def build(params):
+    with params.create_build_dir() as build_dir:
+        gen_phase = GenerationPhase(build_dir, params)
+        gen_phase.run()
+        build_phase = BuildPhase(build_dir, params)
+        build_phase.run()
 
 
 def _parse_args(argv=None):
@@ -133,18 +163,9 @@ def _parse_args(argv=None):
     return args
 
 
-def build(argv=None):
-    args = _parse_args(argv)
-    with _create_build_dir(args) as build_dir:
-        gen_phase = GenerationPhase(build_dir, args)
-        gen_phase.run()
-        build_phase = BuildPhase(build_dir, args)
-        build_phase.run()
-
-
 def main(argv=None):
     with project.utils.setup_logging():
-        build(argv)
+        build(BuildParameters.from_args(_parse_args(argv)))
 
 
 if __name__ == '__main__':
