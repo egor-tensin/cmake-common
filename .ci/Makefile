@@ -95,7 +95,7 @@ echo/%/finished: FORCE
 
 .PHONY: simple/build
 simple/build: echo/simple/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/simple" --configuration Release -- examples/simple $(x64_args)
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/simple" --platform x64 --configuration Release examples/simple
 
 .PHONY: simple/run
 simple/run: echo/simple/run
@@ -112,7 +112,7 @@ simple: simple/build simple/run simple/verify echo/simple/finished
 
 .PHONY: static/build
 static/build: echo/static/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/static" --configuration Debug -- examples/static $(x86_args)
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/static" --platform x86 --configuration Debug examples/static
 
 .PHONY: static/run
 static/run: echo/static/run
@@ -129,7 +129,7 @@ static: static/build static/run static/verify echo/static/finished
 
 .PHONY: dynamic/build
 dynamic/build: echo/dynamic/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/dynamic" --configuration RelWithDebInfo -- examples/dynamic $(x64_args)
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/dynamic" --platform x64 --configuration RelWithDebInfo examples/dynamic
 
 .PHONY: dynamic/run
 # Windows can pick up DLLs in the same directory, otherwise we need to add them
@@ -198,7 +198,7 @@ boost/58/ls: echo/boost/58/ls
 
 .PHONY: boost/58/exe/build
 boost/58/exe/build: echo/boost/58/exe/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_58_0" --configuration Debug -- examples/boost $(x86_args) -D "BOOST_ROOT=$(cwd)/boost_1_58_0" -D "BOOST_LIBRARYDIR=$(cwd)/boost_1_58_0/stage/x86/Debug/lib"
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_58_0" --platform x86 --configuration Debug -- examples/boost -D "BOOST_ROOT=$(cwd)/boost_1_58_0" -D "BOOST_LIBRARYDIR=$(cwd)/boost_1_58_0/stage/x86/Debug/lib"
 
 .PHONY: boost/58/exe/run
 # Boost should be linked statically, no need to adjust PATH:
@@ -235,7 +235,7 @@ boost/72/ls: echo/boost/72/ls
 
 .PHONY: boost/72/exe/build
 boost/72/exe/build: echo/boost/72/exe/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_72_0" --configuration Release -- examples/boost $(x64_args) -D "BOOST_ROOT=$(cwd)/boost_1_72_0" -D "BOOST_LIBRARYDIR=$(cwd)/boost_1_72_0/stage/x64/Release/lib" -D Boost_USE_STATIC_LIBS=OFF
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_72_0" --platform x64 --configuration Release -- examples/boost -D "BOOST_ROOT=$(cwd)/boost_1_72_0" -D "BOOST_LIBRARYDIR=$(cwd)/boost_1_72_0/stage/x64/Release/lib" -D Boost_USE_STATIC_LIBS=OFF
 
 .PHONY: boost/72/exe/run
 # Boost is linked dynamically, we need to adjust PATH:

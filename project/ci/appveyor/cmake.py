@@ -114,12 +114,13 @@ def build_appveyor(argv=None):
     args = _parse_args(argv)
     _check_appveyor()
 
-    cmake_args = ['-G', str(_get_generator()), '-A', str(_get_platform())]
+    cmake_args = ['-G', str(_get_generator())]
     cmake_args += args.cmake_args
 
     params = BuildParameters(_get_src_dir(),
                              build_dir=_get_build_dir(),
                              install_dir=args.install_dir,
+                             platform=_get_platform(),
                              configuration=_get_configuration(),
                              cmake_args=cmake_args)
     build(params)

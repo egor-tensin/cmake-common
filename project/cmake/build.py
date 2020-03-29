@@ -17,18 +17,6 @@ A simple usage example:
 
     $ ./path/to/somewhere/bin/foo
     foo
-
-Picking the target platform is build system-specific.  On Visual Studio, pass
-the target platform using the `-A` flag like this:
-
-    > python -m project.cmake.build --install path\to\somewhere -- examples\simple -A Win32
-    ...
-
-Using GCC-like compilers, the best way is to use CMake toolchain files (see
-toolchains/cmake in this repository for examples).
-
-    $ python -m project.cmake.build --install path/to/somewhere -- examples/simple -D CMAKE_TOOLCHAIN_FILE="$( pwd )/toolchains/mingw-x86.cmake"
-    ...
 '''
 
 import argparse
@@ -39,7 +27,9 @@ import os.path
 import sys
 import tempfile
 
+from project.cmake.toolchain import Toolchain
 from project.configuration import Configuration
+from project.platform import Platform
 from project.utils import normalize_path, run, setup_logging
 
 
@@ -52,7 +42,8 @@ def run_cmake(cmake_args):
 
 class GenerationPhase:
     def __init__(self, src_dir, build_dir, install_dir=None,
-                 configuration=DEFAULT_CONFIGURATION, cmake_args=None):
+                 platform=None, configuration=DEFAULT_CONFIGURATION,
+                 mingw=False, cmake_args=None):
         src_dir = normalize_path(src_dir)
         build_dir = normalize_path(build_dir)
         if install_dir is not None:
@@ -62,20 +53,24 @@ class GenerationPhase:
         self.src_dir = src_dir
         self.build_dir = build_dir
         self.install_dir = install_dir
+        self.platform = platform
         self.configuration = configuration
+        self.mingw = mingw
         self.cmake_args = cmake_args
 
-    def _cmake_args(self):
+    def _cmake_args(self, toolchain):
         result = []
         if self.install_dir is not None:
             result += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
+        result += toolchain.get_cmake_args()
         result += ['-D', f'CMAKE_BUILD_TYPE={self.configuration}']
         result += self.cmake_args
         result += [f'-B{self.build_dir}', f'-H{self.src_dir}']
         return result
 
     def run(self):
-        run_cmake(self._cmake_args())
+        with Toolchain.detect(self.platform, self.build_dir, mingw=self.mingw) as toolchain:
+            run_cmake(self._cmake_args(toolchain))
 
 
 class BuildPhase:
@@ -101,7 +96,8 @@ class BuildPhase:
 
 class BuildParameters:
     def __init__(self, src_dir, build_dir=None, install_dir=None,
-                 configuration=DEFAULT_CONFIGURATION, cmake_args=None):
+                 platform=None, configuration=DEFAULT_CONFIGURATION,
+                 mingw=False, cmake_args=None):
 
         src_dir = normalize_path(src_dir)
         if build_dir is not None:
@@ -113,7 +109,9 @@ class BuildParameters:
         self.src_dir = src_dir
         self.build_dir = build_dir
         self.install_dir = install_dir
+        self.platform = platform
         self.configuration = configuration
+        self.mingw = mingw
         self.cmake_args = cmake_args
 
     @staticmethod
@@ -140,7 +138,9 @@ def build(params):
     with params.create_build_dir() as build_dir:
         gen_phase = GenerationPhase(params.src_dir, build_dir,
                                     install_dir=params.install_dir,
+                                    platform=params.platform,
                                     configuration=params.configuration,
+                                    mingw=params.mingw,
                                     cmake_args=params.cmake_args)
         gen_phase.run()
         build_phase = BuildPhase(build_dir, install_dir=params.install_dir,
@@ -164,10 +164,18 @@ def _parse_args(argv=None):
                         type=normalize_path,
                         help='install directory')
 
+    platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
+
+    parser.add_argument('--platform', metavar='PLATFORM',
+                        type=Platform.parse,
+                        help=f'target platform ({platform_options})')
     parser.add_argument('--configuration', metavar='CONFIG',
                         type=Configuration.parse, default=DEFAULT_CONFIGURATION,
                         help=f'build configuration ({configuration_options})')
+
+    parser.add_argument('--mingw', action='store_true',
+                        help='build using MinGW-w64')
 
     parser.add_argument('src_dir', metavar='DIR',
                         type=normalize_path,

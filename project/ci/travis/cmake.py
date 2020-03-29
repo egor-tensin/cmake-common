@@ -19,6 +19,7 @@ import sys
 
 from project.cmake.build import BuildParameters, build
 from project.configuration import Configuration
+from project.platform import Platform
 from project.utils import setup_logging
 
 
@@ -39,6 +40,10 @@ def _get_src_dir():
 
 def _get_build_dir():
     return os.path.join(_env('HOME'), 'build')
+
+
+def _get_platform():
+    return Platform.parse(_env('platform'))
 
 
 def _get_configuration():
@@ -68,6 +73,7 @@ def build_travis(argv=None):
     params = BuildParameters(_get_src_dir(),
                              build_dir=_get_build_dir(),
                              install_dir=args.install_dir,
+                             platform=_get_platform(),
                              configuration=_get_configuration(),
                              cmake_args=args.cmake_args)
     build(params)

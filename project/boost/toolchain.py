@@ -18,7 +18,7 @@ import abc
 from contextlib import contextmanager
 import logging
 
-import project.os
+import project.mingw
 from project.utils import temp_file
 
 
@@ -62,27 +62,8 @@ class MinGW(Toolchain):
         return [f'--user-config={self.config_path}', f'toolset=gcc-{MinGW.TAG}']
 
     @staticmethod
-    def _get_compiler_prefix(platform):
-        target_arch = platform.get_address_model()
-        if target_arch == 32:
-            return 'i686'
-        if target_arch == 64:
-            return 'x86_64'
-        raise RuntimeError(f'unexpected address model: {target_arch}')
-
-    @staticmethod
-    def _get_compiler_path(platform):
-        prefix = MinGW._get_compiler_prefix(platform)
-        ext = ''
-        if project.os.on_windows_like():
-            # Boost.Build wants the .exe extension at the end on Cygwin.
-            ext = '.exe'
-        path = f'{prefix}-w64-mingw32-g++{ext}'
-        return path
-
-    @staticmethod
     def _format_mingw_user_config(platform):
-        compiler = MinGW._get_compiler_path(platform)
+        compiler = project.mingw.get_gxx(platform)
         features = {
             'target-os': 'windows',
             'address-model': platform.get_address_model(),

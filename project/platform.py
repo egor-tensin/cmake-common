@@ -45,3 +45,11 @@ class Platform(Enum):
         if self is Platform.X64:
             return 64
         raise NotImplementedError(f'unsupported platform: {self}')
+
+    def get_cmake_arch(self):
+        '''Maps to CMake's -A argument for MSVC.'''
+        if self is Platform.X86:
+            return 'Win32'
+        if self is Platform.X64:
+            return 'x64'
+        raise NotImplementedError(f'unsupported platform: {self}')
