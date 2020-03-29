@@ -151,9 +151,12 @@ def _parse_args(argv=None):
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
                         type=project.utils.normalize_path,
                         help='install directory')
+
+    configuration_options = '/'.join(map(str, Configuration.all()))
     parser.add_argument('--configuration', metavar='CONFIG',
                         type=Configuration.parse, default=Configuration.DEBUG,
-                        help=f'build configuration ({"/".join(map(str, Configuration))})')
+                        help=f'build configuration ({configuration_options})')
+
     parser.add_argument('src_dir', metavar='DIR',
                         type=project.utils.normalize_path,
                         help='source directory')

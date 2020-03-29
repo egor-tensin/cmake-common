@@ -25,6 +25,7 @@ from project.boost.directory import BoostDir
 from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
+from project.os import on_linux_like
 import project.utils
 
 
@@ -81,7 +82,7 @@ class BuildParameters:
                 if link is Linkage.SHARED:
                     logging.warning("Cannot link the runtime statically to a dynamic library, going to link dynamically")
                     runtime_link = Linkage.SHARED
-                elif project.utils.on_linux():
+                elif on_linux_like():
                     logging.warning("Cannot link to the GNU C Library (which is assumed) statically, going to link dynamically")
                     runtime_link = Linkage.SHARED
             yield link, runtime_link

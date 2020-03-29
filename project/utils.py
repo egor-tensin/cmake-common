@@ -6,7 +6,6 @@
 from contextlib import contextmanager
 import logging
 import os.path
-import platform
 import subprocess
 
 
@@ -44,11 +43,3 @@ def run(cmd_line):
 
 def run_cmake(cmake_args):
     return run(['cmake'] + cmake_args)
-
-
-def on_windows():
-    return platform.system() == 'Windows'
-
-
-def on_linux():
-    return not on_windows()
