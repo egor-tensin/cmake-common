@@ -19,8 +19,8 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 endif
 
-# Shut Boost.Build's executable up:
-b2_flags = -d0
+# Additional b2 flags:
+b2_flags =
 
 # Basic stuff that needed to be abstracted away:
 ifeq ($(windows),1)

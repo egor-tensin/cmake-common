@@ -29,6 +29,13 @@ from project.platform import Platform
 import project.utils
 
 
+DEFAULT_PLATFORMS = Platform.all()
+DEFAULT_CONFIGURATIONS = Configuration.all()
+DEFAULT_LINK = Linkage.all()
+DEFAULT_RUNTIME_LINK = Linkage.STATIC
+DEFAULT_B2_ARGS = ['-d0']
+
+
 class BuildParameters:
     def __init__(self, boost_dir, build_dir=None, platforms=None, configurations=None, link=None,
                  runtime_link=None, b2_args=None):
@@ -36,11 +43,14 @@ class BuildParameters:
         boost_dir = project.utils.normalize_path(boost_dir)
         if build_dir is not None:
             build_dir = project.utils.normalize_path(build_dir)
-        platforms = platforms or Platform.all()
-        configurations = configurations or Configuration.all()
-        link = link or Linkage.all()
-        runtime_link = runtime_link or Linkage.STATIC
-        b2_args = b2_args or []
+        platforms = platforms or DEFAULT_PLATFORMS
+        configurations = configurations or DEFAULT_CONFIGURATIONS
+        link = link or DEFAULT_LINK
+        runtime_link = runtime_link or DEFAULT_RUNTIME_LINK
+        if b2_args:
+            b2_args = DEFAULT_B2_ARGS + b2_args
+        else:
+            b2_args = DEFAULT_B2_ARGS
 
         self.boost_dir = boost_dir
         self.stage_dir = 'stage'
@@ -169,7 +179,7 @@ def _parse_args(argv=None):
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
     parser.add_argument('--runtime-link', metavar='LINKAGE',
-                        type=Linkage.parse, default=Linkage.STATIC,
+                        type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
                         help=f'how the libraries link to the runtime ({"/".join(map(str, Linkage))})')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
