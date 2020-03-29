@@ -72,6 +72,8 @@ def _parse_args(argv=None):
     parser.add_argument('--runtime-link', metavar='LINKAGE',
                         type=Linkage.parse,
                         help='how the libraries link to the runtime')
+    parser.add_argument('--mingw', action='store_true',
+                        help='build using MinGW-w64')
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
@@ -96,6 +98,7 @@ def build_travis(argv=None):
                              configurations=(_get_configuration(),),
                              link=args.link,
                              runtime_link=args.runtime_link,
+                             mingw=args.mingw,
                              b2_args=args.b2_args)
     build(params)
 

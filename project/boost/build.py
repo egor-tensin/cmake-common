@@ -49,7 +49,7 @@ COMMON_B2_ARGS = ['-d0']
 class BuildParameters:
     def __init__(self, boost_dir, build_dir=None, platforms=None,
                  configurations=None, link=None, runtime_link=None,
-                 b2_args=None, mingw=False):
+                 mingw=False, b2_args=None):
 
         boost_dir = project.utils.normalize_path(boost_dir)
         if build_dir is not None:
@@ -64,14 +64,14 @@ class BuildParameters:
             b2_args = COMMON_B2_ARGS
 
         self.boost_dir = boost_dir
-        self.stage_dir = 'stage'
         self.build_dir = build_dir
+        self.stage_dir = 'stage'
         self.platforms = platforms
         self.configurations = configurations
         self.link = link
         self.runtime_link = runtime_link
-        self.b2_args = b2_args
         self.mingw = mingw
+        self.b2_args = b2_args
 
     @staticmethod
     def from_args(args):
@@ -192,6 +192,9 @@ def _parse_args(argv=None):
                         type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
                         help=f'how the libraries link to the runtime ({linkage_options})')
 
+    parser.add_argument('--mingw', action='store_true',
+                        help='build using MinGW-w64')
+
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=project.utils.normalize_path,
                         help='Boost build directory (temporary directory unless specified)')
@@ -202,9 +205,6 @@ def _parse_args(argv=None):
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
-
-    parser.add_argument('--mingw', action='store_true',
-                        help='build using MinGW-w64')
 
     return parser.parse_args(argv)
 
