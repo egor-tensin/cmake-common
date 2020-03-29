@@ -12,6 +12,15 @@ Usage example:
 
     $ python -m project.boost.build -- boost_1_71_0/ --with-filesystem --with-program_options
     ...
+
+Consult the output of `python -m project.boost.build --help` for more details.
+
+By default, only builds:
+
+* for the current platform,
+* Debug & Release configurations,
+* static libraries,
+* statically linked to the runtime.
 '''
 
 import argparse
@@ -30,11 +39,11 @@ from project.os import on_linux_like
 import project.utils
 
 
-DEFAULT_PLATFORMS = Platform.all()
-DEFAULT_CONFIGURATIONS = Configuration.all()
-DEFAULT_LINK = Linkage.all()
+DEFAULT_PLATFORMS = (Platform.native(),)
+DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
+DEFAULT_LINK = (Linkage.STATIC,)
 DEFAULT_RUNTIME_LINK = Linkage.STATIC
-DEFAULT_B2_ARGS = ['-d0']
+COMMON_B2_ARGS = ['-d0']
 
 
 class BuildParameters:
@@ -50,9 +59,9 @@ class BuildParameters:
         link = link or DEFAULT_LINK
         runtime_link = runtime_link or DEFAULT_RUNTIME_LINK
         if b2_args:
-            b2_args = DEFAULT_B2_ARGS + b2_args
+            b2_args = COMMON_B2_ARGS + b2_args
         else:
-            b2_args = DEFAULT_B2_ARGS
+            b2_args = COMMON_B2_ARGS
 
         self.boost_dir = boost_dir
         self.stage_dir = 'stage'
