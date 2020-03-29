@@ -14,7 +14,7 @@ but written in bash and PowerShell, respectively).
 
 A simple usage example:
 
-    $ %(prog)s --configuration Release --install path/to/somewhere -- ../examples/simple
+    $ python -m project.cmake.build --configuration Release --install path/to/somewhere -- examples/simple
     ...
 
     $ ./path/to/somewhere/bin/foo
@@ -23,13 +23,13 @@ A simple usage example:
 Picking the target platform is build system-specific.  On Visual Studio, pass
 the target platform using the `-A` flag like this:
 
-    > %(prog)s --install path\to\somewhere -- ..\examples\simple -A Win32
+    > python -m project.cmake.build --install path\to\somewhere -- examples\simple -A Win32
     ...
 
 Using GCC-like compilers, the best way is to use CMake toolchain files (see
-cmake/toolchains in this repository for examples).
+toolchains/cmake in this repository for examples).
 
-    $ %(prog)s --install path/to/somewhere -- ../examples/simple -D CMAKE_TOOLCHAIN_FILE="$( pwd )/../toolchains/mingw-x86.cmake"
+    $ python -m project.cmake.build --install path/to/somewhere -- examples/simple -D CMAKE_TOOLCHAIN_FILE="$( pwd )/toolchains/mingw-x86.cmake"
     ...
 '''
 
@@ -157,10 +157,11 @@ def _parse_args(argv=None):
     parser.add_argument('src_dir', metavar='DIR',
                         type=project.utils.normalize_path,
                         help='source directory')
-    parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG',
+    parser.add_argument('cmake_args', metavar='CMAKE_ARG',
+                        nargs='*', default=[],
                         help='additional CMake arguments, to be passed verbatim')
-    args = parser.parse_args(argv)
-    return args
+
+    return parser.parse_args(argv)
 
 
 def main(argv=None):

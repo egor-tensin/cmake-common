@@ -8,10 +8,9 @@ R'''Build Boost.
 This script builds the Boost libraries.  It's main utility is setting the
 correct --stagedir parameter value to avoid name clashes.
 
-Usage examples:
+Usage example:
 
-
-    $ %(prog)s -- boost_1_71_0/ --with-filesystem --with-program_options
+    $ python -m project.boost.build -- boost_1_71_0/ --with-filesystem --with-program_options
     ...
 '''
 
@@ -37,8 +36,9 @@ DEFAULT_B2_ARGS = ['-d0']
 
 
 class BuildParameters:
-    def __init__(self, boost_dir, build_dir=None, platforms=None, configurations=None, link=None,
-                 runtime_link=None, b2_args=None):
+    def __init__(self, boost_dir, build_dir=None, platforms=None,
+                 configurations=None, link=None, runtime_link=None,
+                 b2_args=None):
 
         boost_dir = project.utils.normalize_path(boost_dir)
         if build_dir is not None:
@@ -70,7 +70,9 @@ class BuildParameters:
             for platform in self.platforms:
                 for configuration in self.configurations:
                     for link, runtime_link in self._linkage_options():
-                        yield self._build_params(build_dir, platform, configuration, link, runtime_link)
+                        yield self._build_params(build_dir, platform,
+                                                 configuration, link,
+                                                 runtime_link)
 
     def _linkage_options(self):
         for link in self.link:
@@ -116,14 +118,12 @@ class BuildParameters:
 
     def _stagedir(self, platform, configuration):
         # Having different --stagedir values for every configuration/platform
-        # combination is unnecessary on Windows.
-        # Even for older Boost versions (when the binaries weren't tagged with
-        # their target platform) only a single --stagedir for every platform
-        # would suffice.
-        # For newer versions, just a single --stagedir would do, as the
-        # binaries are tagged with the target platform, as well as their
-        # configuration (a.k.a. "variant" in Boost's terminology).
-        # Still, uniformity helps.
+        # combination is unnecessary on Windows.  Even for older Boost versions
+        # (when the binaries weren't tagged with their target platform) only a
+        # single --stagedir for every platform would suffice.  For newer
+        # versions, just a single --stagedir would do, as the binaries are
+        # tagged with the target platform, as well as their configuration
+        # (a.k.a. "variant" in Boost's terminology).  Still, uniformity helps.
         platform = str(platform)
         configuration = str(configuration)
         return f'--stagedir={os.path.join(self.stage_dir, platform, configuration)}'
@@ -159,28 +159,29 @@ def _parse_args(argv=None):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    platform_options = '/'.join(map(str, Platform.all()))
+    configuration_options = '/'.join(map(str, Configuration.all()))
     # These are used to put the built libraries into proper stage/
     # subdirectories (to avoid name clashes).
-    parser.add_argument('--platform', metavar='PLATFORM',
-                        nargs='*', dest='platforms', default=[],
-                        type=Platform.parse,
-                        help=f'target platform ({"/".join(map(str, Platform))})')
-    parser.add_argument('--configuration', metavar='CONFIGURATION',
-                        nargs='*', dest='configurations', default=[],
-                        type=Configuration.parse,
-                        help=f'target configuration ({"/".join(map(str, Configuration))})')
+    parser.add_argument('--platform', metavar='PLATFORM', dest='platforms',
+                        nargs='*', type=Platform.parse, default=[],
+                        help=f'target platform ({platform_options})')
+    parser.add_argument('--configuration', metavar='CONFIGURATION', dest='configurations',
+                        nargs='*', type=Configuration.parse, default=[],
+                        help=f'target configuration ({configuration_options})')
+
+    linkage_options = '/'.join(map(str, Linkage.all()))
     # This is needed because the default behaviour on Linux and Windows is
     # different: static & dynamic libs are built on Linux, but only static libs
     # are built on Windows by default.
     parser.add_argument('--link', metavar='LINKAGE',
-                        nargs='*', default=[],
-                        type=Linkage.parse,
-                        help=f'how the libraries are linked ({"/".join(map(str, Linkage))})')
+                        nargs='*', type=Linkage.parse, default=[],
+                        help=f'how the libraries are linked ({linkage_options})')
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
     parser.add_argument('--runtime-link', metavar='LINKAGE',
                         type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
-                        help=f'how the libraries link to the runtime ({"/".join(map(str, Linkage))})')
+                        help=f'how the libraries link to the runtime ({linkage_options})')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=project.utils.normalize_path,
@@ -189,7 +190,8 @@ def _parse_args(argv=None):
                         type=project.utils.normalize_path,
                         help='root Boost directory')
 
-    parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
+    parser.add_argument('b2_args', metavar='B2_ARG',
+                        nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
 
     return parser.parse_args(argv)

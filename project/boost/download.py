@@ -10,10 +10,10 @@ is that it's supposed to be cross-platform.
 
 Usage examples:
 
-    $ %(prog)s 1.71.0
+    $ python -m project.boost.download 1.71.0
     ...
 
-    $ %(prog)s --unpack ~/workspace/third-party/ 1.65.0
+    $ python -m project.boost.download --unpack ~/workspace/third-party/ 1.65.0
     ...
 '''
 
@@ -98,8 +98,10 @@ def _parse_args(argv=None):
     parser.add_argument('--cache', metavar='DIR', dest='cache_dir',
                         type=project.utils.normalize_path,
                         help='download directory (temporary file unless specified)')
-    parser.add_argument('version', metavar='VERSION', type=Version.from_string,
+    parser.add_argument('version', metavar='VERSION',
+                        type=Version.from_string,
                         help='Boost version (in the MAJOR.MINOR.PATCH format)')
+
     return parser.parse_args(argv)
 
 

@@ -5,8 +5,8 @@
 
 R'''Download & build Boost on Travis.
 
-This is similar to build.py, but auto-fills some parameters for build.py from
-the Travis-defined environment variables.
+This is similar to running both project.boost.download & project.boost.build,
+but auto-fills some parameters from the Travis-defined environment variables.
 
 Boost is built in $HOME/boost.
 '''
@@ -65,12 +65,17 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--link', metavar='LINKAGE', nargs='*', type=Linkage.parse,
+
+    parser.add_argument('--link', metavar='LINKAGE',
+                        nargs='*', type=Linkage.parse,
                         help='how the libraries are linked')
-    parser.add_argument('--runtime-link', metavar='LINKAGE', type=Linkage.parse,
+    parser.add_argument('--runtime-link', metavar='LINKAGE',
+                        type=Linkage.parse,
                         help='how the libraries link to the runtime')
-    parser.add_argument('b2_args', nargs='*', metavar='B2_ARG', default=[],
+    parser.add_argument('b2_args', metavar='B2_ARG',
+                        nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
+
     return parser.parse_args(argv)
 
 

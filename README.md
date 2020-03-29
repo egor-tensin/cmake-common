@@ -30,8 +30,8 @@ It's used in a bunch of projects of mine, namely in
 
 and a few others.
 
-[Boost]: boost/build/README.md
-[CMake project]: cmake/build/README.md
+[Boost]: project/boost/README.md
+[CMake project]: project/cmake/README.md
 
 [aes-tools]: https://github.com/egor-tensin/aes-tools
 [math-server]: https://github.com/egor-tensin/math-server
