@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2019 Egor Tensin <Egor.Tensin@gmail.com>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common.
@@ -42,31 +40,38 @@ import sys
 import tempfile
 
 from project.configuration import Configuration
-import project.utils
+from project.utils import normalize_path, run, setup_logging
+
+
+DEFAULT_CONFIGURATION = Configuration.DEBUG
 
 
 def run_cmake(cmake_args):
-    return project.utils.run(['cmake'] + cmake_args)
+    return run(['cmake'] + cmake_args)
 
 
 class GenerationPhase:
-    def __init__(self, build_dir, params):
+    def __init__(self, src_dir, build_dir, install_dir=None,
+                 configuration=DEFAULT_CONFIGURATION, cmake_args=None):
+        src_dir = normalize_path(src_dir)
+        build_dir = normalize_path(build_dir)
+        if install_dir is not None:
+            install_dir = normalize_path(install_dir)
+        cmake_args = cmake_args or []
+
+        self.src_dir = src_dir
         self.build_dir = build_dir
-        self.params = params
+        self.install_dir = install_dir
+        self.configuration = configuration
+        self.cmake_args = cmake_args
 
     def _cmake_args(self):
-        return self._to_cmake_args(self.build_dir, self.params)
-
-    @staticmethod
-    def _to_cmake_args(build_dir, params):
         result = []
-        if params.install_dir is not None:
-            result += ['-D', f'CMAKE_INSTALL_PREFIX={params.install_dir}']
-        if params.configuration is not None:
-            result += ['-D', f'CMAKE_BUILD_TYPE={params.configuration}']
-        if params.cmake_args is not None:
-            result += params.cmake_args
-        result += [f'-B{build_dir}', f'-H{params.src_dir}']
+        if self.install_dir is not None:
+            result += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
+        result += ['-D', f'CMAKE_BUILD_TYPE={self.configuration}']
+        result += self.cmake_args
+        result += [f'-B{self.build_dir}', f'-H{self.src_dir}']
         return result
 
     def run(self):
@@ -74,19 +79,19 @@ class GenerationPhase:
 
 
 class BuildPhase:
-    def __init__(self, build_dir, params):
+    def __init__(self, build_dir, install_dir=None,
+                 configuration=DEFAULT_CONFIGURATION):
+
+        build_dir = normalize_path(build_dir)
+
         self.build_dir = build_dir
-        self.params = params
+        self.install_dir = install_dir
+        self.configuration = configuration
 
     def _cmake_args(self):
-        return self._to_cmake_args(self.build_dir, self.params)
-
-    @staticmethod
-    def _to_cmake_args(build_dir, params):
-        result = ['--build', build_dir]
-        if params.configuration is not None:
-            result += ['--config', str(params.configuration)]
-        if params.install_dir is not None:
+        result = ['--build', self.build_dir]
+        result += ['--config', str(self.configuration)]
+        if self.install_dir is not None:
             result += ['--target', 'install']
         return result
 
@@ -96,15 +101,14 @@ class BuildPhase:
 
 class BuildParameters:
     def __init__(self, src_dir, build_dir=None, install_dir=None,
-                 configuration=Configuration.DEBUG, cmake_args=None):
+                 configuration=DEFAULT_CONFIGURATION, cmake_args=None):
 
-        src_dir = project.utils.normalize_path(src_dir)
+        src_dir = normalize_path(src_dir)
         if build_dir is not None:
-            build_dir = project.utils.normalize_path(build_dir)
+            build_dir = normalize_path(build_dir)
         if install_dir is not None:
-            install_dir = project.utils.normalize_path(install_dir)
-        if cmake_args is None:
-            cmake_args = []
+            install_dir = normalize_path(install_dir)
+        cmake_args = cmake_args or []
 
         self.src_dir = src_dir
         self.build_dir = build_dir
@@ -134,9 +138,13 @@ class BuildParameters:
 
 def build(params):
     with params.create_build_dir() as build_dir:
-        gen_phase = GenerationPhase(build_dir, params)
+        gen_phase = GenerationPhase(params.src_dir, build_dir,
+                                    install_dir=params.install_dir,
+                                    configuration=params.configuration,
+                                    cmake_args=params.cmake_args)
         gen_phase.run()
-        build_phase = BuildPhase(build_dir, params)
+        build_phase = BuildPhase(build_dir, install_dir=params.install_dir,
+                                 configuration=params.configuration)
         build_phase.run()
 
 
@@ -150,19 +158,19 @@ def _parse_args(argv=None):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=project.utils.normalize_path,
+                        type=normalize_path,
                         help='build directory (temporary directory unless specified)')
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
-                        type=project.utils.normalize_path,
+                        type=normalize_path,
                         help='install directory')
 
     configuration_options = '/'.join(map(str, Configuration.all()))
     parser.add_argument('--configuration', metavar='CONFIG',
-                        type=Configuration.parse, default=Configuration.DEBUG,
+                        type=Configuration.parse, default=DEFAULT_CONFIGURATION,
                         help=f'build configuration ({configuration_options})')
 
     parser.add_argument('src_dir', metavar='DIR',
-                        type=project.utils.normalize_path,
+                        type=normalize_path,
                         help='source directory')
     parser.add_argument('cmake_args', metavar='CMAKE_ARG',
                         nargs='*', default=[],
@@ -172,7 +180,7 @@ def _parse_args(argv=None):
 
 
 def main(argv=None):
-    with project.utils.setup_logging():
+    with setup_logging():
         build(BuildParameters.from_args(_parse_args(argv)))
 
 
