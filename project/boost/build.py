@@ -23,6 +23,21 @@ By default, only builds:
 * statically linked to the runtime.
 '''
 
+# The way Boost names library files by default is insane.  It's absolutely not compatible between
+# OSs, compilers, Boost versions, etc.  On Linux, for example, it would create
+# stage/lib/libboost_filesystem.a, while on Windows it would become something insane like
+# stage\lib\libboost_filesystem-vc142-mt-s-x64-1_72.lib.  More than that, older Boost versions
+# wouldn't include architecture information (the "x64" part) in the file name, so you couldn't
+# store libraries for both x86 and x64 in the same directory.  On Linux, on the other hand, you
+# can't even store debug/release binaries in the same directory.  What's worse is that older CMake
+# versions don't support the architecture suffix, choking on the Windows example above.
+#
+# With all of that in mind, I decided to bring some uniformity by sacrificing some flexibility.
+# b2 is called with --layout=system, and libraries are put to stage/<platform>/<configuration>/lib,
+# where <platform> is x86/x64 and <configuration> is CMake's CMAKE_BUILD_TYPE.  That means that I
+# can't have libraries with different runtime-link values in the same directory, but I don't really
+# care.
+
 import argparse
 from contextlib import contextmanager
 import logging
@@ -41,8 +56,11 @@ from project.utils import normalize_path, setup_logging
 
 DEFAULT_PLATFORMS = (Platform.native(),)
 DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
+# For my development, I link everything statically (to be able to pull the
+# binaries from a CI, etc. and run them everywhere):
 DEFAULT_LINK = (Linkage.STATIC,)
 DEFAULT_RUNTIME_LINK = Linkage.STATIC
+# Shut compilers up:
 COMMON_B2_ARGS = ['-d0']
 
 
@@ -118,6 +136,7 @@ class BuildParameters:
         params = []
         params.append(self._build_dir(build_dir))
         params.append(self._stagedir(toolchain, configuration))
+        params.append('--layout=system')
         params += toolchain.get_b2_args()
         params.append(self._link(link))
         params.append(self._runtime_link(runtime_link))
@@ -130,13 +149,6 @@ class BuildParameters:
         return f'--build-dir={build_dir}'
 
     def _stagedir(self, toolchain, configuration):
-        # Having different --stagedir values for every configuration/platform
-        # combination is unnecessary on Windows.  Even for older Boost versions
-        # (when the binaries weren't tagged with their target platform) only a
-        # single --stagedir for every platform would suffice.  For newer
-        # versions, just a single --stagedir would do, as the binaries are
-        # tagged with the target platform, as well as their configuration
-        # (a.k.a. "variant" in Boost's terminology).  Still, uniformity helps.
         platform = str(toolchain.platform)
         configuration = str(configuration)
         return f'--stagedir={os.path.join(self.stage_dir, platform, configuration)}'
