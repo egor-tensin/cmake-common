@@ -266,7 +266,7 @@ boost/65/ls: echo/boost/65/ls
 
 .PHONY: boost/65/exe/build
 boost/65/exe/build: echo/boost/65/exe/build
-	TRAVIS_BUILD_DIR="$$TRAVIS_BUILD_DIR/examples/boost" "$(python)" -m project.ci.travis.cmake --install "$(install_prefix)/boost_1_65_0" --boost "$$HOME/boost"
+	TRAVIS_BUILD_DIR="$$TRAVIS_BUILD_DIR/examples/boost" "$(python)" -m project.ci.travis.cmake --install "$(install_prefix)/boost_1_65_0"
 endif
 ifdef APPVEYOR
 .PHONY: boost/65/build
@@ -279,7 +279,7 @@ boost/65/ls: echo/boost/65/ls
 
 .PHONY: boost/65/exe/build
 boost/65/exe/build: echo/boost/65/exe/build
-	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\examples\boost" && "$(python)" -m project.ci.appveyor.cmake --install "$(install_prefix)/boost_1_65_0" --boost "C:\projects\boost"
+	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\examples\boost" && "$(python)" -m project.ci.appveyor.cmake --install "$(install_prefix)/boost_1_65_0"
 endif
 
 .PHONY: boost/65/exe/run

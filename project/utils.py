@@ -74,3 +74,9 @@ def temp_file(contents, **kwargs):
         file.write(contents)
     with delete(path):
         yield path
+
+
+def env(name):
+    if name not in os.environ:
+        raise RuntimeError(f'undefined environment variable: {name}')
+    return os.environ[name]
