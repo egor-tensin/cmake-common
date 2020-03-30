@@ -43,11 +43,13 @@ def run_cmake(cmake_args):
 class GenerationPhase:
     def __init__(self, src_dir, build_dir, install_dir=None,
                  platform=None, configuration=DEFAULT_CONFIGURATION,
-                 mingw=False, cmake_args=None):
+                 boost_dir=None, mingw=False, cmake_args=None):
         src_dir = normalize_path(src_dir)
         build_dir = normalize_path(build_dir)
         if install_dir is not None:
             install_dir = normalize_path(install_dir)
+        if boost_dir is not None:
+            boost_dir = normalize_path(boost_dir)
         cmake_args = cmake_args or []
 
         self.src_dir = src_dir
@@ -55,6 +57,7 @@ class GenerationPhase:
         self.install_dir = install_dir
         self.platform = platform
         self.configuration = configuration
+        self.boost_dir = boost_dir
         self.mingw = mingw
         self.cmake_args = cmake_args
 
@@ -64,9 +67,25 @@ class GenerationPhase:
             result += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
         result += toolchain.get_cmake_args()
         result += ['-D', f'CMAKE_BUILD_TYPE={self.configuration}']
+        result += self._get_boost_args()
         result += self.cmake_args
         result += [f'-B{self.build_dir}', f'-H{self.src_dir}']
         return result
+
+    def _get_boost_args(self):
+        if self.boost_dir is None:
+            return []
+        stagedir = self._stagedir(self.boost_dir, self.platform, self.configuration)
+        return [
+            '-D', f'BOOST_ROOT={self.boost_dir}',
+            '-D', f'BOOST_LIBRARYDIR={stagedir}',
+        ]
+
+    @staticmethod
+    def _stagedir(boost_dir, platform, configuration):
+        if platform is None:
+            platform = Platform.native()
+        return os.path.join(boost_dir, 'stage', str(platform), str(configuration), 'lib')
 
     def run(self):
         with Toolchain.detect(self.platform, self.build_dir, mingw=self.mingw) as toolchain:
@@ -97,13 +116,15 @@ class BuildPhase:
 class BuildParameters:
     def __init__(self, src_dir, build_dir=None, install_dir=None,
                  platform=None, configuration=DEFAULT_CONFIGURATION,
-                 mingw=False, cmake_args=None):
+                 boost_dir=None, mingw=False, cmake_args=None):
 
         src_dir = normalize_path(src_dir)
         if build_dir is not None:
             build_dir = normalize_path(build_dir)
         if install_dir is not None:
             install_dir = normalize_path(install_dir)
+        if boost_dir is not None:
+            boost_dir = normalize_path(boost_dir)
         cmake_args = cmake_args or []
 
         self.src_dir = src_dir
@@ -111,6 +132,7 @@ class BuildParameters:
         self.install_dir = install_dir
         self.platform = platform
         self.configuration = configuration
+        self.boost_dir = boost_dir
         self.mingw = mingw
         self.cmake_args = cmake_args
 
@@ -140,6 +162,7 @@ def build(params):
                                     install_dir=params.install_dir,
                                     platform=params.platform,
                                     configuration=params.configuration,
+                                    boost_dir=params.boost_dir,
                                     mingw=params.mingw,
                                     cmake_args=params.cmake_args)
         gen_phase.run()
@@ -173,6 +196,10 @@ def _parse_args(argv=None):
     parser.add_argument('--configuration', metavar='CONFIG',
                         type=Configuration.parse, default=DEFAULT_CONFIGURATION,
                         help=f'build configuration ({configuration_options})')
+
+    parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
+                        type=normalize_path,
+                        help='set Boost directory path')
 
     parser.add_argument('--mingw', action='store_true',
                         help='build using MinGW-w64')

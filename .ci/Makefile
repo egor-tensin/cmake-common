@@ -19,8 +19,7 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 endif
 
-# Additional b2 flags:
-b2_flags =
+makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Basic stuff that needed to be abstracted away:
 ifeq ($(windows),1)
@@ -46,15 +45,9 @@ else
 python := python3
 endif
 
-# The build scripts are not completely OS-agnostic, unfortunately:
 ifeq ($(windows),1)
-x64_args = -A x64
-x86_args = -A Win32
 install_prefix = C:/install
 else
-makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-x64_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/../toolchains/cmake/gcc-x64.cmake"
-x86_args := -D "CMAKE_TOOLCHAIN_FILE=$(makefile_dir)/../toolchains/cmake/gcc-x86.cmake"
 install_prefix := $$HOME/install
 endif
 
@@ -190,7 +183,7 @@ boost/58/download: echo/boost/58/build
 
 .PHONY: boost/58/build
 boost/58/build:
-	"$(python)" -m project.boost.build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options $(b2_flags)
+	"$(python)" -m project.boost.build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options
 
 .PHONY: boost/58/ls
 boost/58/ls: echo/boost/58/ls
@@ -198,7 +191,7 @@ boost/58/ls: echo/boost/58/ls
 
 .PHONY: boost/58/exe/build
 boost/58/exe/build: echo/boost/58/exe/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_58_0" --platform x86 --configuration Debug -- examples/boost -D "BOOST_ROOT=$(cwd)/boost_1_58_0" -D "BOOST_LIBRARYDIR=$(cwd)/boost_1_58_0/stage/x86/Debug/lib"
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_58_0" --platform x86 --configuration Debug --boost boost_1_58_0 examples/boost
 
 .PHONY: boost/58/exe/run
 # Boost should be linked statically, no need to adjust PATH:
@@ -227,7 +220,7 @@ boost/72/download: echo/boost/72/build
 
 .PHONY: boost/72/build
 boost/72/build:
-	"$(python)" -m project.boost.build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options $(b2_flags)
+	"$(python)" -m project.boost.build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options
 
 .PHONY: boost/72/ls
 boost/72/ls: echo/boost/72/ls
@@ -235,7 +228,7 @@ boost/72/ls: echo/boost/72/ls
 
 .PHONY: boost/72/exe/build
 boost/72/exe/build: echo/boost/72/exe/build
-	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_72_0" --platform x64 --configuration Release -- examples/boost -D "BOOST_ROOT=$(cwd)/boost_1_72_0" -D "BOOST_LIBRARYDIR=$(cwd)/boost_1_72_0/stage/x64/Release/lib" -D Boost_USE_STATIC_LIBS=OFF
+	"$(python)" -m project.cmake.build --install "$(install_prefix)/boost_1_72_0" --platform x64 --configuration Release --boost boost_1_72_0 -- examples/boost -D Boost_USE_STATIC_LIBS=OFF
 
 .PHONY: boost/72/exe/run
 # Boost is linked dynamically, we need to adjust PATH:
@@ -265,7 +258,7 @@ boost/72: boost/72/download boost/72/build boost/72/ls boost/72/exe echo/boost/7
 ifdef TRAVIS
 .PHONY: boost/65/build
 boost/65/build: echo/boost/65/build
-	"$(python)" -m project.ci.travis.boost --link static -- --with-filesystem --with-program_options $(b2_flags)
+	"$(python)" -m project.ci.travis.boost --link static -- --with-filesystem --with-program_options
 
 .PHONY: boost/65/ls
 boost/65/ls: echo/boost/65/ls
@@ -273,12 +266,12 @@ boost/65/ls: echo/boost/65/ls
 
 .PHONY: boost/65/exe/build
 boost/65/exe/build: echo/boost/65/exe/build
-	TRAVIS_BUILD_DIR="$$TRAVIS_BUILD_DIR/examples/boost" "$(python)" -m project.ci.travis.cmake --install "$(install_prefix)/boost_1_65_0" -- -D "BOOST_ROOT=$$HOME/boost" -D "BOOST_LIBRARYDIR=$$HOME/boost/stage/$$platform/$$configuration/lib"
+	TRAVIS_BUILD_DIR="$$TRAVIS_BUILD_DIR/examples/boost" "$(python)" -m project.ci.travis.cmake --install "$(install_prefix)/boost_1_65_0" --boost "$$HOME/boost"
 endif
 ifdef APPVEYOR
 .PHONY: boost/65/build
 boost/65/build: echo/boost/65/build
-	"$(python)" -m project.ci.appveyor.boost --link static -- --with-filesystem --with-program_options $(b2_flags)
+	"$(python)" -m project.ci.appveyor.boost --link static -- --with-filesystem --with-program_options
 
 .PHONY: boost/65/ls
 boost/65/ls: echo/boost/65/ls
@@ -286,7 +279,7 @@ boost/65/ls: echo/boost/65/ls
 
 .PHONY: boost/65/exe/build
 boost/65/exe/build: echo/boost/65/exe/build
-	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\examples\boost" && "$(python)" -m project.ci.appveyor.cmake --install "$(install_prefix)/boost_1_65_0" -- -D "BOOST_ROOT=C:\projects\boost" -D "BOOST_LIBRARYDIR=C:\projects\boost\stage\%PLATFORM%\%CONFIGURATION%\lib"
+	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\examples\boost" && "$(python)" -m project.ci.appveyor.cmake --install "$(install_prefix)/boost_1_65_0" --boost "C:\projects\boost"
 endif
 
 .PHONY: boost/65/exe/run

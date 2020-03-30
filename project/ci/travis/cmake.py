@@ -61,6 +61,8 @@ def _parse_args(argv=None):
 
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
                         help='install directory')
+    parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
+                        help='set Boost directory path')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
                         help='additional CMake arguments, to be passed verbatim')
     return parser.parse_args(argv)
@@ -75,6 +77,7 @@ def build_travis(argv=None):
                              install_dir=args.install_dir,
                              platform=_get_platform(),
                              configuration=_get_configuration(),
+                             boost_dir=args.boost_dir,
                              cmake_args=args.cmake_args)
     build(params)
 
