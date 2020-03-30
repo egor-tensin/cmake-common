@@ -23,6 +23,8 @@ def _parse_args(dirs, argv=None):
                         help='install directory')
     parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
                         help='set Boost directory path')
+    parser.add_argument('--mingw', action='store_true',
+                        help='build using MinGW-w64')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
                         help='additional CMake arguments, to be passed verbatim')
     return parser.parse_args(argv)
@@ -37,5 +39,6 @@ def build_ci(dirs, argv=None):
                              platform=dirs.get_platform(),
                              configuration=dirs.get_configuration(),
                              boost_dir=args.boost_dir or dirs.get_boost_dir(),
+                             mingw=args.mingw,
                              cmake_args=dirs.get_cmake_args() + args.cmake_args)
     build(params)
