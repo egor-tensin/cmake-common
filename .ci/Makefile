@@ -183,7 +183,7 @@ boost/58/download: echo/boost/58/build
 
 .PHONY: boost/58/build
 boost/58/build:
-	"$(python)" -m project.boost.build --configuration Debug --platform x86 --link static -- ./boost_1_58_0 --with-filesystem --with-program_options
+	"$(python)" -m project.boost.build --platform x86 --configuration Debug --link static -- ./boost_1_58_0 --with-filesystem --with-program_options
 
 .PHONY: boost/58/ls
 boost/58/ls: echo/boost/58/ls
@@ -220,7 +220,7 @@ boost/72/download: echo/boost/72/build
 
 .PHONY: boost/72/build
 boost/72/build:
-	"$(python)" -m project.boost.build --platform x86 x64 --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options
+	"$(python)" -m project.boost.build --platform x86 x64 --configuration Debug Release --link shared -- ./boost_1_72_0 --with-filesystem --with-program_options
 
 .PHONY: boost/72/ls
 boost/72/ls: echo/boost/72/ls
@@ -251,7 +251,7 @@ boost/72: boost/72/download boost/72/build boost/72/ls boost/72/exe echo/boost/7
 
 # Boost 1.65.0:
 # * download to $HOME (on Travis), C:\projects (on AppVeyor),
-# * x64, MinSizeRel (= Release), static & shared libraries.
+# * x64, MinSizeRel (= Release), static libraries only.
 # examples/boost:
 # * x64/MinSizeRel build (set in .travis.yml and .appveyor.yml).
 
