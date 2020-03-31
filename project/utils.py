@@ -4,10 +4,12 @@
 # Distributed under the MIT License.
 
 from contextlib import contextmanager
+import functools
 import logging
 import os.path
 import subprocess
 import tempfile
+import time
 
 
 def normalize_path(s):
@@ -80,3 +82,23 @@ def env(name):
     if name not in os.environ:
         raise RuntimeError(f'undefined environment variable: {name}')
     return os.environ[name]
+
+
+def retry(exc_type, timeout=5, retries=3, backoff=2):
+    def wrapper(func):
+        @functools.wraps(func)
+        def func2(*args, **kwargs):
+            current_timeout = timeout
+            for retry_n in range(retries):
+                try:
+                    return func(*args, **kwargs)
+                except exc_type as e:
+                    logging.exception(e)
+                    if retry_n < retries:
+                        logging.error('Retrying after %d seconds', current_timeout)
+                        time.sleep(current_timeout)
+                        current_timeout *= backoff
+                        continue
+                    raise
+        return func2
+    return wrapper

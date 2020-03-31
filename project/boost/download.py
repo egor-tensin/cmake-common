@@ -25,14 +25,19 @@ import urllib.request
 
 from project.boost.archive import Archive, PermanentStorage, TemporaryStorage
 from project.boost.version import Version
-from project.utils import normalize_path, setup_logging
+from project.utils import normalize_path, retry, setup_logging
+
+
+@retry(urllib.request.URLError)
+def _download_try_url_retry(url):
+    with urllib.request.urlopen(url, timeout=20) as request:
+        return request.read()
 
 
 def _download_try_url(url):
     logging.info('Trying URL: %s', url)
     try:
-        with urllib.request.urlopen(url, timeout=20) as request:
-            return request.read()
+        return _download_try_url_retry(url)
     except urllib.request.URLError as e:
         logging.error("Couldn't download from this mirror, an error occured:")
         logging.exception(e)
