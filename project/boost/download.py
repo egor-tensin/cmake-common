@@ -68,7 +68,13 @@ def _download_if_necessary(version, storage):
 
 
 class DownloadParameters:
-    def __init__(self, version, unpack_dir='.', cache_dir=None):
+    def __init__(self, version, unpack_dir=None, cache_dir=None):
+        if unpack_dir is None:
+            if cache_dir is None:
+                unpack_dir = '.'
+            else:
+                unpack_dir = cache_dir
+
         self.version = version
         self.unpack_dir = normalize_path(unpack_dir)
         self.storage = TemporaryStorage(unpack_dir)
@@ -98,7 +104,7 @@ def _parse_args(argv=None):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
-                        type=normalize_path, default='.',
+                        type=normalize_path,
                         help='directory to unpack the archive to')
     parser.add_argument('--cache', metavar='DIR', dest='cache_dir',
                         type=normalize_path,
