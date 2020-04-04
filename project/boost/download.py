@@ -20,6 +20,7 @@ Usage examples:
 import argparse
 from contextlib import contextmanager
 import logging
+import os
 import sys
 import urllib.request
 
@@ -68,7 +69,7 @@ def _download_if_necessary(version, storage):
 
 
 class DownloadParameters:
-    def __init__(self, version, unpack_dir=None, cache_dir=None):
+    def __init__(self, version, unpack_dir=None, cache_dir=None, dest_path=None):
         if unpack_dir is None:
             if cache_dir is None:
                 unpack_dir = '.'
@@ -81,10 +82,15 @@ class DownloadParameters:
         if cache_dir is not None:
             cache_dir = normalize_path(cache_dir)
             self.storage = PermanentStorage(cache_dir)
+        self.dest_path = dest_path
 
     @staticmethod
     def from_args(args):
         return DownloadParameters(**vars(args))
+
+    def rename_if_necessary(self, boost_dir):
+        if self.dest_path is not None:
+            os.rename(boost_dir.path, self.dest_path)
 
 
 def download(params):
@@ -92,6 +98,7 @@ def download(params):
         archive = Archive(params.version, path)
         boost_dir = archive.unpack(params.unpack_dir)
         boost_dir.bootstrap()
+        params.rename_if_necessary(boost_dir)
 
 
 def _parse_args(argv=None):
@@ -112,6 +119,9 @@ def _parse_args(argv=None):
     parser.add_argument('version', metavar='VERSION',
                         type=Version.from_string,
                         help='Boost version (in the MAJOR.MINOR.PATCH format)')
+    parser.add_argument('dest_path', metavar='DIR', nargs='?',
+                        type=normalize_path,
+                        help='rename the boost directory to DIR')
 
     return parser.parse_args(argv)
 

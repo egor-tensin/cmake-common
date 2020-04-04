@@ -5,8 +5,6 @@
 
 import argparse
 import logging
-import os
-import os.path
 import sys
 
 from project.boost.download import DownloadParameters, download
@@ -43,11 +41,9 @@ def build_ci(dirs, argv=None):
 
     version = dirs.get_boost_version()
     build_dir = dirs.get_build_dir()
-    download(DownloadParameters(version, unpack_dir=build_dir))
-
-    unpacked_boost_dir = version.dir_path(build_dir)
     boost_dir = dirs.get_boost_dir()
-    os.rename(unpacked_boost_dir, boost_dir)
+    params = DownloadParameters(version, unpack_dir=build_dir, dest_path=boost_dir)
+    download(params)
 
     params = BuildParameters(boost_dir,
                              platforms=(dirs.get_platform(),),
