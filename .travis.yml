@@ -4,7 +4,6 @@ dist: focal
 
 addons:
   apt:
-    update: true
     packages:
       - g++-multilib
 
@@ -14,7 +13,6 @@ jobs:
       language: shell
       addons:
         apt:
-          update: true
           packages:
             - clang-format-9
       script: ./tools/clang-format.py --clang-format clang-format-9
