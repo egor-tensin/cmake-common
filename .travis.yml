@@ -10,7 +10,7 @@ addons:
 jobs:
   include:
     - name: Run clang-format
-      language: shell
+      language: minimal
       addons:
         apt:
           packages:
