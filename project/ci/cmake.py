@@ -34,7 +34,7 @@ def build_ci(dirs, argv=None):
     args = _parse_args(dirs, argv)
 
     params = BuildParameters(dirs.get_src_dir(),
-                             build_dir=dirs.get_build_dir(),
+                             build_dir=dirs.get_cmake_dir(),
                              install_dir=args.install_dir,
                              platform=dirs.get_platform(),
                              configuration=dirs.get_configuration(),
