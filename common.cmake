@@ -38,7 +38,7 @@ if(toolset STREQUAL "GNU")
 elseif(toolset STREQUAL "MSVC")
     set(is_msvc ON)
 else()
-    message(WARNING "Unrecognized toolset: ${toolset}")
+    message(WARNING "common.cmake: Unrecognized toolset: ${toolset}")
 endif()
 
 # User-defined switches:
@@ -78,13 +78,13 @@ option(Boost_USE_STATIC_LIBS "Use the static Boost libraries" "${default_value}"
 option(Boost_USE_STATIC_RUNTIME "Use Boost libraries linked to the runtime statically" "${CC_STATIC_RUNTIME}")
 
 if(NOT parent_dir)
-    message(STATUS "Toolset:                        ${toolset}")
-    message(STATUS "C++ standard:                   ${CC_CXX_STANDARD}")
-    message(STATUS "Set common compiler options:    ${CC_BEST_PRACTICES}")
-    message(STATUS "Define useful Windows macros:   ${CC_WINDOWS_DEF}")
-    message(STATUS "Use the static Boost libraries: ${Boost_USE_STATIC_LIBS}")
-    message(STATUS "Link the runtime statically:    ${CC_STATIC_RUNTIME}")
-    message(STATUS "Strip symbols:                  ${CC_STRIP_SYMBOLS}")
+    message(STATUS "common.cmake: Toolset:                 ${toolset}")
+    message(STATUS "common.cmake: C++ standard:            ${CC_CXX_STANDARD}")
+    message(STATUS "common.cmake: Common compiler options: ${CC_BEST_PRACTICES}")
+    message(STATUS "common.cmake: Useful Windows macros:   ${CC_WINDOWS_DEF}")
+    message(STATUS "common.cmake: Static Boost libraries:  ${Boost_USE_STATIC_LIBS}")
+    message(STATUS "common.cmake: Static runtime:          ${CC_STATIC_RUNTIME}")
+    message(STATUS "common.cmake: Strip symbols:           ${CC_STRIP_SYMBOLS}")
 endif()
 
 # C++ standard version:
@@ -93,104 +93,101 @@ set(CMAKE_CXX_STANDARD "${CC_CXX_STANDARD}")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Common compiler options routines:
+# Common compiler options:
 
 function(_cc_best_practices_msvc target)
     set(compile_options /MP /W4)
-    get_target_property(target_type "${target}" TYPE)
-    get_target_property(aliased "${target}" ALIASED_TARGET)
-    if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
-        target_compile_options("${target}" PRIVATE ${compile_options})
-    endif()
+    target_compile_options("${target}" PRIVATE ${compile_options})
 endfunction()
 
 function(_cc_best_practices_gcc target)
     set(compile_options -Wall -Wextra)
-    get_target_property(target_type "${target}" TYPE)
-    get_target_property(aliased "${target}" ALIASED_TARGET)
-    if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
-        target_compile_options("${target}" PRIVATE ${compile_options})
-    endif()
+    target_compile_options("${target}" PRIVATE ${compile_options})
 endfunction()
 
 function(_cc_best_practices target)
-    if(is_msvc)
-        _cc_best_practices_msvc("${target}")
-    elseif(is_gcc)
-        _cc_best_practices_gcc("${target}")
+    get_target_property(target_type "${target}" TYPE)
+    get_target_property(aliased "${target}" ALIASED_TARGET)
+    if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
+        message(STATUS "common.cmake: ${target}: Settings common compiler options")
+        if(is_msvc)
+            _cc_best_practices_msvc("${target}")
+        elseif(is_gcc)
+            _cc_best_practices_gcc("${target}")
+        endif()
     endif()
 endfunction()
 
-# Useful Windows macros routines:
+# Useful Windows macros:
 
 function(_cc_common_windows_definitions target)
     set(compile_definitions WIN32_LEAN_AND_MEAN NOMINMAX)
     get_target_property(target_type "${target}" TYPE)
     if(target_type STREQUAL "INTERFACE_LIBRARY")
+        message(STATUS "common.cmake: ${target}: Defining useful Windows macros")
         target_compile_definitions("${target}" INTERFACE ${compile_definitions})
     else()
         get_target_property(aliased "${target}" ALIASED_TARGET)
         if(NOT aliased)
+            message(STATUS "common.cmake: ${target}: Defining useful Windows macros")
             target_compile_definitions("${target}" PRIVATE ${compile_definitions})
         endif()
     endif()
 endfunction()
 
-# Static runtime routines:
+# Static runtime:
 
 function(_cc_static_runtime_msvc target)
-    get_target_property(target_type "${target}" TYPE)
-    get_target_property(aliased "${target}" ALIASED_TARGET)
-    if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
-        target_compile_options("${target}" PRIVATE
-            $<$<CONFIG:Debug>:/MTd>
-            $<$<NOT:$<CONFIG:Debug>>:/MT>)
-    endif()
+    target_compile_options("${target}" PRIVATE
+        $<$<CONFIG:Debug>:/MTd>
+        $<$<NOT:$<CONFIG:Debug>>:/MT>)
 endfunction()
 
 function(_cc_static_runtime_gcc target)
-    get_target_property(target_type "${target}" TYPE)
-    get_target_property(aliased "${target}" ALIASED_TARGET)
-    if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
-        # This causes issues with mixing keyword- and plain- versions of
-        # target_link_libraries:
-        #target_link_libraries("${target}" PRIVATE -static)
+    # This causes issues with mixing keyword- and plain- versions of
+    # target_link_libraries:
+    #target_link_libraries("${target}" PRIVATE -static)
 
-        set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -static")
+    set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -static")
 
-        # Or (haven't tested this), if CMake 3.13+ is used:
-        #target_link_options("${target}" PRIVATE -static)
-    endif()
+    # Or (haven't tested this), if CMake 3.13+ is used:
+    #target_link_options("${target}" PRIVATE -static)
 endfunction()
 
 function(_cc_static_runtime target)
-    if(is_msvc)
-        _cc_static_runtime_msvc("${target}")
-    elseif(is_gcc)
-        _cc_static_runtime_gcc("${target}")
+    get_target_property(target_type "${target}" TYPE)
+    get_target_property(aliased "${target}" ALIASED_TARGET)
+    if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
+        message(STATUS "common.cmake: ${target}: Linking the runtime statically")
+        if(is_msvc)
+            _cc_static_runtime_msvc("${target}")
+        elseif(is_gcc)
+            _cc_static_runtime_gcc("${target}")
+        endif()
     endif()
 endfunction()
 
-# Symbol stripping routines:
+# Symbol stripping:
 
 function(_cc_strip_symbols_gcc target)
+    # This causes issues with mixing keyword- and plain- versions of
+    # target_link_libraries:
+    #target_link_libraries("${target}" PRIVATE -s)
+
+    set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -s")
+endfunction()
+
+function(_cc_strip_symbols target)
     get_target_property(target_type "${target}" TYPE)
     get_target_property(aliased "${target}" ALIASED_TARGET)
     if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
         set(release_build $<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>)
         if(release_build)
-            # This causes issues with mixing keyword- and plain- versions of
-            # target_link_libraries:
-            #target_link_libraries("${target}" PRIVATE -s)
-
-            set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -s")
+            message(STATUS "common.cmake: ${target}: Stripping symbols for release configurations")
+            if(is_gcc)
+                _cc_strip_symbols_gcc("${target}")
+            endif()
         endif()
-    endif()
-endfunction()
-
-function(_cc_strip_symbols target)
-    if(is_gcc)
-        _cc_strip_symbols_gcc("${target}")
     endif()
 endfunction()
 
