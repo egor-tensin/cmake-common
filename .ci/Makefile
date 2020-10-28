@@ -201,7 +201,7 @@ echo/boost/%/exe/run: FORCE
 
 echo/boost/%/exe/arch: FORCE
 	@echo ---------------------------------------------------------------------
-	@echo Boost 1.$*.0: verifying boost_1_$*_0/bin/foo
+	@echo Boost 1.$*.0: checking target architecture of boost_1_$*_0/bin/foo
 	@echo ---------------------------------------------------------------------
 
 echo/boost/%/finished: FORCE
