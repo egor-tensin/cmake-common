@@ -1,6 +1,10 @@
 # Travis/AppVeyor commands.
 # Basically, make is used as a kinda-portable shell.
 
+# make when called by CMake produces a lot of bogus warnings if this is
+# uncommented:
+#MAKEFLAGS += --warn-undefined-variables
+
 .DEFAULT_GOAL := all
 .SUFFIXES:
 
@@ -23,12 +27,20 @@ makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Basic stuff that needed to be abstracted away:
 ifeq ($(windows),1)
-ext := .exe
+exe_ext := .exe
+static_prefix :=
+static_ext := .lib
+shared_prefix :=
+shared_ext := .dll
 newline := @echo.
 cwd := $(shell cd)
 ls := dir /a-D /S /B
 else
-ext :=
+exe_ext :=
+static_prefix := lib
+static_ext := .a
+shared_prefix := lib
+shared_ext := .so
 newline := @echo
 cwd := $(shell pwd)
 ls := function my_ls() { find "$$@" -type f | sort ; } ; my_ls
@@ -58,6 +70,13 @@ else
 verify_arch := ./.ci/verify_arch.sh
 endif
 
+# Script to check if symbols are present in the executable:
+ifeq ($(windows),1)
+verify_symbols := powershell -file ./.ci/verify_symbols.ps1
+else
+verify_symbols := ./.ci/verify_symbols.sh
+endif
+
 .PHONY: all
 all: simple static dynamic
 
@@ -75,9 +94,14 @@ echo/%/run: FORCE
 	@echo Running $*/bin/foo
 	@echo ---------------------------------------------------------------------
 
-echo/%/verify: FORCE
+echo/%/arch: FORCE
 	@echo ---------------------------------------------------------------------
-	@echo Verifying $*/bin/foo
+	@echo Checking target architecture of $*/bin/foo
+	@echo ---------------------------------------------------------------------
+
+echo/%/symbols: FORCE
+	@echo ---------------------------------------------------------------------
+	@echo Checking symbols for $*/bin/foo
 	@echo ---------------------------------------------------------------------
 
 echo/%/finished: FORCE
@@ -94,12 +118,16 @@ simple/build: echo/simple/build
 simple/run: echo/simple/run
 	"$(install_prefix)/simple/bin/foo"
 
-.PHONY: simple/verify
-simple/verify: echo/simple/verify
-	$(verify_arch) "$(install_prefix)/simple/bin/foo$(ext)" x64
+.PHONY: simple/arch
+simple/arch: echo/simple/arch
+	$(verify_arch) "$(install_prefix)/simple/bin/foo$(exe_ext)" x64
+
+.PHONY: simple/symbols
+simple/symbols: echo/simple/symbols
+	$(verify_symbols) "$(install_prefix)/simple/bin/foo$(exe_ext)"
 
 .PHONY: simple
-simple: simple/build simple/run simple/verify echo/simple/finished
+simple: simple/build simple/run simple/arch simple/symbols echo/simple/finished
 
 # examples/static: x86/Debug build.
 
@@ -111,12 +139,16 @@ static/build: echo/static/build
 static/run: echo/static/run
 	"$(install_prefix)/static/bin/foo"
 
-.PHONY: static/verify
-static/verify: echo/static/verify
-	$(verify_arch) "$(install_prefix)/static/bin/foo$(ext)" x86
+.PHONY: static/arch
+static/arch: echo/static/arch
+	$(verify_arch) "$(install_prefix)/static/bin/foo$(exe_ext)" x86
+
+.PHONY: static/symbols
+static/symbols: echo/static/symbols
+	$(verify_symbols) "$(install_prefix)/static/bin/foo$(exe_ext)" main bar
 
 .PHONY: static
-static: static/build static/run static/verify echo/static/finished
+static: static/build static/run static/arch static/symbols echo/static/finished
 
 # examples/dynamic: x64/RelWithDebInfo build.
 
@@ -134,12 +166,17 @@ else
 	LD_LIBRARY_PATH="$(install_prefix)/dynamic/lib" "$(install_prefix)/dynamic/bin/foo"
 endif
 
-.PHONY: dynamic/verify
-dynamic/verify: echo/dynamic/verify
-	$(verify_arch) "$(install_prefix)/dynamic/bin/foo$(ext)" x64
+.PHONY: dynamic/arch
+dynamic/arch: echo/dynamic/arch
+	$(verify_arch) "$(install_prefix)/dynamic/bin/foo$(exe_ext)" x64
+
+.PHONY: dynamic/symbols
+dynamic/symbols: echo/dynamic/symbols
+	$(verify_symbols) "$(install_prefix)/dynamic/bin/foo$(exe_ext)" main
+	$(verify_symbols) "$(install_prefix)/dynamic/lib/$(shared_prefix)baz$(shared_ext)" baz
 
 .PHONY: dynamic
-dynamic: dynamic/build dynamic/run dynamic/verify echo/dynamic/finished
+dynamic: dynamic/build dynamic/run dynamic/arch dynamic/symbols echo/dynamic/finished
 
 echo/boost/%/build: FORCE
 	$(newline)
@@ -162,7 +199,7 @@ echo/boost/%/exe/run: FORCE
 	@echo Boost 1.$*.0: running boost_1_$*_0/bin/foo
 	@echo ---------------------------------------------------------------------
 
-echo/boost/%/exe/verify: FORCE
+echo/boost/%/exe/arch: FORCE
 	@echo ---------------------------------------------------------------------
 	@echo Boost 1.$*.0: verifying boost_1_$*_0/bin/foo
 	@echo ---------------------------------------------------------------------
@@ -198,12 +235,12 @@ boost/58/exe/build: echo/boost/58/exe/build
 boost/58/exe/run: echo/boost/58/exe/run
 	"$(install_prefix)/boost_1_58_0/bin/foo"
 
-.PHONY: boost/58/exe/verify
-boost/58/exe/verify: echo/boost/58/exe/verify
-	$(verify_arch) "$(install_prefix)/boost_1_58_0/bin/foo$(ext)" x86
+.PHONY: boost/58/exe/arch
+boost/58/exe/arch: echo/boost/58/exe/arch
+	$(verify_arch) "$(install_prefix)/boost_1_58_0/bin/foo$(exe_ext)" x86
 
 .PHONY: boost/58/exe
-boost/58/exe: boost/58/exe/build boost/58/exe/run boost/58/exe/verify
+boost/58/exe: boost/58/exe/build boost/58/exe/run boost/58/exe/arch
 
 .PHONY: boost/58
 boost/58: boost/58/download boost/58/build boost/58/ls boost/58/exe echo/boost/58/finished
@@ -239,12 +276,12 @@ else
 	LD_LIBRARY_PATH="$(cwd)/boost_1_72_0/stage/x64/Release/lib" "$(install_prefix)/boost_1_72_0/bin/foo"
 endif
 
-.PHONY: boost/72/exe/verify
-boost/72/exe/verify: echo/boost/72/exe/verify
-	$(verify_arch) "$(install_prefix)/boost_1_72_0/bin/foo$(ext)" x64
+.PHONY: boost/72/exe/arch
+boost/72/exe/arch: echo/boost/72/exe/arch
+	$(verify_arch) "$(install_prefix)/boost_1_72_0/bin/foo$(exe_ext)" x64
 
 .PHONY: boost/72/exe
-boost/72/exe: boost/72/exe/build boost/72/exe/run boost/72/exe/verify
+boost/72/exe: boost/72/exe/build boost/72/exe/run boost/72/exe/arch
 
 .PHONY: boost/72
 boost/72: boost/72/download boost/72/build boost/72/ls boost/72/exe echo/boost/72/finished
@@ -286,12 +323,12 @@ endif
 boost/65/exe/run: echo/boost/65/exe/run
 	"$(install_prefix)/boost_1_65_0/bin/foo"
 
-.PHONY: boost/65/exe/verify
-boost/65/exe/verify: echo/boost/65/exe/verify
-	$(verify_arch) "$(install_prefix)/boost_1_65_0/bin/foo$(ext)" x64
+.PHONY: boost/65/exe/arch
+boost/65/exe/arch: echo/boost/65/exe/arch
+	$(verify_arch) "$(install_prefix)/boost_1_65_0/bin/foo$(exe_ext)" x64
 
 .PHONY: boost/65/exe
-boost/65/exe: boost/65/exe/build boost/65/exe/run boost/65/exe/verify
+boost/65/exe: boost/65/exe/build boost/65/exe/run boost/65/exe/arch
 
 .PHONY: boost/65
 boost/65: boost/65/build boost/65/ls boost/65/exe echo/boost/65/finished
