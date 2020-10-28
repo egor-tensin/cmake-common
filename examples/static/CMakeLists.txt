@@ -11,6 +11,4 @@ add_executable(foo foo.cpp)
 target_link_libraries(foo PRIVATE bar)
 
 install(TARGETS foo bar RUNTIME DESTINATION bin ARCHIVE DESTINATION lib)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    install(FILES "$<TARGET_PDB_FILE:foo>" DESTINATION bin OPTIONAL)
-endif()
+install_pdbs(TARGETS foo DESTINATION bin)
