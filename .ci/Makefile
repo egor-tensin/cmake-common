@@ -204,6 +204,11 @@ echo/boost/%/exe/arch: FORCE
 	@echo Boost 1.$*.0: checking target architecture of boost_1_$*_0/bin/foo
 	@echo ---------------------------------------------------------------------
 
+echo/boost/%/exe/symbols: FORCE
+	@echo ---------------------------------------------------------------------
+	@echo Boost 1.$*.0: checking symbols for boost_1_$*_0/bin/foo
+	@echo ---------------------------------------------------------------------
+
 echo/boost/%/finished: FORCE
 	@echo =====================================================================
 	$(newline)
@@ -239,8 +244,12 @@ boost/58/exe/run: echo/boost/58/exe/run
 boost/58/exe/arch: echo/boost/58/exe/arch
 	$(verify_arch) "$(install_prefix)/boost_1_58_0/bin/foo$(exe_ext)" x86
 
+.PHONY: boost/58/exe/symbols
+boost/58/exe/symbols: echo/boost/58/exe/symbols
+	$(verify_symbols) "$(install_prefix)/boost_1_58_0/bin/foo$(exe_ext)" main
+
 .PHONY: boost/58/exe
-boost/58/exe: boost/58/exe/build boost/58/exe/run boost/58/exe/arch
+boost/58/exe: boost/58/exe/build boost/58/exe/run boost/58/exe/arch boost/58/exe/symbols
 
 .PHONY: boost/58
 boost/58: boost/58/download boost/58/build boost/58/ls boost/58/exe echo/boost/58/finished
@@ -280,8 +289,12 @@ endif
 boost/72/exe/arch: echo/boost/72/exe/arch
 	$(verify_arch) "$(install_prefix)/boost_1_72_0/bin/foo$(exe_ext)" x64
 
+.PHONY: boost/72/exe/symbols
+boost/72/exe/symbols: echo/boost/72/exe/symbols
+	$(verify_symbols) "$(install_prefix)/boost_1_72_0/bin/foo$(exe_ext)"
+
 .PHONY: boost/72/exe
-boost/72/exe: boost/72/exe/build boost/72/exe/run boost/72/exe/arch
+boost/72/exe: boost/72/exe/build boost/72/exe/run boost/72/exe/arch boost/72/exe/symbols
 
 .PHONY: boost/72
 boost/72: boost/72/download boost/72/build boost/72/ls boost/72/exe echo/boost/72/finished
@@ -327,8 +340,12 @@ boost/65/exe/run: echo/boost/65/exe/run
 boost/65/exe/arch: echo/boost/65/exe/arch
 	$(verify_arch) "$(install_prefix)/boost_1_65_0/bin/foo$(exe_ext)" x64
 
+.PHONY: boost/65/exe/symbols
+boost/65/exe/symbols: echo/boost/65/exe/symbols
+	$(verify_symbols) "$(install_prefix)/boost_1_65_0/bin/foo$(exe_ext)"
+
 .PHONY: boost/65/exe
-boost/65/exe: boost/65/exe/build boost/65/exe/run boost/65/exe/arch
+boost/65/exe: boost/65/exe/build boost/65/exe/run boost/65/exe/arch boost/65/exe/symbols
 
 .PHONY: boost/65
 boost/65: boost/65/build boost/65/ls boost/65/exe echo/boost/65/finished
