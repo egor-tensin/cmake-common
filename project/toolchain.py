@@ -6,16 +6,21 @@
 '''Supported platform/build system/compiler combinations include, but are not
 limited to:
 
-* Linux / make / Clang,
-* Linux / make / GCC,
-* Linux / make / MinGW-w64,
-* Windows / make / Clang (clang.exe & clang++.exe),
-* Windows / make / Clang (clang-cl.exe, Boost 1.69.0 or higher only),
-* Windows / make / MinGW-w64,
-* Windows / msbuild / MSVC,
-* Cygwin / make / Clang,
-* Cygwin / make / GCC,
-* Cygwin / make / MinGW-w64.
+| Platform | Build system | Compiler
+| -------- | ------------ | --------
+| Linux    | make         | Clang
+|          |              | GCC
+|          |              | MinGW-w64
+| Windows  | make [1]     | Clang (clang/clang++)
+|          |              | Clang (clang-cl [2])
+|          |              | MinGW-w64
+|          | msbuild      | MSVC
+| Cygwin   | make         | Clang
+|          |              | GCC
+|          |              | MinGW-w64
+
+1. Both GNU make and MinGW mingw32-make.
+2. Boost 1.69.0 or higher only.
 '''
 
 import argparse
