@@ -16,7 +16,7 @@ class Configuration(Enum):
     RELEASE = 'Release'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def all():
@@ -26,8 +26,8 @@ class Configuration(Enum):
     def parse(s):
         try:
             return Configuration(s)
-        except ValueError:
-            raise argparse.ArgumentTypeError(f'invalid configuration: {s}')
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid configuration: {s}') from e
 
     def to_boost_variant(self):
         '''Roughly maps CMake's CMAKE_BUILD_TYPE to Boost's variant.

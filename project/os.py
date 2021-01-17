@@ -13,7 +13,7 @@ class OS(Enum):
     CYGWIN = 'Cygwin'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def current():

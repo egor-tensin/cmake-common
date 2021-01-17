@@ -452,6 +452,6 @@ class Clang(ConfigFile):
 class ClangCL(Toolchain):
     def get_b2_args(self):
         return super().get_b2_args() + [
-            f'toolset=clang-win',
+            'toolset=clang-win',
             'define=BOOST_USE_WINDOWS_H',
         ]

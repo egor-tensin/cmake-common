@@ -15,7 +15,7 @@ class Image(Enum):
     VS_2019 = 'Visual Studio 2019'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def parse(s):
@@ -36,7 +36,7 @@ class Generator(Enum):
     VS_2019 = 'Visual Studio 16 2019'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def from_image(image):

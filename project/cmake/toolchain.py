@@ -189,7 +189,8 @@ class Makefile(Toolchain):
     def _get_config_path(build_dir):
         return os.path.join(build_dir, 'custom_toolchain.cmake')
 
-    def _get_makefile_generator(self):
+    @staticmethod
+    def _get_makefile_generator():
         if on_windows():
             if shutil.which('mingw32-make'):
                 return 'MinGW Makefiles'

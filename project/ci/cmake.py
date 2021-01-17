@@ -26,7 +26,7 @@ def _parse_args(dirs, argv=None):
                         help='set Boost directory path')
     parser.add_argument('--toolset', metavar='TOOLSET',
                         type=ToolchainType.parse,
-                        help=f'toolset to use')
+                        help='toolset to use')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
                         help='additional CMake arguments, to be passed verbatim')
     return parser.parse_args(argv)

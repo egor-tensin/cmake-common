@@ -15,7 +15,7 @@ class Platform(Enum):
     X64 = 'x64'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def native():
@@ -35,8 +35,8 @@ class Platform(Enum):
                 # AppVeyor convention:
                 return Platform.X86
             return Platform(s)
-        except ValueError:
-            raise argparse.ArgumentTypeError(f'invalid platform: {s}')
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid platform: {s}') from e
 
     def get_address_model(self):
         '''Maps to Boost's address-model.'''

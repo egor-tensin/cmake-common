@@ -12,7 +12,7 @@ class Linkage(Enum):
     SHARED = 'shared'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def all():
@@ -22,5 +22,5 @@ class Linkage(Enum):
     def parse(s):
         try:
             return Linkage(s)
-        except ValueError:
-            raise argparse.ArgumentTypeError(f'invalid linkage: {s}')
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid linkage: {s}') from e

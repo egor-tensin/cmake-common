@@ -31,7 +31,7 @@ class ToolchainType(Enum):
     CLANG_CL = 'clang-cl'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def all():
@@ -41,5 +41,5 @@ class ToolchainType(Enum):
     def parse(s):
         try:
             return ToolchainType(s)
-        except ValueError:
-            raise argparse.ArgumentTypeError(f'invalid toolset: {s}')
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid toolset: {s}') from e
