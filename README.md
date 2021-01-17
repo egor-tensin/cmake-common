@@ -1,6 +1,7 @@
 cmake-common
 ============
 
+[![Basic usage](https://github.com/egor-tensin/cmake-common/workflows/Basic%20usage/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Basic+usage%22)
 [![Boost (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Boost%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Boost+%28toolsets%29%22)
 [![Examples (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Examples%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Examples+%28toolsets%29%22)
 
@@ -50,7 +51,7 @@ Windows-specific macros, strips debug symbols in release builds, etc.).
 
 Everything is optional (use the `CC_*` CMake options to opt out).
 
-### Bootstrap Boost
+### Boost
 
 Download & build the Boost libraries in a cross-platform way.
 
@@ -65,7 +66,7 @@ Pass the `--help` flag to view detailed usage information.
     $ python3 -m project.boost.download --help
     $ python3 -m project.boost.build --help
 
-### Build CMake project
+### CMake project
 
 Build (and optionally, install) a CMake project.
 
