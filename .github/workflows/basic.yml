@@ -1,0 +1,72 @@
+name: Basic usage
+
+on:
+  push:
+    branches-ignore:
+      - travis
+      - appveyor
+  pull_request:
+  schedule:
+    # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
+    - cron: '30 5 * * 6'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, windows-2019]
+
+        include:
+          # Prettier run names.
+          - {os: windows-2019, name: VS 2019}
+          - {os: ubuntu-18.04, name: Ubuntu}
+
+    runs-on: '${{ matrix.os }}'
+
+    name: '${{ matrix.name }}'
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Build Boost
+        run: |
+          python -m project.boost.download 1.72.0
+          python -m project.boost.build -- boost_1_72_0 --with-filesystem
+
+      - name: Build example project
+        run: |
+          $src_dir = Join-Path examples boost
+          python -m project.cmake.build --boost boost_1_72_0 --install install -- $src_dir
+
+      - name: Run example project
+        run: |
+          $foo_path = Join-Path (Get-Location).Path install bin foo
+          if ('${{ runner.os }}' -eq 'Windows') {
+              $foo_path += '.exe'
+          }
+
+          $relative = 'test.txt'
+          $absolute = Join-Path (Get-Location).Path $relative
+
+          $actual = & $foo_path $relative
+          echo 'Actual output:'
+          echo $actual
+
+          $expected = $foo_path,$absolute
+          echo 'Expected output:'
+          echo $expected
+
+          if (Compare-Object $actual $expected -CaseSensitive) {
+              throw 'Unexpected output'
+          }
