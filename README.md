@@ -93,11 +93,9 @@ Pass the `--help` flag to a script to view detailed usage information.
 
 #### Travis
 
-Bootstrap Boost:
+Bootstrap Boost and/or build a CMake project:
 
     $ python3 -m project.ci.travis.boost -- --with-test
-
-Build a CMake project:
 
     $ python3 -m project.ci.travis.cmake --install "$HOME/install"
 
@@ -109,11 +107,10 @@ Environment variables:
 
 #### AppVeyor
 
-Bootstrap Boost (seldom used, since AppVeyor pre-builds many Boost versions):
+Bootstrap Boost (seldom used, since AppVeyor pre-builds many Boost versions)
+and/or build a CMake project:
 
     > C:\Python36-x64\python.exe -m project.ci.appveyor.boost -- --with-test
-
-Build a CMake project:
 
     > C:\Python36-x64\python.exe -m project.ci.appveyor.cmake --install C:\projects\install
 
