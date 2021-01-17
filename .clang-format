@@ -8,8 +8,10 @@ IndentWidth: 4
 IncludeCategories:
   - Regex: '^".*'
     Priority: 1
-  - Regex: '^<boost/'
+  - Regex: '^<(bar|baz)\.'
     Priority: 2
-  - Regex: '.*'
+  - Regex: '^<boost\/'
     Priority: 3
+  - Regex: '.*'
+    Priority: 4
 ...
