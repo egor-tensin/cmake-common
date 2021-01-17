@@ -1,0 +1,79 @@
+# This workflow pretends like it's being run on AppVeyor by setting the
+# appropriate environment variables.  The project.ci.appveyor package is
+# tested.
+
+name: CI (AppVeyor)
+
+on:
+  push:
+    branches-ignore:
+      - travis
+      - appveyor
+  pull_request:
+  schedule:
+    # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
+    - cron: '30 5 * * 6'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [Win32, x64]
+        configuration: [Debug, Release]
+
+    runs-on: windows-2019
+
+    name: '${{ matrix.platform }} / ${{ matrix.configuration }}'
+
+    env:
+      # https://www.appveyor.com/docs/environment-variables/
+      APPVEYOR: 'True'
+      APPVEYOR_BUILD_FOLDER: '${{ github.workspace }}\examples\boost'
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      PLATFORM: '${{ matrix.platform }}'
+      CONFIGURATION: '${{ matrix.configuration }}'
+      boost_version: 1.72.0
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Create C:\projects
+        run: mkdir C:\projects
+
+      - name: Build Boost
+        run: |
+          python -m project.ci.appveyor.boost -- --with-filesystem
+
+      - name: Build example project
+        run: |
+          python -m project.ci.appveyor.cmake --install ..\install
+
+      - name: Run example project
+        run: |
+          $foo_path = Join-Path (Split-Path (Get-Location).Path) install bin foo.exe
+
+          $relative = 'test.txt'
+          $absolute = Join-Path (Get-Location).Path $relative
+
+          $actual = & $foo_path $relative
+          echo 'Actual output:'
+          echo $actual
+
+          $expected = $foo_path,$absolute
+          echo 'Expected output:'
+          echo $expected
+
+          if (Compare-Object $actual $expected -CaseSensitive) {
+              throw 'Unexpected output'
+          }

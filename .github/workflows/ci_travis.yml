@@ -1,0 +1,73 @@
+# This workflow pretends like it's being run on Travis by setting the
+# appropriate environment variables.  The project.ci.travis package is tested.
+
+name: CI (Travis)
+
+on:
+  push:
+    branches-ignore:
+      - travis
+      - appveyor
+  pull_request:
+  schedule:
+    # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
+    - cron: '30 5 * * 6'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: ubuntu-18.04
+
+    name: '${{ matrix.configuration }}'
+
+    env:
+      # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+      TRAVIS: 'true'
+      TRAVIS_BUILD_DIR: '${{ github.workspace }}/examples/boost'
+      platform: x64
+      configuration: '${{ matrix.configuration }}'
+      boost_version: 1.72.0
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Build Boost
+        run: |
+          python -m project.ci.travis.boost -- --with-filesystem
+
+      - name: Build example project
+        run: |
+          python -m project.ci.travis.cmake --install ../install
+
+      - name: Run example project
+        run: |
+          $foo_path = Join-Path (Split-Path (Get-Location).Path) install bin foo
+
+          $relative = 'test.txt'
+          $absolute = Join-Path (Get-Location).Path $relative
+
+          $actual = & $foo_path $relative
+          echo 'Actual output:'
+          echo $actual
+
+          $expected = $foo_path,$absolute
+          echo 'Expected output:'
+          echo $expected
+
+          if (Compare-Object $actual $expected -CaseSensitive) {
+              throw 'Unexpected output'
+          }
