@@ -30,10 +30,13 @@ import tempfile
 from project.cmake.toolchain import Toolchain
 from project.configuration import Configuration
 from project.platform import Platform
+from project.toolchain import ToolchainType
 from project.utils import normalize_path, run, setup_logging
 
 
+DEFAULT_PLATFORM = Platform.native()
 DEFAULT_CONFIGURATION = Configuration.DEBUG
+DEFAULT_TOOLSET = ToolchainType.AUTO
 
 
 def run_cmake(cmake_args):
@@ -41,15 +44,18 @@ def run_cmake(cmake_args):
 
 
 class GenerationPhase:
-    def __init__(self, src_dir, build_dir, install_dir=None,
-                 platform=None, configuration=DEFAULT_CONFIGURATION,
-                 boost_dir=None, mingw=False, cmake_args=None):
+    def __init__(self, src_dir, build_dir, install_dir=None, platform=None,
+                 configuration=None, boost_dir=None, toolset=None,
+                 cmake_args=None):
         src_dir = normalize_path(src_dir)
         build_dir = normalize_path(build_dir)
         if install_dir is not None:
             install_dir = normalize_path(install_dir)
+        platform = platform or DEFAULT_PLATFORM
+        configuration = configuration or DEFAULT_CONFIGURATION
         if boost_dir is not None:
             boost_dir = normalize_path(boost_dir)
+        toolset = toolset or DEFAULT_TOOLSET
         cmake_args = cmake_args or []
 
         self.src_dir = src_dir
@@ -58,7 +64,7 @@ class GenerationPhase:
         self.platform = platform
         self.configuration = configuration
         self.boost_dir = boost_dir
-        self.mingw = mingw
+        self.toolset = toolset
         self.cmake_args = cmake_args
 
     def _cmake_args(self, toolchain):
@@ -87,44 +93,47 @@ class GenerationPhase:
             platform = Platform.native()
         return os.path.join(boost_dir, 'stage', str(platform), str(configuration), 'lib')
 
-    def run(self):
-        with Toolchain.detect(self.platform, self.build_dir, mingw=self.mingw) as toolchain:
-            run_cmake(self._cmake_args(toolchain))
+    def run(self, toolchain):
+        run_cmake(self._cmake_args(toolchain))
 
 
 class BuildPhase:
-    def __init__(self, build_dir, install_dir=None,
-                 configuration=DEFAULT_CONFIGURATION):
+    def __init__(self, build_dir, install_dir=None, configuration=None):
 
         build_dir = normalize_path(build_dir)
+        configuration = configuration or DEFAULT_CONFIGURATION
 
         self.build_dir = build_dir
         self.install_dir = install_dir
         self.configuration = configuration
 
-    def _cmake_args(self):
+    def _cmake_args(self, toolchain):
         result = ['--build', self.build_dir]
         result += ['--config', str(self.configuration)]
         if self.install_dir is not None:
             result += ['--target', 'install']
+        result += ['--'] + toolchain.get_build_args()
         return result
 
-    def run(self):
-        run_cmake(self._cmake_args())
+    def run(self, toolchain):
+        run_cmake(self._cmake_args(toolchain))
 
 
 class BuildParameters:
     def __init__(self, src_dir, build_dir=None, install_dir=None,
-                 platform=None, configuration=DEFAULT_CONFIGURATION,
-                 boost_dir=None, mingw=False, cmake_args=None):
+                 platform=None, configuration=None, boost_dir=None,
+                 toolset=None, cmake_args=None):
 
         src_dir = normalize_path(src_dir)
         if build_dir is not None:
             build_dir = normalize_path(build_dir)
         if install_dir is not None:
             install_dir = normalize_path(install_dir)
+        platform = platform or DEFAULT_PLATFORM
+        configuration = configuration or DEFAULT_CONFIGURATION
         if boost_dir is not None:
             boost_dir = normalize_path(boost_dir)
+        toolset = toolset or DEFAULT_TOOLSET
         cmake_args = cmake_args or []
 
         self.src_dir = src_dir
@@ -133,7 +142,7 @@ class BuildParameters:
         self.platform = platform
         self.configuration = configuration
         self.boost_dir = boost_dir
-        self.mingw = mingw
+        self.toolset = toolset
         self.cmake_args = cmake_args
 
     @staticmethod
@@ -158,17 +167,19 @@ class BuildParameters:
 
 def build(params):
     with params.create_build_dir() as build_dir:
+        toolchain = Toolchain.detect(params.toolset, params.platform, build_dir)
+
         gen_phase = GenerationPhase(params.src_dir, build_dir,
                                     install_dir=params.install_dir,
                                     platform=params.platform,
                                     configuration=params.configuration,
                                     boost_dir=params.boost_dir,
-                                    mingw=params.mingw,
+                                    toolset=params.toolset,
                                     cmake_args=params.cmake_args)
-        gen_phase.run()
+        gen_phase.run(toolchain)
         build_phase = BuildPhase(build_dir, install_dir=params.install_dir,
                                  configuration=params.configuration)
-        build_phase.run()
+        build_phase.run(toolchain)
 
 
 def _parse_args(argv=None):
@@ -201,8 +212,10 @@ def _parse_args(argv=None):
                         type=normalize_path,
                         help='set Boost directory path')
 
-    parser.add_argument('--mingw', action='store_true',
-                        help='build using MinGW-w64')
+    toolset_options = '/'.join(map(str, ToolchainType.all()))
+    parser.add_argument('--toolset', metavar='TOOLSET',
+                        type=ToolchainType.parse, default=ToolchainType.AUTO,
+                        help=f'toolset to use ({toolset_options})')
 
     parser.add_argument('src_dir', metavar='DIR',
                         type=normalize_path,

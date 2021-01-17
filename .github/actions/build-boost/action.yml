@@ -1,0 +1,53 @@
+name: Build Boost
+description: Build Boost
+inputs:
+  boost-dir:
+    description: Boost directory
+    required: false
+  toolset:
+    description: Toolset to use
+    required: false
+    default: auto
+  libraries:
+    description: Libraries to build
+    required: false
+  platform:
+    description: Target platform
+    required: false
+    default: x64
+  configuration:
+    description: Configuration to build
+    required: false
+    default: Debug
+runs:
+  using: composite
+  steps:
+    - run: |
+        $python = 'python'
+
+        $boost_dir = '${{ inputs.boost-dir }}'
+        if (-not $boost_dir) {
+            $boost_dir = $env:BOOST_DIR
+        }
+
+        $libraries = '${{ inputs.libraries }}'
+        $libraries = $libraries.Split(' ') | %{ "--with-$_" }
+        if (-not $libraries) {
+            Remove-Variable libraries
+        }
+
+        if ($env:CI_HOST_CYGWIN) {
+            $python = 'python3'
+            $boost_dir = cygpath.exe -ua $boost_dir
+        }
+
+        & $python `
+            -m project.boost.build `
+            --verbose `
+            --toolset '${{ inputs.toolset }}' `
+            --platform '${{ inputs.platform }}' `
+            --configuration '${{ inputs.configuration }}' `
+            -- `
+            $boost_dir `
+            $libraries
+      shell: pwsh

@@ -1,0 +1,77 @@
+name: Check that Boost libraries were built
+description: Check that Boost libraries were built
+inputs:
+  boost-dir:
+    description: Boost directory
+    required: false
+  libraries:
+    description: Libraries to check
+    required: true
+  platform:
+    description: Target platform
+    required: false
+    default: x64
+  configuration:
+    description: Configuration to check
+    required: false
+    default: Debug
+runs:
+  using: composite
+  steps:
+    - run: |
+        $boost_dir = '${{ inputs.boost-dir }}'
+        if (-not $boost_dir) {
+            $boost_dir = $env:BOOST_DIR
+        }
+
+        $libraries = '${{ inputs.libraries }}'
+        $libraries = $libraries.Split(' ')
+
+        $stagedir = Join-Path 'stage' '${{ inputs.platform }}' '${{ inputs.configuration }}'
+        $librarydir = Join-Path $boost_dir $stagedir 'lib'
+
+        function Get-FileStubs {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $lib
+            )
+
+            if ($lib -eq 'test') {
+                "prg_exec_monitor","test_exec_monitor","unit_test_framework"
+            } else {
+                @($lib)
+            }
+        }
+
+        $files = @()
+        foreach ($lib in $libraries) {
+            $stubs = Get-FileStubs $lib
+            foreach ($stub in $stubs) {
+                $files += "${env:CI_LIB_PREFIX}boost_$stub${env:CI_LIB_EXT}"
+            }
+        }
+        $files = $files | Sort-Object
+
+        echo '----------------------------------------------------------------'
+        echo 'Expected files'
+        echo '----------------------------------------------------------------'
+        echo $files
+
+        echo ''
+        echo '----------------------------------------------------------------'
+        echo 'Actual files'
+        echo '----------------------------------------------------------------'
+        echo (Get-ChildItem $librarydir | Sort-Object Name).Name
+
+        $missing = @()
+
+        foreach ($file in $files) {
+            if (!(Test-Path (Join-Path $librarydir $file) -Type Leaf)) {
+                $missing += $file
+            }
+        }
+
+        if ($missing.Count -ne 0) {
+            throw "These libraries are missing: $($missing -join ', ')"
+        }
+      shell: pwsh

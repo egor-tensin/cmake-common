@@ -1,0 +1,161 @@
+name: Verify runtime library linkage
+description: Verify runtime library linkage (static or shared)
+inputs:
+  path:
+    description: Installation directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        New-Variable path -Value '${{ inputs.path }}' -Option Constant
+
+        function Parse-DllLine {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $Line
+            )
+
+            if ($Line -match '^\s*DLL Name:\s*(?<dll>\S+)\s*$') {
+                $Matches.dll
+            } else {
+                throw "Line doesn't match the pattern: $Line"
+            }
+        }
+
+        function Parse-PeHeaders {
+            param(
+                [Parameter(ValueFromPipeline)]
+                [string[]] $Output
+            )
+
+            process {
+                $Output | Select-String 'DLL Name:' -SimpleMatch -CaseSensitive | %{
+                    Parse-DllLine $_
+                }
+            }
+        }
+
+        function Parse-NeededLine {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $Line
+            )
+
+            if ($Line -match '^\s*NEEDED\s*(?<dll>\S+)\s*$') {
+                $Matches.dll
+            } else {
+                throw "Line doesn't match the pattern: $Line"
+            }
+        }
+
+        function Parse-ElfHeaders {
+            param(
+                [Parameter(ValueFromPipeline)]
+                [string[]] $Output
+            )
+
+            process {
+                $Output | Select-String 'NEEDED' -SimpleMatch -CaseSensitive | %{
+                    Parse-NeededLine $_
+                }
+            }
+        }
+
+        function Get-LinkedLibraries {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $ExePath
+            )
+
+            $objdump = 'objdump'
+            if ($env:CI_HOST_WINDOWS) {
+                $objdump = 'C:\ProgramData\chocolatey\bin\objdump.exe'
+            }
+
+            if ($env:CI_TARGET_PE) {
+                & $objdump -x $ExePath | Parse-PeHeaders | echo
+            }
+            if ($env:CI_TARGET_ELF) {
+                & $objdump -x $ExePath | Parse-ElfHeaders | echo
+            }
+        }
+
+        function Do-ValidateLinkedLibraries {
+            param(
+                [Parameter(Mandatory=$true)]
+                [ValidateNotNull()]
+                [string[]] $Actual,
+
+                [Parameter(Mandatory=$true)]
+                [ValidateNotNull()]
+                [string[]] $Required,
+
+                [Parameter(Mandatory=$true)]
+                [ValidateNotNull()]
+                [string[]] $Optional
+            )
+
+            echo 'Linked libraries:'
+            echo $Actual
+
+            $missing = $Required | ?{$_ -notin $Actual}
+
+            if ($missing.Count -gt 0) {
+                throw "Doesn't link to the following libraries: $($missing -join ', ')"
+            }
+
+            $unexpected = $Actual | ?{$_ -notin $Required -and $_ -notin $Optional}
+
+            if ($unexpected.Count -gt 0) {
+                throw "Links to the following unexpected libraries: $($unexpected -join ', ')"
+            }
+        }
+
+        function Validate-LinkedLibraries {
+            param(
+                [Parameter(Mandatory=$true)]
+                [ValidateNotNull()]
+                [string[]] $Actual
+            )
+
+            $windows_required = @('KERNEL32.dll')
+            if ($env:CI_MINGW) {
+                $windows_required += 'msvcrt.dll'
+            }
+            # Linking libstdc++ statically on Cygwin is broken, see the
+            # cygwin_static_libstdc++.yml workflow.
+            $cygwin_required = $windows_required + @('cygwin1.dll','cygstdc++-6.dll')
+            $linux_required = @('libc.so.6')
+
+            $windows_optional = @('baz.dll')
+            if ($env:CI_MINGW) {
+                $windows_optional = @('libbaz.dll','USER32.dll')
+            }
+            $cygwin_optional = @('cygbaz.dll')
+            $linux_optional = @('libbaz.so','ld-linux.so.2','ld-linux-x86-64.so.2','libm.so.6')
+
+            if ($env:CI_TARGET_CYGWIN) {
+                Do-ValidateLinkedLibraries `
+                    -Actual $Actual `
+                    -Required $cygwin_required `
+                    -Optional $cygwin_optional
+            } elseif ($env:CI_TARGET_WINDOWS) {
+                Do-ValidateLinkedLibraries `
+                    -Actual $Actual `
+                    -Required $windows_required `
+                    -Optional $windows_optional
+            } elseif ($env:CI_TARGET_LINUX) {
+                Do-ValidateLinkedLibraries `
+                    -Actual $Actual `
+                    -Required $linux_required `
+                    -Optional $linux_optional
+            } else {
+                throw 'Where am I?'
+            }
+        }
+
+        $exe_path = (Join-Path $path 'bin' 'foo') + $env:CI_EXE_EXT
+        $libraries = Get-LinkedLibraries $exe_path
+        Validate-LinkedLibraries $libraries
+      shell: pwsh

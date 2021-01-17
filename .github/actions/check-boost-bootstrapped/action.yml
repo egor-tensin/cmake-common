@@ -1,0 +1,44 @@
+name: Check that Boost was bootstrapped
+description: Check that Boost was bootstrapped
+runs:
+  using: composite
+  steps:
+    - run: |
+        echo '----------------------------------------------------------------'
+        echo 'bootstrap.log'
+        echo '----------------------------------------------------------------'
+        $path = Join-Path $env:BOOST_DIR 'bootstrap.log'
+        cat $path
+      shell: pwsh
+    - run: |
+        echo ''
+        echo '----------------------------------------------------------------'
+        echo 'project-config.jam'
+        echo '----------------------------------------------------------------'
+        $path = Join-Path $env:BOOST_DIR 'project-config.jam'
+        if (Test-Path $path -Type Leaf) {
+            cat $path
+        }
+      shell: pwsh
+    - run: |
+        echo ''
+        echo '----------------------------------------------------------------'
+        echo 'Checking that b2 executable was built'
+        echo '----------------------------------------------------------------'
+        $name = 'b2'
+        $path = Join-Path $env:BOOST_DIR $name
+
+        $exists_plain = Test-Path $path -Type Leaf
+        $exists_exe = Test-Path "${path}.exe" -Type Leaf
+        $exists = if ($env:CI_HOST_CYGWIN) {
+            $exists_plain -or $exists_exe
+        } elseif ($env:CI_HOST_WINDOWS) {
+            $exists_exe
+        } else {
+            $exists_plain
+        }
+
+        if (-not $exists) {
+            throw "b2 executable wasn't found"
+        }
+      shell: pwsh

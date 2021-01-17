@@ -23,7 +23,8 @@ if(NOT POLICY CMP0054)
 endif()
 cmake_policy(SET CMP0054 NEW)
 
-# Toolset identification:
+# Toolset identification
+# ----------------------
 
 if(CMAKE_C_COMPILER_ID)
     set(toolset "${CMAKE_C_COMPILER_ID}")
@@ -37,11 +38,14 @@ if(toolset STREQUAL "GNU")
     set(is_gcc ON)
 elseif(toolset STREQUAL "MSVC")
     set(is_msvc ON)
+elseif(toolset STREQUAL "Clang")
+    set(is_clang ON)
 else()
     message(WARNING "common.cmake: Unrecognized toolset: ${toolset}")
 endif()
 
-# User-defined switches:
+# User-defined switches
+# ---------------------
 
 set(default_value ON)
 get_directory_property(parent_dir PARENT_DIRECTORY)
@@ -63,10 +67,6 @@ if(NOT DEFINED CC_STATIC_RUNTIME)
     if(DEFINED Boost_USE_STATIC_LIBS AND NOT Boost_USE_STATIC_LIBS)
         # Linking to dynamic Boost libs and the static runtime is a no-no:
         set(static_runtime_default_value OFF)
-    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR MINGW)
-    else()
-        # At this point, Linux-like environment & the GNU C Library are assumed.
-        set(static_runtime_default_value OFF)
     endif()
     option(CC_STATIC_RUNTIME "Link the runtime statically" "${static_runtime_default_value}")
 endif()
@@ -87,13 +87,15 @@ if(NOT parent_dir)
     message(STATUS "common.cmake: Strip symbols:           ${CC_STRIP_SYMBOLS}")
 endif()
 
-# C++ standard version:
+# C++ standard
+# ------------
 
 set(CMAKE_CXX_STANDARD "${CC_CXX_STANDARD}")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Common compiler options:
+# Common compiler options
+# -----------------------
 
 function(_cc_best_practices_msvc target)
     set(compile_options /MP /W4)
@@ -118,7 +120,8 @@ function(_cc_best_practices target)
     endif()
 endfunction()
 
-# Useful Windows macros:
+# Useful Windows macros
+# ---------------------
 
 function(_cc_common_windows_definitions target)
     set(compile_definitions WIN32_LEAN_AND_MEAN NOMINMAX)
@@ -135,12 +138,70 @@ function(_cc_common_windows_definitions target)
     endif()
 endfunction()
 
-# Static runtime:
+# Static runtime
+# --------------
+
+function(_cc_join output glue)
+    set(tmp "")
+    set(this_glue "")
+    foreach(arg ${ARGN})
+        set(tmp "${tmp}${this_glue}${arg}")
+        set(this_glue "${glue}")
+    endforeach()
+    set("${output}" "${tmp}" PARENT_SCOPE)
+endfunction()
+
+function(_cc_replace_flags str sub)
+    # Whenever this is used, it fucking sucks, but was tested on at least some
+    # CMake version.
+    set(flags_list
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_CXX_FLAGS_MINSIZEREL
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELWITHDEBINFO
+        CMAKE_C_FLAGS_RELEASE
+        CMAKE_C_FLAGS_MINSIZEREL)
+    foreach(flags ${flags_list})
+        if(NOT ${flags})
+            continue()
+        endif()
+        set(value "${${flags}}")
+        string(REPLACE "${str}" "${sub}" value "${value}")
+        get_property(original_docstring CACHE ${flags} PROPERTY HELPSTRING)
+        set(${flags} "${value}" CACHE STRING "${original_docstring}" FORCE)
+    endforeach()
+endfunction()
+
+# MSVC_RUNTIME_LIBRARY is a convenient way to select the runtime library, but
+# it's only available starting from 3.15.
+# Additionally, it has to be enabled outside of this file (either via
+# cmake_policy or setting the cmake_minimum_required to the appropriate value).
+
+if(POLICY CMP0091)
+    cmake_policy(GET CMP0091 msvc_runtime_policy)
+    # Use a variable as an indicator that the policy is in effect.
+    if(msvc_runtime_policy STREQUAL "NEW")
+        set(msvc_runtime_policy ON)
+    else()
+        unset(msvc_runtime_policy)
+    endif()
+endif()
+
+function(_cc_static_runtime_via_policy target)
+    set_property(TARGET "${target}" PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endfunction()
 
 function(_cc_static_runtime_msvc target)
-    target_compile_options("${target}" PRIVATE
-        $<$<CONFIG:Debug>:/MTd>
-        $<$<NOT:$<CONFIG:Debug>>:/MT>)
+    if(msvc_runtime_policy)
+        _cc_static_runtime_via_policy("${target}")
+    else()
+        _cc_replace_flags("/MDd" "/MTd")
+        _cc_replace_flags("/MD" "/MT")
+    endif()
 endfunction()
 
 function(_cc_static_runtime_gcc target)
@@ -148,10 +209,51 @@ function(_cc_static_runtime_gcc target)
     # target_link_libraries:
     #target_link_libraries("${target}" PRIVATE -static)
 
-    set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " -static")
+    set(flags -static-libstdc++ -static-libgcc)
+    if(CYGWIN)
+        set(flags -static-libgcc)
+    endif()
 
-    # Or (haven't tested this), if CMake 3.13+ is used:
-    #target_link_options("${target}" PRIVATE -static)
+    if(CMAKE_VERSION VERSION_LESS "3.13")
+        _cc_join(flags_str " " ${flags})
+        set_property(TARGET "${target}" APPEND_STRING PROPERTY LINK_FLAGS " ${flags_str}")
+    else()
+        target_link_options("${target}" PRIVATE ${flags})
+    endif()
+endfunction()
+
+function(_cc_static_runtime_clang target)
+    if(NOT WIN32)
+        # On Linux, clang/clang++ is used, which is treated as GCC.
+        # This is consistent with CMake (see Modules/Platform/Linux-Clang-CXX.cmake).
+        _cc_static_runtime_gcc("${target}")
+        return()
+    endif()
+
+    # On Windows, clang/clang++ can be used since 3.15; otherwise, clang-cl is
+    # is used, which is treated as MSVC.
+    # This is consistent with CMake (see Modules/Platform/Windows-Clang.cmake).
+    if(CMAKE_VERSION VERSION_LESS "3.15")
+        _cc_static_runtime_msvc("${target}")
+        return()
+    endif()
+
+    # If the policy is enabled, we don't need to patch the flags manually.
+    if(msvc_runtime_policy)
+        _cc_static_runtime_via_policy("${target}")
+        return()
+    endif()
+
+    if("${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC" OR "${CMAKE_C_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
+        # It's 3.15 or higher, but we're in luck: clang-cl is used, which can
+        # be treated as MSVC.
+        _cc_static_runtime_msvc("${target}")
+        return()
+    endif()
+
+    # Well, that sucks, but works for versions 3.15--3.18 at least.
+    _cc_replace_flags("-D_DLL" "")
+    _cc_replace_flags("--dependent-lib=msvcrt" "--dependent-lib=libcmt")
 endfunction()
 
 function(_cc_static_runtime target)
@@ -163,11 +265,14 @@ function(_cc_static_runtime target)
             _cc_static_runtime_msvc("${target}")
         elseif(is_gcc)
             _cc_static_runtime_gcc("${target}")
+        elseif(is_clang)
+            _cc_static_runtime_clang("${target}")
         endif()
     endif()
 endfunction()
 
-# Symbol stripping:
+# Symbol stripping
+# ----------------
 
 function(_cc_strip_symbols_gcc target)
     # This causes issues with mixing keyword- and plain- versions of
@@ -183,13 +288,14 @@ function(_cc_strip_symbols target)
     get_target_property(aliased "${target}" ALIASED_TARGET)
     if(NOT target_type STREQUAL "INTERFACE_LIBRARY" AND NOT aliased)
         message(STATUS "common.cmake: ${target}: Stripping symbols for release configurations")
-        if(is_gcc)
+        if(is_gcc OR is_clang)
             _cc_strip_symbols_gcc("${target}")
         endif()
     endif()
 endfunction()
 
-# Main macros:
+# Main macros
+# -----------
 
 function(_cc_apply_settings target)
     if(TARGET "${target}")

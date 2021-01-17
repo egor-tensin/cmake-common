@@ -1,0 +1,46 @@
+name: Check symbols
+description: Check debug symbols
+inputs:
+  path:
+    description: Installation directory
+    required: true
+  expected:
+    description: Expected symbols
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        $install_dir = '${{ inputs.path }}'
+        $bin_dir = Join-Path $install_dir 'bin'
+        $lib_dir = Join-Path $install_dir 'lib'
+
+        $script_path = if ($env:CI_TARGET_ELF) {
+            Join-Path $env:GITHUB_WORKSPACE '.ci' 'verify_symbols.sh'
+        } else {
+            throw "Verifying symbols for PE executables is not implemented"
+        }
+
+        ConvertFrom-Json '${{ inputs.expected }}' | %{
+            $target = $_.target
+            $type = $_.type
+
+            switch -Exact ($type) {
+                'exe' {
+                    $file = $target + $env:CI_EXE_EXT
+                    $path = Join-Path $bin_dir $file
+                }
+                'dll' {
+                    $file = $env:CI_DLL_PREFIX + $target + $env:CI_DLL_EXT
+                    $path = if ($env:CI_DLL_IN_BIN) {
+                        Join-Path $bin_dir $file
+                    } else {
+                        Join-Path $lib_dir $file
+                    }
+                }
+                default { throw "Unrecognized type: $type" }
+            }
+
+            & $script_path $path $_.symbols
+        }
+      shell: pwsh

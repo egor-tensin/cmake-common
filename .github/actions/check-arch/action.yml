@@ -1,0 +1,23 @@
+name: Verify architecture
+description: Verify target architecture
+inputs:
+  path:
+    description: Installation directory
+    required: true
+  expected:
+    description: Target platform
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        $script_path = if ($env:CI_TARGET_PE) {
+            Join-Path $env:GITHUB_WORKSPACE '.ci' 'verify_arch.ps1'
+        } else {
+            Join-Path $env:GITHUB_WORKSPACE '.ci' 'verify_arch.sh'
+        }
+
+        $exe_path = (Join-Path '${{ inputs.path }}' 'bin' 'foo') + $env:CI_EXE_EXT
+
+        & $script_path $exe_path '${{ inputs.expected }}'
+      shell: pwsh

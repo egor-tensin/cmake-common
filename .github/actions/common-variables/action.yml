@@ -1,0 +1,85 @@
+name: Set common variables
+description: Set common run variables
+inputs:
+  toolset:
+    description: Toolset used
+    required: true
+  cygwin:
+    description: Targeting Cygwin
+    required: false
+    default: 0
+runs:
+  using: composite
+  steps:
+    - run: |
+        New-Variable toolset -Value '${{ inputs.toolset }}' -Option Constant
+        New-Variable cygwin -Value ('${{ inputs.cygwin }}' -eq '1') -Option Constant
+
+        New-Variable os -Value '${{ runner.os }}' -Option Constant
+
+        New-Variable host_linux -Value ($os -eq 'Linux') -Option Constant
+        New-Variable host_cygwin -Value $cygwin -Option Constant
+        New-Variable host_windows -Value ($os -eq 'Windows' -and !$host_cygwin) -Option Constant
+
+        New-Variable mingw -Value ($toolset -eq 'mingw' -or ($host_windows -and $toolset -eq 'gcc')) -Option Constant
+
+        New-Variable target_linux -Value ($host_linux -and !$mingw) -Option Constant
+        New-Variable target_cygwin -Value ($host_cygwin -and !$mingw) -Option Constant
+        New-Variable target_windows -Value ($mingw -or $host_windows) -Option Constant
+
+        New-Variable target_pe -Value ($target_windows -or $target_cygwin) -Option Constant
+        New-Variable target_elf -Value $target_linux -Option Constant
+
+        function Set-BoolVar {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $name,
+                [Parameter(Mandatory=$true)]
+                [bool] $value
+            )
+
+            $str_value = if ($value) { '1' } else { '' }
+            $msg = "$name=$str_value"
+            echo $msg
+            echo $msg >> $env:GITHUB_ENV
+        }
+
+        function Set-StrVar {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $name,
+                [string] $value
+            )
+
+            $msg = "$name=$value"
+            echo $msg
+            echo $msg >> $env:GITHUB_ENV
+        }
+
+        Set-BoolVar 'CI_HOST_LINUX' $host_linux
+        Set-BoolVar 'CI_HOST_CYGWIN' $host_cygwin
+        Set-BoolVar 'CI_HOST_WINDOWS' $host_windows
+        Set-BoolVar 'CI_MINGW' $mingw
+        Set-BoolVar 'CI_TARGET_LINUX' $target_linux
+        Set-BoolVar 'CI_TARGET_CYGWIN' $target_cygwin
+        Set-BoolVar 'CI_TARGET_WINDOWS' $target_windows
+
+        Set-BoolVar 'CI_TARGET_PE' $target_pe
+        Set-BoolVar 'CI_TARGET_ELF' $target_elf
+
+        $lib_prefix = 'lib'
+        $lib_ext = if ($target_windows -and -not $mingw) { '.lib' } else { '.a' }
+
+        $dll_prefix = if ($target_windows -and -not $mingw) { '' } elseif ($target_cygwin) { 'cyg' } else { 'lib' }
+        $dll_ext = if ($target_windows -or $target_cygwin) { '.dll' } else { '.so' }
+
+        $exe_ext = if ($target_pe) { '.exe' } else { '' }
+
+        Set-StrVar 'CI_LIB_PREFIX' $lib_prefix
+        Set-StrVar 'CI_LIB_EXT' $lib_ext
+        Set-StrVar 'CI_DLL_PREFIX' $dll_prefix
+        Set-StrVar 'CI_DLL_EXT' $dll_ext
+        Set-StrVar 'CI_EXE_EXT' $exe_ext
+
+        Set-BoolVar 'CI_DLL_IN_BIN' $target_pe
+      shell: pwsh

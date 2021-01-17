@@ -6,6 +6,7 @@
 import logging
 import os.path
 
+from project.boost.toolchain import BootstrapToolchain
 from project.utils import cd, run
 from project.os import on_windows
 
@@ -21,18 +22,19 @@ class BoostDir:
 
     def build(self, params):
         with self._go():
-            self._bootstrap_if_required()
+            self._bootstrap_if_required(params)
             self._b2(params)
 
-    def _bootstrap_if_required(self):
+    def _bootstrap_if_required(self, params):
         if os.path.isfile(self._b2_path()):
             logging.info('Not going to bootstrap, b2 is already there')
             return
-        self.bootstrap()
+        self.bootstrap(params)
 
-    def bootstrap(self):
+    def bootstrap(self, params):
         with self._go():
-            run(self._bootstrap_path())
+            toolchain = BootstrapToolchain.detect(params.toolset)
+            run([self._bootstrap_path()] + self._bootstrap_args(toolchain))
 
     def _b2(self, params):
         for b2_params in params.enum_b2_args():
@@ -48,6 +50,12 @@ class BoostDir:
         if on_windows():
             ext = '.bat'
         return f'bootstrap{ext}'
+
+    @staticmethod
+    def _bootstrap_args(toolchain):
+        if on_windows():
+            return toolchain.get_bootstrap_bat_args()
+        return toolchain.get_bootstrap_sh_args()
 
     @staticmethod
     def _b2_path():

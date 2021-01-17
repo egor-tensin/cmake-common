@@ -1,0 +1,40 @@
+name: Download Boost
+description: Download & unpack Boost
+inputs:
+  boost-version:
+    description: 'Boost version'
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: echo 'BOOST_VERSION=${{ inputs.boost-version }}' >> $env:GITHUB_ENV
+      shell: pwsh
+    - run: |
+        $parent_dir = Split-Path $env:GITHUB_WORKSPACE
+        $unpack_dir = Join-Path $parent_dir 'boost'
+        echo "BOOST_UNPACK_DIR=$unpack_dir" >> $env:GITHUB_ENV
+      shell: pwsh
+    - run: |
+        $dir_name = "boost_$($env:BOOST_VERSION.Replace('.', '_'))"
+        $dir = Join-Path $env:BOOST_UNPACK_DIR $dir_name
+        echo "BOOST_DIR=$dir" >> $env:GITHUB_ENV
+      shell: pwsh
+    - run: |
+        echo ''
+        echo '----------------------------------------------------------------'
+        echo "BOOST_VERSION:    $env:BOOST_VERSION"
+        echo "BOOST_UNPACK_DIR: $env:BOOST_UNPACK_DIR"
+        echo "BOOST_DIR:        $env:BOOST_DIR"
+        echo '----------------------------------------------------------------'
+        New-Item $env:BOOST_UNPACK_DIR -Type Directory | Out-Null
+
+        $python = 'python'
+        $unpack_dir = $env:BOOST_UNPACK_DIR
+
+        if ($env:CI_HOST_CYGWIN) {
+            $python = 'python3'
+            $unpack_dir = cygpath.exe -ua $unpack_dir
+        }
+
+        & $python -m project.boost.download --unpack $unpack_dir -- $env:BOOST_VERSION
+      shell: pwsh

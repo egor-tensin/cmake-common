@@ -29,7 +29,7 @@ main() {
 
     local symbol
     for symbol; do
-        if echo "$nm" | grep -F --quiet -e " $symbol"; then
+        if echo "$nm" | grep -F -e " $symbol"; then
             echo "$script_name: file '$path' has symbol '$symbol'"
         else
             echo "$script_name: symbol '$symbol' wasn't found in file '$path'"

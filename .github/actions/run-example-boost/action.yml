@@ -1,0 +1,45 @@
+name: Run examples/boost
+description: Run examples/boost
+inputs:
+  path:
+    description: Installation directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        New-Variable path -Value '${{ inputs.path }}' -Option Constant
+
+        if ($env:CI_HOST_LINUX -and -not $env:CI_TARGET_LINUX) {
+            echo 'Not going to do that on Linux/MinGW'
+            exit
+        }
+
+        $relative_test = 'test.txt'
+        $absolute_test = Join-Path (Get-Location).Path 'test.txt'
+
+        $exe_path = (Join-Path $path 'bin' 'foo')
+        if (-not $env:CI_TARGET_CYGWIN) {
+            $exe_path += $env:CI_EXE_EXT
+        }
+
+        $argv0 = $exe_path
+        if ($env:CI_TARGET_CYGWIN) {
+            # Apparently, Cygwin programs convert argv[0] when executing native
+            # programs or being executed by them.
+            $argv0 = cygpath.exe -ua $argv0
+        }
+
+        $actual = & $exe_path $relative_test
+
+        echo 'Actual output:'
+        echo $actual
+
+        $expected = $argv0,$absolute_test
+        echo 'Expected output:'
+        echo $expected
+
+        if (Compare-Object $actual $expected -CaseSensitive) {
+            throw 'Unexpected output'
+        }
+      shell: pwsh

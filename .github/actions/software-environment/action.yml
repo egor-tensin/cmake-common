@@ -1,0 +1,63 @@
+name: Set up software environment
+description: Set up software paths and versions
+inputs:
+  toolset:
+    description: Toolset to use
+    required: true
+  platform:
+    description: Target platform
+    required: false
+    default: x64
+runs:
+  using: composite
+  steps:
+    - run: |
+        if ($env:CI_HOST_WINDOWS) {
+            echo 'C:\Program Files\CMake\bin' >> $env:GITHUB_PATH
+        }
+      shell: pwsh
+    - run: |
+        echo '------------------------------------------------------------'
+        echo 'PATH'
+        echo '------------------------------------------------------------'
+        echo $env:PATH.Split([IO.Path]::PathSeparator)
+      shell: pwsh
+    - run: |
+        function Print-Info {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $name,
+                [Parameter(Mandatory=$true)]
+                [string] $exe
+            )
+
+            echo ''
+            echo '------------------------------------------------------------'
+            echo $name
+            echo '------------------------------------------------------------'
+            $full_path = Get-Command $exe -ErrorAction SilentlyContinue
+            if ($full_path) {
+                $full_path = $full_path.Path
+                echo "Location: $full_path"
+                echo 'Version info:'
+                & $full_path --version
+            } else {
+                echo "Executable '$name' couldn't be found!"
+            }
+        }
+
+        $python = 'python'
+        if ($env:CI_HOST_CYGWIN) {
+            $python = 'python3'
+        }
+
+        Print-Info 'python' $python
+        Print-Info 'cmake' 'cmake'
+        Print-Info 'make' 'make'
+        Print-Info 'mingw32-make' 'mingw32-make'
+        Print-Info 'g++' 'g++'
+        Print-Info 'clang++' 'clang++'
+        Print-Info 'clang-cl' 'clang-cl'
+        Print-Info 'i686-w64-mingw32-g++' 'i686-w64-mingw32-g++'
+        Print-Info 'x86_64-w64-mingw32-g++' 'x86_64-w64-mingw32-g++'
+      shell: pwsh

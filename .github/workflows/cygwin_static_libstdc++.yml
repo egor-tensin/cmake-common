@@ -1,0 +1,81 @@
+# -static-libstdc++ is broken on Cygwin for some reason, as this workflow tries
+# to demonstrate.  I don't know why exactly, but I'm not the only one with this
+# problem:
+#
+#   * https://stackoverflow.com/q/46854365/514684
+#   * https://sourceforge.net/p/stlplus/discussion/345536/thread/48c7fc9c17/?limit=25
+
+name: Cygwin & -static-libstdc++
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
+    - cron: '30 5 * * 6'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-2019
+
+    name: Test
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v1
+        if: runner.os == 'Windows'
+
+      - name: Set common variables
+        uses: ./.github/actions/common-variables
+        with:
+          toolset: '${{ matrix.toolset }}'
+          cygwin: 1
+
+      - name: Install Cygwin
+        uses: egor-tensin/setup-cygwin@v3
+
+      - name: Install GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          cygwin: 1
+
+      - name: Set up software environment
+        uses: ./.github/actions/software-environment
+        with:
+          toolset: gcc
+
+      - name: test.cpp
+        run: |
+          $src = @"
+          #include <stdexcept>
+
+          int main() {
+              std::runtime_error x{"x"};
+              std::runtime_error y{x};
+              return 0;
+          }
+          "@
+
+          echo $src > test.cpp
+
+      - name: Build w/ -static-libstdc++
+        run: C:\tools\cygwin\bin\g++.exe -static-libstdc++ -o test test.cpp
+        continue-on-error: true
+
+      - name: Should fail
+        run: $(Test-Path test.exe -Type Leaf) -and $(throw "test.exe shouldn't have been built")
+
+      - name: Build w/ --allow-multiple-definition
+        run: C:\tools\cygwin\bin\g++.exe '-Wl,--allow-multiple-definition' -static-libstdc++ -o test test.cpp
+        continue-on-error: true
+
+      - name: Should succeed
+        run: $(Test-Path test.exe -Type Leaf) -or $(throw "test.exe should have been built")

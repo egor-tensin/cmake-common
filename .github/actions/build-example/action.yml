@@ -1,0 +1,69 @@
+name: Build example project
+description: Build example project
+inputs:
+  src-dir:
+    description: Project directory
+    required: true
+  boost-dir:
+    description: Boost directory
+    required: false
+  toolset:
+    description: Toolset to use
+    required: false
+    default: auto
+  platform:
+    description: Target platform
+    required: false
+    default: x64
+  configuration:
+    description: Configuration to build
+    required: false
+    default: Debug
+outputs:
+  install-dir:
+    description: Installation directory
+    value: '${{ steps.install-dir.outputs.path }}'
+runs:
+  using: composite
+  steps:
+    - id: install-dir
+      run: |
+        $src_dir = Resolve-Path '${{ inputs.src-dir }}'
+        $project_name = Split-Path $src_dir -Leaf
+        $install_dir = Join-Path (Split-Path $env:GITHUB_WORKSPACE) "install_$project_name"
+        echo "::set-output name=path::$install_dir"
+      shell: pwsh
+    - run: |
+        $python = 'python'
+        $src_dir = '${{ inputs.src-dir }}'
+        $install_dir = '${{ steps.install-dir.outputs.path }}'
+        $boost_dir = '${{ inputs.boost-dir }}'
+
+        if ($env:CI_HOST_CYGWIN) {
+            $python = 'python3'
+            $src_dir = cygpath.exe -ua $src_dir
+            $install_dir = cygpath.exe -ua $install_dir
+            if ($boost_dir) {
+                $boost_dir = cygpath.exe -ua $boost_dir
+            }
+        }
+
+        $args = @(
+            '--install',
+            $install_dir,
+            '--platform',
+            '${{ inputs.platform }}',
+            '--configuration',
+            '${{ inputs.configuration }}',
+            '--toolset',
+            '${{ inputs.toolset }}'
+        )
+
+        if ($boost_dir) {
+            $args += '--boost',$boost_dir
+        }
+
+        $args += '--',$src_dir
+        $env:VERBOSE = 1
+        & $python -m project.cmake.build $args
+      shell: pwsh

@@ -7,8 +7,9 @@ import argparse
 import logging
 import sys
 
-from project.boost.download import DownloadParameters, download
 from project.boost.build import BuildParameters, build
+from project.boost.download import DownloadParameters, download
+from project.boost.toolchain import ToolchainType
 from project.linkage import Linkage
 
 
@@ -27,8 +28,10 @@ def _parse_args(dirs, argv=None):
     parser.add_argument('--runtime-link', metavar='LINKAGE',
                         type=Linkage.parse,
                         help='how the libraries link to the runtime')
-    parser.add_argument('--mingw', action='store_true',
-                        help='build using MinGW-w64')
+    parser.add_argument('--toolset', metavar='TOOLSET',
+                        type=ToolchainType.parse,
+                        help='toolset to use')
+
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
@@ -50,6 +53,6 @@ def build_ci(dirs, argv=None):
                              configurations=(dirs.get_configuration(),),
                              link=args.link,
                              runtime_link=args.runtime_link,
-                             mingw=args.mingw,
+                             toolset=args.toolset,
                              b2_args=args.b2_args)
     build(params)

@@ -5,8 +5,8 @@
 
 R'''Download & bootstrap Boost.
 
-This script downloads and bootstraps a Boost distribution.  It's main utility
-is that it's supposed to be cross-platform.
+This script downloads and unpacks a Boost distribution archive.  Its main
+utility is that it's supposed to be cross-platform.
 
 Usage examples:
 
@@ -97,7 +97,6 @@ def download(params):
     with _download_if_necessary(params.version, params.storage) as path:
         archive = Archive(params.version, path)
         boost_dir = archive.unpack(params.unpack_dir)
-        boost_dir.bootstrap()
         params.rename_if_necessary(boost_dir)
 
 

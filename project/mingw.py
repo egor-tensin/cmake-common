@@ -3,8 +3,6 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-from project.os import on_windows_like
-
 
 def _get_compiler_prefix(platform):
     target_arch = platform.get_address_model()
@@ -17,11 +15,7 @@ def _get_compiler_prefix(platform):
 
 def _get(platform, what):
     prefix = _get_compiler_prefix(platform)
-    ext = ''
-    if on_windows_like():
-        # Boost.Build wants the .exe extension at the end on Cygwin.
-        ext = '.exe'
-    path = f'{prefix}-w64-mingw32-{what}{ext}'
+    path = f'{prefix}-w64-mingw32-{what}'
     return path
 
 
@@ -31,6 +25,14 @@ def get_gcc(platform):
 
 def get_gxx(platform):
     return _get(platform, 'g++')
+
+
+def get_ar(platform):
+    return _get(platform, 'gcc-ar')
+
+
+def get_ranlib(platform):
+    return _get(platform, 'gcc-ranlib')
 
 
 def get_windres(platform):

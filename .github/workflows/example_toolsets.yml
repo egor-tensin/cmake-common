@@ -1,0 +1,168 @@
+name: Examples (toolsets)
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
+    - cron: '30 5 * * 6'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [simple, static, dynamic]
+        toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
+        cygwin: [0, 1]
+        os: [ubuntu-18.04, windows-2016, windows-2019]
+
+        include:
+          # Prettier run names.
+          - {os: windows-2019, name: VS 2019}
+          - {os: windows-2016, name: VS 2017}
+          - {os: ubuntu-18.04, name: Ubuntu}
+          - {cygwin: 1, name: Cygwin}
+          # Target platform.
+          - {example: simple, platform: x64}
+          - {example: static, platform: x86}
+          - {example: dynamic, platform: x64}
+          # Configuration.
+          - {example: simple, configuration: Release}
+          - {example: static, configuration: Debug}
+          - {example: dynamic, configuration: RelWithDebInfo}
+          # Expected symbols.
+          - example: simple
+            symbols:
+              - target: foo
+                type: exe
+                symbols: []
+          - example: static
+            symbols:
+              - target: foo
+                type: exe
+                symbols: [main, bar]
+          - example: dynamic
+            symbols:
+              - target: foo
+                type: exe
+                symbols: [main]
+              - target: baz
+                type: dll
+                symbols: [baz]
+        exclude:
+          # Ubuntu: no MSVC/clang-cl/Cygwin.
+          - {os: ubuntu-18.04, toolset: msvc}
+          - {os: ubuntu-18.04, toolset: clang-cl}
+          - {os: ubuntu-18.04, cygwin: 1}
+          # Cygwin: no MSVC/clang-cl.
+          - {cygwin: 1, toolset: msvc}
+          - {cygwin: 1, toolset: clang-cl}
+          # Cygwin is the same on Windows Server 2016 & 2019.
+          - {os: windows-2016, cygwin: 1}
+
+    runs-on: '${{ matrix.os }}'
+
+    name: '${{ matrix.example }} / ${{ matrix.toolset }} / ${{ matrix.name }}'
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v1
+        if: runner.os == 'Windows'
+
+      - name: Set common variables
+        uses: ./.github/actions/common-variables
+        with:
+          toolset: '${{ matrix.toolset }}'
+          cygwin: '${{ matrix.cygwin }}'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+        if: '!env.CI_HOST_CYGWIN'
+
+      - name: Install Cygwin
+        uses: egor-tensin/setup-cygwin@v3
+        with:
+          platform: '${{ matrix.platform }}'
+          packages: cmake make python3
+          hardlinks: 1
+        if: env.CI_HOST_CYGWIN
+
+      - name: Install GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          cygwin: '${{ matrix.cygwin }}'
+          platform: '${{ matrix.platform }}'
+          hardlinks: 1
+        if: (env.CI_HOST_LINUX || env.CI_HOST_CYGWIN) && (matrix.toolset == 'auto' || matrix.toolset == 'gcc')
+
+      - name: Install Clang
+        uses: egor-tensin/setup-clang@v1
+        with:
+          cygwin: '${{ matrix.cygwin }}'
+          platform: '${{ matrix.platform }}'
+          hardlinks: 1
+        if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
+
+      - name: Install MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          cygwin: '${{ matrix.cygwin }}'
+          platform: '${{ matrix.platform }}'
+          hardlinks: 1
+        # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
+        if: env.CI_MINGW || (matrix.toolset == 'clang' && env.CI_HOST_WINDOWS)
+
+      - name: Set up software environment
+        uses: ./.github/actions/software-environment
+        with:
+          toolset: '${{ matrix.toolset }}'
+          platform: '${{ matrix.platform }}'
+
+      - name: Set up Visual Studio
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: '${{ matrix.platform }}'
+        if: matrix.toolset == 'clang-cl' && env.CI_HOST_WINDOWS
+
+      - name: Build example project
+        id: build
+        uses: ./.github/actions/build-example
+        with:
+          src-dir: 'examples/${{ matrix.example }}'
+          toolset: '${{ matrix.toolset }}'
+          platform: '${{ matrix.platform }}'
+          configuration: '${{ matrix.configuration }}'
+
+      - name: Verify runtime library linkage
+        uses: ./.github/actions/check-runtime-library
+        with:
+          path: '${{ steps.build.outputs.install-dir }}'
+
+      - name: Verify architecture
+        uses: ./.github/actions/check-arch
+        with:
+          path: '${{ steps.build.outputs.install-dir }}'
+          expected: '${{ matrix.platform }}'
+
+      - name: Run example project
+        uses: ./.github/actions/run-example
+        with:
+          path: '${{ steps.build.outputs.install-dir }}'
+
+      - name: Check symbols
+        uses: ./.github/actions/check-symbols
+        with:
+          path: '${{ steps.build.outputs.install-dir }}'
+          expected: '${{ toJson(matrix.symbols) }}'
+        if: env.CI_TARGET_ELF

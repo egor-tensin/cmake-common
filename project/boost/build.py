@@ -5,8 +5,8 @@
 
 R'''Build Boost.
 
-This script builds the Boost libraries.  It's main utility is setting the
-correct --stagedir parameter value to avoid name clashes.
+This script builds the Boost libraries.  It main utility is setting the correct
+--stagedir parameter value to avoid name clashes.
 
 Usage example:
 
@@ -46,6 +46,7 @@ import sys
 import tempfile
 
 from project.boost.directory import BoostDir
+from project.toolchain import ToolchainType
 from project.boost.toolchain import Toolchain
 from project.configuration import Configuration
 from project.linkage import Linkage
@@ -60,14 +61,14 @@ DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
 # binaries from a CI, etc. and run them everywhere):
 DEFAULT_LINK = (Linkage.STATIC,)
 DEFAULT_RUNTIME_LINK = Linkage.STATIC
-# Shut compilers up:
-COMMON_B2_ARGS = ['-d0']
+B2_QUIET = ['-d0']
+B2_VERBOSE = ['-d2', '--debug-configuration']
 
 
 class BuildParameters:
     def __init__(self, boost_dir, build_dir=None, platforms=None,
                  configurations=None, link=None, runtime_link=None,
-                 mingw=False, b2_args=None):
+                 toolset=None, verbose=False, b2_args=None):
 
         boost_dir = normalize_path(boost_dir)
         if build_dir is not None:
@@ -76,10 +77,12 @@ class BuildParameters:
         configurations = configurations or DEFAULT_CONFIGURATIONS
         link = link or DEFAULT_LINK
         runtime_link = runtime_link or DEFAULT_RUNTIME_LINK
+        toolset = toolset or ToolchainType.AUTO
+        verbosity = B2_VERBOSE if verbose else B2_QUIET
         if b2_args:
-            b2_args = COMMON_B2_ARGS + b2_args
+            b2_args = verbosity + b2_args
         else:
-            b2_args = COMMON_B2_ARGS
+            b2_args = verbosity
 
         self.boost_dir = boost_dir
         self.build_dir = build_dir
@@ -88,17 +91,20 @@ class BuildParameters:
         self.configurations = configurations
         self.link = link
         self.runtime_link = runtime_link
-        self.mingw = mingw
+        self.toolset = toolset
         self.b2_args = b2_args
 
     @staticmethod
     def from_args(args):
         return BuildParameters(**vars(args))
 
+    def get_bootstrap_args(self):
+        return self.toolset.get_bootstrap_args()
+
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                with Toolchain.detect(platform, mingw=self.mingw) as toolchain:
+                with Toolchain.detect(self.toolset, platform) as toolchain:
                     for configuration in self.configurations:
                         for link, runtime_link in self._linkage_options():
                             yield self._build_params(build_dir, toolchain,
@@ -138,9 +144,9 @@ class BuildParameters:
         params.append(self._stagedir(toolchain, configuration))
         params.append('--layout=system')
         params += toolchain.get_b2_args()
+        params.append(self._variant(configuration))
         params.append(self._link(link))
         params.append(self._runtime_link(runtime_link))
-        params.append(self._variant(configuration))
         params += self.b2_args
         return params
 
@@ -204,8 +210,10 @@ def _parse_args(argv=None):
                         type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
                         help=f'how the libraries link to the runtime ({linkage_options})')
 
-    parser.add_argument('--mingw', action='store_true',
-                        help='build using MinGW-w64')
+    toolset_options = '/'.join(map(str, ToolchainType.all()))
+    parser.add_argument('--toolset', metavar='TOOLSET',
+                        type=ToolchainType.parse, default=ToolchainType.AUTO,
+                        help=f'toolset to use ({toolset_options})')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=normalize_path,
@@ -214,6 +222,8 @@ def _parse_args(argv=None):
                         type=normalize_path,
                         help='root Boost directory')
 
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbose b2 invocation (quiet by default)')
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')

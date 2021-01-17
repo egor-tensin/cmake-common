@@ -1,0 +1,28 @@
+name: Run example project
+description: Run example project
+inputs:
+  path:
+    description: Installation directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        New-Variable path -Value '${{ inputs.path }}' -Option Constant
+
+        if ($env:CI_HOST_LINUX -and -not $env:CI_TARGET_LINUX) {
+            echo 'Not going to do that on Linux/MinGW'
+            exit
+        }
+
+        if ($env:CI_TARGET_LINUX) {
+            $lib = Join-Path $path 'lib'
+            if (Test-Path $lib) {
+                $lib = Resolve-Path $lib
+                $env:LD_LIBRARY_PATH = $lib
+            }
+        }
+        $exe_path = (Join-Path $path 'bin' 'foo') + $env:CI_EXE_EXT
+        echo "Executable path: $exe_path"
+        & $exe_path
+      shell: pwsh

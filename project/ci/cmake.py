@@ -8,6 +8,7 @@ import logging
 import sys
 
 from project.cmake.build import BuildParameters, build
+from project.toolchain import ToolchainType
 
 
 def _parse_args(dirs, argv=None):
@@ -23,8 +24,9 @@ def _parse_args(dirs, argv=None):
                         help='install directory')
     parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
                         help='set Boost directory path')
-    parser.add_argument('--mingw', action='store_true',
-                        help='build using MinGW-w64')
+    parser.add_argument('--toolset', metavar='TOOLSET',
+                        type=ToolchainType.parse,
+                        help=f'toolset to use')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
                         help='additional CMake arguments, to be passed verbatim')
     return parser.parse_args(argv)
@@ -39,6 +41,6 @@ def build_ci(dirs, argv=None):
                              platform=dirs.get_platform(),
                              configuration=dirs.get_configuration(),
                              boost_dir=args.boost_dir or dirs.get_boost_dir(),
-                             mingw=args.mingw,
+                             toolset=args.toolset,
                              cmake_args=dirs.get_cmake_args() + args.cmake_args)
     build(params)
