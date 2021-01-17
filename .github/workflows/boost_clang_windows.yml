@@ -9,6 +9,9 @@ name: Boost & Clang on Windows
 
 on:
   push:
+    branches-ignore:
+      - travis
+      - appveyor
   pull_request:
   schedule:
     # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
