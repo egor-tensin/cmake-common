@@ -153,6 +153,8 @@ class BuildParameters:
     def create_build_dir(self):
         if self.build_dir is not None:
             logging.info('Build directory: %s', self.build_dir)
+            if not os.path.exists(self.build_dir):
+                os.makedirs(self.build_dir, exist_ok=True)
             yield self.build_dir
             return
 
