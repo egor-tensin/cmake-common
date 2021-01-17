@@ -1,10 +1,35 @@
 cmake-common
 ============
 
-[![Travis (.com) branch](https://img.shields.io/travis/com/egor-tensin/cmake-common/master?label=Travis)](https://travis-ci.com/egor-tensin/cmake-common)
-[![AppVeyor branch](https://img.shields.io/appveyor/ci/egor-tensin/cmake-common/master?label=AppVeyor)](https://ci.appveyor.com/project/egor-tensin/cmake-common/branch/master)
+[![Boost (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Boost%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Boost+%28toolsets%29%22)
+[![Examples (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Examples%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Examples+%28toolsets%29%22)
 
 Various utilities to help develop C++/CMake projects.
+
+Toolchains
+----------
+
+Supported platform/build system/compiler combinations include, but are not
+limited to:
+
+| Platform | Build system | Compiler
+| -------- | ------------ | --------
+| Linux    | make         | Clang
+|          |              | GCC
+|          |              | MinGW-w64
+| Windows  | make \[1\]   | Clang (clang/clang++)
+|          |              | Clang (clang-cl \[2\])
+|          |              | MinGW-w64
+|          | msbuild      | MSVC
+| Cygwin   | make         | Clang
+|          |              | GCC
+|          |              | MinGW-w64
+
+1. Both GNU `make` and MinGW `mingw32-make`.
+2. Boost 1.69.0 or higher only.
+
+All of those are verified continuously by the "Boost (toolsets)" and "Examples
+(toolsets)" workflows.
 
 Usage
 -----
@@ -104,34 +129,6 @@ Environment variables:
     $ cd project/
     $ python3 path/to/tools/clang-format.py      # Prints a diff
     $ python3 path/to/tools/clang-format.py -i   # Edits files in-place
-
-Toolchains
-----------
-
-Supported platform/build system/compiler combinations include, but are not
-limited to:
-
-| Platform | Build system | Compiler
-| -------- | ------------ | --------
-| Linux    | make         | Clang
-|          |              | GCC
-|          |              | MinGW-w64
-| Windows  | make \[1\]   | Clang (clang/clang++)
-|          |              | Clang (clang-cl \[2\])
-|          |              | MinGW-w64
-|          | msbuild      | MSVC
-| Cygwin   | make         | Clang
-|          |              | GCC
-|          |              | MinGW-w64
-
-1. Both GNU `make` and MinGW `mingw32-make`.
-2. Boost 1.69.0 or higher only.
-
-All of those are verified continuously by the "Boost (toolsets)" and "Examples
-(toolsets)" workflows.
-
-[![Examples (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Examples%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Examples+%28toolsets%29%22)
-[![Boost (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Boost%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Boost+%28toolsets%29%22)
 
 Examples
 --------
