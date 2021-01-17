@@ -56,8 +56,10 @@ Pass the `--help` flag to view detailed usage information.
 
 ### CI
 
-One of the goals was to merge my Travis & AppVeyor build scripts.
-They have nearly identical interfaces now.
+One of the goals was to merge Travis & AppVeyor build scripts for the various
+projects I have.
+This project provides the scripts for both of these CI systems with
+nearly-identical interfaces.
 Internally, they call the generic scripts from above, auto-filling some
 parameters from environment variables.
 

@@ -56,7 +56,7 @@ Boost is built in {self.get_boost_dir()}.
 '''
 
     def get_cmake_help(self):
-        return f'''Build a CMake project on AppVeyor.
+        return f'''Build a CMake project on Travis/AppVeyor.
 
 This is similar to running project.cmake.build, but auto-fills some parameters
 from environment variables.
