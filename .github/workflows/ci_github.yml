@@ -1,7 +1,6 @@
-# This workflow pretends like it's being run on Travis by setting the
-# appropriate environment variables.  The project.ci.travis package is tested.
+# The project.ci.github package is tested.
 
-name: CI (Travis)
+name: CI (GitHub)
 
 on:
   push:
@@ -18,16 +17,18 @@ jobs:
   build:
     strategy:
       matrix:
+        os: [ubuntu-18.04, windows-2019]
         configuration: [Debug, Release]
+        include:
+          # Prettier run names.
+          - {os: ubuntu-18.04, name: Ubuntu}
+          - {os: windows-2019, name: VS 2019}
 
-    runs-on: ubuntu-18.04
+    runs-on: '${{ matrix.os }}'
 
-    name: '${{ matrix.configuration }}'
+    name: '${{ matrix.name }} / ${{ matrix.configuration }}'
 
     env:
-      # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-      TRAVIS: 'true'
-      TRAVIS_BUILD_DIR: '${{ github.workspace }}/examples/boost'
       platform: x64
       configuration: '${{ matrix.configuration }}'
       boost_version: 1.72.0
@@ -46,15 +47,18 @@ jobs:
           python-version: '3.x'
 
       - name: Build Boost
-        run: python -m project.ci.travis.boost -- --with-filesystem
+        run: python -m project.ci.github.boost -- --with-filesystem
 
       - name: Build example project
-        run: python -m project.ci.travis.cmake --install
+        run: python -m project.ci.github.cmake --install --subdir examples/boost -- -D Boost_DEBUG=ON
 
       - name: Run example project
         run: |
-          cd "$env:HOME/install/bin"
+          cd (Join-Path $env:GITHUB_WORKSPACE .. install bin)
           $foo_path = Join-Path (Get-Location).Path foo
+          if ('${{ runner.os }}' -eq 'Windows') {
+              $foo_path += '.exe'
+          }
 
           $relative = 'test.txt'
           $absolute = Join-Path (Get-Location).Path $relative

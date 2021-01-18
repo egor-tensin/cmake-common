@@ -97,7 +97,7 @@ Bootstrap Boost and/or build a CMake project:
 
     $ python3 -m project.ci.travis.boost -- --with-test
 
-    $ python3 -m project.ci.travis.cmake --install "$HOME/install"
+    $ python3 -m project.ci.travis.cmake --install
 
 Environment variables:
 
@@ -110,14 +110,28 @@ Environment variables:
 Bootstrap Boost (seldom used, since AppVeyor pre-builds many Boost versions)
 and/or build a CMake project:
 
-    > C:\Python36-x64\python.exe -m project.ci.appveyor.boost -- --with-test
+    > C:\Python36-x64\python.exe -m project.ci.appveyor.boost -- --with-filesystem
 
-    > C:\Python36-x64\python.exe -m project.ci.appveyor.cmake --install C:\projects\install
+    > C:\Python36-x64\python.exe -m project.ci.appveyor.cmake --install
 
 Environment variables:
 
 * `PLATFORM`,
 * `CONFIGURATION`,
+* `boost_version`.
+
+#### GitHub Actions
+
+Bootstrap Boost and/or build a CMake project:
+
+    > python -m project.ci.github.boost -- --with-program_options
+
+    > python -m project.ci.github.cmake --install
+
+Environment variables:
+
+* `platform`,
+* `configuration`,
 * `boost_version`.
 
 ### clang-format.py

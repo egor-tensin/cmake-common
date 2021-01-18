@@ -5,6 +5,7 @@
 
 import argparse
 import logging
+import os.path
 import sys
 
 from project.cmake.build import BuildParameters, build
@@ -27,6 +28,8 @@ def _parse_args(dirs, argv=None):
     parser.add_argument('--toolset', metavar='TOOLSET',
                         type=ToolchainType.parse,
                         help='toolset to use')
+    parser.add_argument('--subdir', metavar='DIR',
+                        help='relative project directory path')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
                         help='additional CMake arguments, to be passed verbatim')
     return parser.parse_args(argv)
@@ -35,8 +38,11 @@ def _parse_args(dirs, argv=None):
 def build_ci(dirs, argv=None):
     args = _parse_args(dirs, argv)
 
+    src_dir = dirs.get_src_dir()
+    if args.subdir:
+        src_dir = os.path.join(src_dir, args.subdir)
     install_dir = dirs.get_install_dir() if args.install else None
-    params = BuildParameters(dirs.get_src_dir(),
+    params = BuildParameters(src_dir,
                              build_dir=dirs.get_cmake_dir(),
                              install_dir=install_dir,
                              platform=dirs.get_platform(),

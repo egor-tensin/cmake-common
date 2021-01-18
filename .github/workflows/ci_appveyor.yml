@@ -52,12 +52,10 @@ jobs:
         run: mkdir C:\projects
 
       - name: Build Boost
-        run: |
-          python -m project.ci.appveyor.boost -- --with-filesystem
+        run: python -m project.ci.appveyor.boost -- --with-filesystem
 
       - name: Build example project
-        run: |
-          python -m project.ci.appveyor.cmake --install
+        run: python -m project.ci.appveyor.cmake --install
 
       - name: Run example project
         run: |

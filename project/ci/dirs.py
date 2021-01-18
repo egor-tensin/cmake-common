@@ -100,3 +100,20 @@ class AppVeyor(Dirs):
 
     def get_cmake_args(self):
         return ['-G', str(Generator.from_image(Image.get()))]
+
+
+class GitHub(Dirs):
+    def get_platform(self):
+        return Platform.parse(env('platform'))
+
+    def get_configuration(self):
+        return Configuration.parse(env('configuration'))
+
+    def get_src_dir(self):
+        return env('GITHUB_WORKSPACE')
+
+    def get_build_dir(self):
+        return os.path.dirname(env('GITHUB_WORKSPACE'))
+
+    def get_cmake_args(self):
+        return []
