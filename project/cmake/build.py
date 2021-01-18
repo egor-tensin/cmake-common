@@ -34,7 +34,7 @@ from project.toolchain import ToolchainType
 from project.utils import normalize_path, run, setup_logging
 
 
-DEFAULT_PLATFORM = Platform.native()
+DEFAULT_PLATFORM = None
 DEFAULT_CONFIGURATION = Configuration.DEBUG
 DEFAULT_TOOLSET = ToolchainType.AUTO
 

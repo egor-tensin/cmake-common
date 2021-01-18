@@ -138,6 +138,12 @@ class Toolchain(abc.ABC):
     @staticmethod
     def detect(hint, platform, build_dir):
         if hint is ToolchainType.AUTO:
+            # If the platform wasn't specified, auto-detect everything.
+            # There's no need to set -mXX flags, etc.
+            if platform is None:
+                return Auto()
+            # If a specific platform was requested, we might need to set some
+            # CMake/compiler flags.
             if on_windows():
                 # We need to specify the -A parameter.  This might break if
                 # none of the Visual Studio generators are available, but the
