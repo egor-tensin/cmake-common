@@ -20,8 +20,8 @@ def _parse_args(dirs, argv=None):
         description=dirs.get_cmake_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument('--install', metavar='DIR', dest='install_dir',
-                        help='install directory')
+    parser.add_argument('--install', action='store_true',
+                        help='install the project')
     parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
                         help='set Boost directory path')
     parser.add_argument('--toolset', metavar='TOOLSET',
@@ -35,9 +35,10 @@ def _parse_args(dirs, argv=None):
 def build_ci(dirs, argv=None):
     args = _parse_args(dirs, argv)
 
+    install_dir = dirs.get_install_dir() if args.install else None
     params = BuildParameters(dirs.get_src_dir(),
                              build_dir=dirs.get_cmake_dir(),
-                             install_dir=args.install_dir,
+                             install_dir=install_dir,
                              platform=dirs.get_platform(),
                              configuration=dirs.get_configuration(),
                              boost_dir=args.boost_dir or dirs.get_boost_dir(),

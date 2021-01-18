@@ -57,11 +57,12 @@ jobs:
 
       - name: Build example project
         run: |
-          python -m project.ci.appveyor.cmake --install ..\install
+          python -m project.ci.appveyor.cmake --install
 
       - name: Run example project
         run: |
-          $foo_path = Join-Path (Split-Path (Get-Location).Path) install bin foo.exe
+          cd C:\projects\install\bin
+          $foo_path = Join-Path (Get-Location).Path foo.exe
 
           $relative = 'test.txt'
           $absolute = Join-Path (Get-Location).Path $relative

@@ -42,6 +42,9 @@ class Dirs(abc.ABC):
     def get_cmake_dir(self):
         return os.path.join(self.get_build_dir(), 'build')
 
+    def get_install_dir(self):
+        return os.path.join(self.get_build_dir(), 'install')
+
     @abc.abstractmethod
     def get_cmake_args(self):
         pass
@@ -61,7 +64,7 @@ Boost is built in {self.get_boost_dir()}.
 This is similar to running project.cmake.build, but auto-fills some parameters
 from environment variables.
 
-The project is built in {self.get_cmake_dir()}.
+The project is built in {self.get_cmake_dir()} and installed to {self.get_install_dir()}.
 '''
 
 

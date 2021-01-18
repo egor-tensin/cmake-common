@@ -58,7 +58,7 @@ python := python3
 endif
 
 ifeq ($(windows),1)
-install_prefix = C:/install
+install_prefix := C:/install
 else
 install_prefix := $$HOME/install
 endif
@@ -316,7 +316,9 @@ boost/65/ls: echo/boost/65/ls
 
 .PHONY: boost/65/exe/build
 boost/65/exe/build: echo/boost/65/exe/build
-	TRAVIS_BUILD_DIR="$$TRAVIS_BUILD_DIR/examples/boost" "$(python)" -m project.ci.travis.cmake --install "$(install_prefix)/boost_1_65_0"
+	TRAVIS_BUILD_DIR="$$TRAVIS_BUILD_DIR/examples/boost" "$(python)" -m project.ci.travis.cmake --install
+
+ci_install_dir := $$HOME/install
 endif
 ifdef APPVEYOR
 .PHONY: boost/65/build
@@ -329,20 +331,22 @@ boost/65/ls: echo/boost/65/ls
 
 .PHONY: boost/65/exe/build
 boost/65/exe/build: echo/boost/65/exe/build
-	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\examples\boost" && "$(python)" -m project.ci.appveyor.cmake --install "$(install_prefix)/boost_1_65_0"
+	set "APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%\examples\boost" && "$(python)" -m project.ci.appveyor.cmake --install
+
+ci_install_dir := C:/projects/install
 endif
 
 .PHONY: boost/65/exe/run
 boost/65/exe/run: echo/boost/65/exe/run
-	"$(install_prefix)/boost_1_65_0/bin/foo"
+	"$(ci_install_dir)/bin/foo"
 
 .PHONY: boost/65/exe/arch
 boost/65/exe/arch: echo/boost/65/exe/arch
-	$(verify_arch) "$(install_prefix)/boost_1_65_0/bin/foo$(exe_ext)" x64
+	$(verify_arch) "$(ci_install_dir)/bin/foo$(exe_ext)" x64
 
 .PHONY: boost/65/exe/symbols
 boost/65/exe/symbols: echo/boost/65/exe/symbols
-	$(verify_symbols) "$(install_prefix)/boost_1_65_0/bin/foo$(exe_ext)"
+	$(verify_symbols) "$(ci_install_dir)/bin/foo$(exe_ext)"
 
 .PHONY: boost/65/exe
 boost/65/exe: boost/65/exe/build boost/65/exe/run boost/65/exe/arch boost/65/exe/symbols
