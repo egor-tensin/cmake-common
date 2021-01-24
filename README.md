@@ -82,57 +82,63 @@ Pass the `--help` flag to view detailed usage information.
 
 ### CI
 
-One of the goals was to merge Travis & AppVeyor build scripts for the various
-projects I have.
-This project provides the scripts for both of these CI systems with
-nearly-identical interfaces.
-Internally, they call the generic scripts from above, auto-filling some
+Utility modules `project.ci.boost` and `project.ci.cmake` allow building Boost
+and CMake projects on multiple CI systems.
+They work by calling the generic scripts from above, auto-filling some
 parameters from environment variables.
 
-Pass the `--help` flag to a script to view detailed usage information.
+|                   | Travis           | AppVeyor              | GitHub Actions
+| ----------------- | ---------------- | --------------------- | ----------------------------
+| `--platform`      | `$platform`      | `$PLATFORM`           | `$platform`
+| `--configuration` | `$configuration` | `$CONFIGURATION`      | `$configuration`
+| Boost version     | `$boost_version` | `$boost_version`      | `$boost_version`
+| Boost path        | `$HOME/boost/`   | `C:\projects\boost`   | `$RUNNER_WORKSPACE/boost/`
+| Build path        | `$HOME/build/`   | `C:\projects\build`   | `$RUNNER_WORKSPACE/build/`
+| Install path      | `$HOME/install/` | `C:\projects\install` | `$RUNNER_WORKSPACE/install/`
 
-#### Travis
+For example, the following Travis workflow:
 
-Bootstrap Boost and/or build a CMake project:
+```
+language: cpp
+os: linux
+dist: focal
 
-    $ python3 -m project.ci.travis.boost -- --with-test
+env:
+  global:
+    boost_version: 1.65.0
+  jobs:
+    - configuration=Debug   platform=x64
+    - configuration=Release platform=x64
 
-    $ python3 -m project.ci.travis.cmake --install
+before_script: python3 -m project.ci.boost -- --with-filesystem
+script: python3 -m project.ci.cmake --install
+```
 
-Environment variables:
+is equivalent to running
 
-* `platform`,
-* `configuration`,
-* `boost_version`.
+```
+python3 -m project.boost.download --unpack "$HOME" -- 1.65.0
+mv -- "$HOME/boost_1_65_0" "$HOME/boost"
 
-#### AppVeyor
+python3 -m project.boost.build \
+    --platform x64             \
+    --configuration Debug      \
+    --                         \
+    "$HOME/boost"              \
+    --with-filesystem
 
-Bootstrap Boost (seldom used, since AppVeyor pre-builds many Boost versions)
-and/or build a CMake project:
+python3 -m project.cmake.build \
+    --platform x64             \
+    --configuration Debug      \
+    --boost "$HOME/boost"      \
+    --build "$HOME/build"      \
+    --install "$HOME/install"  \
+    --                         \
+    "$TRAVIS_BUILD_DIR"
+```
 
-    > C:\Python36-x64\python.exe -m project.ci.appveyor.boost -- --with-filesystem
-
-    > C:\Python36-x64\python.exe -m project.ci.appveyor.cmake --install
-
-Environment variables:
-
-* `PLATFORM`,
-* `CONFIGURATION`,
-* `boost_version`.
-
-#### GitHub Actions
-
-Bootstrap Boost and/or build a CMake project:
-
-    > python -m project.ci.github.boost -- --with-program_options
-
-    > python -m project.ci.github.cmake --install
-
-Environment variables:
-
-* `platform`,
-* `configuration`,
-* `boost_version`.
+twice (the `--configuration` parameter having the value of `Release` for the
+second run).
 
 ### clang-format.py
 
