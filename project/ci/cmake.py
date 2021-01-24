@@ -8,17 +8,19 @@ import logging
 import os.path
 import sys
 
+from project.ci.dirs import Dirs
 from project.cmake.build import BuildParameters, build
 from project.toolchain import ToolchainType
+from project.utils import setup_logging
 
 
-def _parse_args(dirs, argv=None):
+def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser(
-        description=dirs.get_cmake_help(),
+        description=Dirs.get_cmake_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--install', action='store_true',
@@ -36,12 +38,15 @@ def _parse_args(dirs, argv=None):
 
 
 def build_ci(dirs, argv=None):
-    args = _parse_args(dirs, argv)
+    args = _parse_args(argv)
+    if dirs is None:
+        dirs = Dirs.detect()
 
     src_dir = dirs.get_src_dir()
     if args.subdir:
         src_dir = os.path.join(src_dir, args.subdir)
     install_dir = dirs.get_install_dir() if args.install else None
+
     params = BuildParameters(src_dir,
                              build_dir=dirs.get_cmake_dir(),
                              install_dir=install_dir,
@@ -51,3 +56,12 @@ def build_ci(dirs, argv=None):
                              toolset=args.toolset,
                              cmake_args=dirs.get_cmake_args() + args.cmake_args)
     build(params)
+
+
+def main(argv=None):
+    with setup_logging():
+        build_ci(None, argv)
+
+
+if __name__ == '__main__':
+    main()

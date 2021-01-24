@@ -44,10 +44,10 @@ jobs:
           python-version: '3.x'
 
       - name: Build Boost
-        run: python -m project.ci.github.boost -- --with-filesystem
+        run: python -m project.ci.boost -- --with-filesystem
 
       - name: Build example project
-        run: python -m project.ci.github.cmake --install --subdir examples/boost -- -D Boost_DEBUG=ON
+        run: python -m project.ci.cmake --install --subdir examples/boost
 
       - name: Run example project
         run: |

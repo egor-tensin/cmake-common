@@ -4,6 +4,7 @@
 # Distributed under the MIT License.
 
 import abc
+import os
 import os.path
 
 from project.boost.version import Version
@@ -14,7 +15,26 @@ from project.utils import env
 
 
 class Dirs(abc.ABC):
+    @staticmethod
+    def detect():
+        matching = [ci for ci in _ALL_CI_LIST if ci.this_one()]
+        if len(matching) == 0:
+            raise RuntimeError('no CI system was detected')
+        if len(matching) > 1:
+            names = ', '.join(ci.get_name() for ci in matching)
+            raise RuntimeError(f"can't select a single CI system out of these: {names}")
+        return matching[0]
+
     def __init__(self):
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_name():
+        pass
+
+    @abc.abstractmethod
+    def this_one(self):
         pass
 
     @abc.abstractmethod
@@ -49,26 +69,37 @@ class Dirs(abc.ABC):
     def get_cmake_args(self):
         pass
 
-    def get_boost_help(self):
-        return f'''Download & build Boost on Travis/AppVeyor.
+    @staticmethod
+    def get_boost_help():
+        names = ', '.join(ci.get_name() for ci in _ALL_CI_LIST)
+        return f'''Download & build Boost during a CI run.
 
 This is similar to running both project.boost.download & project.boost.build,
 but auto-fills some parameters from environment variables.
 
-Boost is built in {self.get_boost_dir()}.
+The supported CI systems are: {names}.
 '''
 
-    def get_cmake_help(self):
-        return f'''Build a CMake project on Travis/AppVeyor.
+    @staticmethod
+    def get_cmake_help():
+        names = ', '.join(ci.get_name() for ci in _ALL_CI_LIST)
+        return f'''Build a CMake project during a CI run.
 
 This is similar to running project.cmake.build, but auto-fills some parameters
 from environment variables.
 
-The project is built in {self.get_cmake_dir()} and installed to {self.get_install_dir()}.
+The supported CI systems are: {names}.
 '''
 
 
 class Travis(Dirs):
+    @staticmethod
+    def get_name():
+        return 'Travis'
+
+    def this_one(self):
+        return 'TRAVIS' in os.environ
+
     def get_platform(self):
         return Platform.parse(env('platform'))
 
@@ -86,6 +117,13 @@ class Travis(Dirs):
 
 
 class AppVeyor(Dirs):
+    @staticmethod
+    def get_name():
+        return 'AppVeyor'
+
+    def this_one(self):
+        return 'APPVEYOR' in os.environ
+
     def get_platform(self):
         return Platform.parse(env('PLATFORM'))
 
@@ -103,6 +141,13 @@ class AppVeyor(Dirs):
 
 
 class GitHub(Dirs):
+    @staticmethod
+    def get_name():
+        return 'GitHub Actions'
+
+    def this_one(self):
+        return 'GITHUB_ACTIONS' in os.environ
+
     def get_platform(self):
         return Platform.parse(env('platform'))
 
@@ -117,3 +162,6 @@ class GitHub(Dirs):
 
     def get_cmake_args(self):
         return []
+
+
+_ALL_CI_LIST = (Travis(), AppVeyor(), GitHub())

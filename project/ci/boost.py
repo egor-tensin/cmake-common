@@ -10,16 +10,18 @@ import sys
 from project.boost.build import BuildParameters, build
 from project.boost.download import DownloadParameters, download
 from project.boost.toolchain import ToolchainType
+from project.ci.dirs import Dirs
 from project.linkage import Linkage
+from project.utils import setup_logging
 
 
-def _parse_args(dirs, argv=None):
+def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser(
-        description=dirs.get_boost_help(),
+        description=Dirs.get_boost_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--link', metavar='LINKAGE',
@@ -40,7 +42,9 @@ def _parse_args(dirs, argv=None):
 
 
 def build_ci(dirs, argv=None):
-    args = _parse_args(dirs, argv)
+    args = _parse_args(argv)
+    if dirs is None:
+        dirs = Dirs.detect()
 
     version = dirs.get_boost_version()
     build_dir = dirs.get_build_dir()
@@ -56,3 +60,12 @@ def build_ci(dirs, argv=None):
                              toolset=args.toolset,
                              b2_args=args.b2_args)
     build(params)
+
+
+def main(argv=None):
+    with setup_logging():
+        build_ci(None, argv)
+
+
+if __name__ == '__main__':
+    main()
