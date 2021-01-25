@@ -9,7 +9,6 @@ import sys
 
 from project.boost.build import BuildParameters, build
 from project.boost.download import DownloadParameters, download
-from project.boost.toolchain import ToolchainType
 from project.ci.dirs import Dirs
 from project.linkage import Linkage
 from project.utils import setup_logging
@@ -30,9 +29,6 @@ def _parse_args(argv=None):
     parser.add_argument('--runtime-link', metavar='LINKAGE',
                         type=Linkage.parse,
                         help='how the libraries link to the runtime')
-    parser.add_argument('--toolset', metavar='TOOLSET',
-                        type=ToolchainType.parse,
-                        help='toolset to use')
 
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
@@ -57,7 +53,7 @@ def build_ci(dirs, argv=None):
                              configurations=(dirs.get_configuration(),),
                              link=args.link,
                              runtime_link=args.runtime_link,
-                             toolset=args.toolset,
+                             toolset=dirs.get_toolset(),
                              b2_args=args.b2_args)
     build(params)
 

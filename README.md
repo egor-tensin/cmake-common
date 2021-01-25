@@ -89,6 +89,7 @@ parameters from environment variables.
 
 |                   | Travis           | AppVeyor              | GitHub Actions
 | ----------------- | ---------------- | --------------------- | ----------------------------
+| `--toolset`       | `$toolset`       | `$toolset`            | `$toolset`
 | `--platform`      | `$platform`      | `$PLATFORM`           | `$platform`
 | `--configuration` | `$configuration` | `$CONFIGURATION`      | `$configuration`
 | Boost version     | `$boost_version` | `$boost_version`      | `$boost_version`

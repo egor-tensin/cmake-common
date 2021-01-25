@@ -11,6 +11,7 @@ from project.boost.version import Version
 from project.ci.appveyor.generator import Generator, Image
 from project.configuration import Configuration
 from project.platform import Platform
+from project.toolchain import ToolchainType
 from project.utils import env
 
 
@@ -36,6 +37,11 @@ class Dirs(abc.ABC):
     @abc.abstractmethod
     def this_one(self):
         pass
+
+    def get_toolset(self):
+        if 'toolset' in os.environ:
+            return ToolchainType.parse(os.environ['toolset'])
+        return None
 
     @abc.abstractmethod
     def get_platform(self):

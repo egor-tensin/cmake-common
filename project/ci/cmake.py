@@ -10,7 +10,6 @@ import sys
 
 from project.ci.dirs import Dirs
 from project.cmake.build import BuildParameters, build
-from project.toolchain import ToolchainType
 from project.utils import setup_logging
 
 
@@ -27,9 +26,6 @@ def _parse_args(argv=None):
                         help='install the project')
     parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
                         help='set Boost directory path')
-    parser.add_argument('--toolset', metavar='TOOLSET',
-                        type=ToolchainType.parse,
-                        help='toolset to use')
     parser.add_argument('--subdir', metavar='DIR',
                         help='relative project directory path')
     parser.add_argument('cmake_args', nargs='*', metavar='CMAKE_ARG', default=[],
@@ -53,7 +49,7 @@ def build_ci(dirs, argv=None):
                              platform=dirs.get_platform(),
                              configuration=dirs.get_configuration(),
                              boost_dir=args.boost_dir or dirs.get_boost_dir(),
-                             toolset=args.toolset,
+                             toolset=dirs.get_toolset(),
                              cmake_args=dirs.get_cmake_args() + args.cmake_args)
     build(params)
 

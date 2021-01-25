@@ -15,17 +15,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-18.04, windows-2019]
+        toolset: [gcc, clang, msvc]
         configuration: [Debug, Release]
-        include:
-          # Prettier run names.
-          - {os: ubuntu-18.04, name: Ubuntu}
-          - {os: windows-2019, name: VS 2019}
+        exclude:
+          - {os: ubuntu-18.04, toolset: msvc}
+          - {os: windows-2019, toolset: gcc}
+          - {os: windows-2019, toolset: clang}
 
     runs-on: '${{ matrix.os }}'
 
-    name: '${{ matrix.name }} / ${{ matrix.configuration }}'
+    name: '${{ matrix.os }} / ${{ matrix.toolset }} / ${{ matrix.configuration }}'
 
     env:
+      toolset: '${{ matrix.toolset }}'
       platform: x64
       configuration: '${{ matrix.configuration }}'
       boost_version: 1.72.0
