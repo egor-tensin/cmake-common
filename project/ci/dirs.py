@@ -10,6 +10,7 @@ import os.path
 from project.boost.version import Version
 from project.ci.appveyor.generator import Generator, Image
 from project.configuration import Configuration
+import project.os
 from project.platform import Platform
 from project.toolchain import ToolchainType
 from project.utils import env
@@ -57,6 +58,10 @@ class Dirs(abc.ABC):
 
     @abc.abstractmethod
     def get_build_dir(self):
+        pass
+
+    @abc.abstractmethod
+    def get_prebuilt_boost_dir(self):
         pass
 
     def get_boost_version(self):
@@ -118,6 +123,11 @@ class Travis(Dirs):
     def get_build_dir(self):
         return env('HOME')
 
+    def get_prebuilt_boost_dir(self):
+        # Travis doesn't have pre-built Boost (available for installation from
+        # the official Ubuntu repositories though).
+        return None
+
     def get_cmake_args(self):
         return []
 
@@ -142,6 +152,9 @@ class AppVeyor(Dirs):
     def get_build_dir(self):
         return R'C:\projects'
 
+    def get_prebuilt_boost_dir(self):
+        return Image.get().get_prebuilt_boost_dir()
+
     def get_cmake_args(self):
         return ['-G', str(Generator.from_image(Image.get()))]
 
@@ -165,6 +178,15 @@ class GitHub(Dirs):
 
     def get_build_dir(self):
         return os.path.dirname(env('GITHUB_WORKSPACE'))
+
+    def get_prebuilt_boost_dir(self):
+        # As of 2021-01-25, Boost 1.72.0 is pre-built (on all images except for
+        # ubuntu-20.04 for some reason).  The path is stored in environment
+        # variable BOOST_ROOT_1_72_0.
+        var_name = 'BOOST_ROOT_1_72_0'
+        if var_name in os.environ:
+            return os.environ[var_name]
+        return None
 
     def get_cmake_args(self):
         return []

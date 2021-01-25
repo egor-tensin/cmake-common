@@ -28,6 +28,19 @@ class Image(Enum):
     def get():
         return Image.parse(env('APPVEYOR_BUILD_WORKER_IMAGE'))
 
+    def get_prebuilt_boost_dir(self):
+        # As of 2021-01-25, these are the latest pre-built Boost distributions:
+        # https://www.appveyor.com/docs/windows-images-software/#boost
+        if self is Image.VS_2013:
+            return 'C:\\Libraries\\boost_1_58_0'
+        if self is Image.VS_2015:
+            return 'C:\\Libraries\\boost_1_69_0'
+        if self is Image.VS_2017:
+            return 'C:\\Libraries\\boost_1_69_0'
+        if self is Image.VS_2019:
+            return 'C:\\Libraries\\boost_1_73_0'
+        raise NotImplementedError(f'unsupported AppVeyor image: {self}')
+
 
 class Generator(Enum):
     VS_2013 = 'Visual Studio 12 2013'

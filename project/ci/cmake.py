@@ -43,12 +43,21 @@ def build_ci(dirs, argv=None):
         src_dir = os.path.join(src_dir, args.subdir)
     install_dir = dirs.get_install_dir() if args.install else None
 
+    boost_dir = args.boost_dir
+    if not boost_dir:
+        # If we've built Boost using project.ci.boost already, use that.
+        # Otherwise, try to use the latest pre-built Boost provided by the CI
+        # system.
+        boost_dir = dirs.get_boost_dir()
+        if not os.path.isdir(boost_dir):
+            boost_dir = dirs.get_prebuilt_boost_dir()
+
     params = BuildParameters(src_dir,
                              build_dir=dirs.get_cmake_dir(),
                              install_dir=install_dir,
                              platform=dirs.get_platform(),
                              configuration=dirs.get_configuration(),
-                             boost_dir=args.boost_dir or dirs.get_boost_dir(),
+                             boost_dir=boost_dir,
                              toolset=dirs.get_toolset(),
                              cmake_args=dirs.get_cmake_args() + args.cmake_args)
     build(params)
