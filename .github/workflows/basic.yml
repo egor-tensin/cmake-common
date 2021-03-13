@@ -37,10 +37,10 @@ jobs:
           python-version: '3.x'
 
       - name: Cache Boost
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: boost_*.tar.gz
-          key: ${{ runner.os }}-boost-1.72.0
+          key: boost-1.72.0
 
       - name: Build Boost
         run: |

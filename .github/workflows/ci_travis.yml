@@ -43,10 +43,10 @@ jobs:
           python-version: '3.x'
 
       - name: Cache Boost
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: '${{ env.HOME }}/boost_*.tar.gz'
-          key: '${{ runner.os }}-boost-${{ env.boost_version }}'
+          key: 'boost-${{ env.boost_version }}'
 
       - name: Build Boost
         run: python -m project.ci.travis.boost -- --with-filesystem
