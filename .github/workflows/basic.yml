@@ -36,9 +36,15 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Cache Boost
+        uses: actions/cache@v2
+        with:
+          path: boost_*.tar.gz
+          key: boost-1.72.0
+
       - name: Build Boost
         run: |
-          python -m project.boost.download 1.72.0
+          python -m project.boost.download --cache . 1.72.0
           python -m project.boost.build -- boost_1_72_0 --with-filesystem
 
       - name: Build example project

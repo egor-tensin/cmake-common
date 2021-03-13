@@ -34,6 +34,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Cache Boost
+        uses: actions/cache@v2
+        with:
+          path: '${{ runner.workspace }}/boost/boost_*.tar.gz'
+          key: boost-${{ matrix.boost-version }}
+
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v1
         if: runner.os == 'Windows'
