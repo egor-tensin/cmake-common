@@ -45,7 +45,7 @@ def build_ci(dirs, argv=None):
     version = dirs.get_boost_version()
     build_dir = dirs.get_build_dir()
     boost_dir = dirs.get_boost_dir()
-    params = DownloadParameters(version, unpack_dir=build_dir, dest_path=boost_dir)
+    params = DownloadParameters(version, cache_dir=build_dir, dest_path=boost_dir)
     download(params)
 
     params = BuildParameters(boost_dir,

@@ -45,6 +45,12 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Cache Boost
+        uses: actions/cache@v2
+        with:
+          path: C:\projects\boost_*.tar.gz
+          key: '${{ runner.os }}-boost-${{ env.boost_version }}'
+
       - name: Create C:\projects
         run: mkdir C:\projects
 
