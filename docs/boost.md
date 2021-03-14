@@ -5,8 +5,8 @@ The way Boost names library files by default is insane.  It's absolutely not
 compatible between OSs, compilers, Boost versions, etc.  On Linux, for example,
 it would create stage/lib/libboost_filesystem.a, while on Windows it would
 become something insane like stage\lib\libboost_filesystem-vc142-mt-s-x64-1_72.lib.
-More than that, older Boost versions wouldn't include architecture information
-(the "x64" part) in the file name, so you couldn't store libraries for both x86
+More than that, older Boost versions don't include architecture information
+(the "x64" part) in the file name, so you cannot store libraries for both x86
 and x64 in the same directory.  On Linux, on the other hand, you can't even
 store debug/release binaries in the same directory.  What's worse is that older
 CMake versions don't support the architecture suffix, choking on the Windows

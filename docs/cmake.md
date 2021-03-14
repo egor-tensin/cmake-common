@@ -61,7 +61,7 @@ to detect that.
 Cross-compilation
 -----------------
 
-If you want to e.g. build x86 binary on x64 and vice versa, the easiest way
+If you want to e.g. build x86 binaries on x64 and vice versa, the easiest way
 seems to be to make a CMake "toolchain file", which initializes the proper
 compiler flags (like -m64/-m32, etc.).  Such file could look like this:
 
@@ -72,8 +72,7 @@ compiler flags (like -m64/-m32, etc.).  Such file could look like this:
 
 You can then pass the path to it using the CMAKE_TOOLCHAIN_FILE parameter.
 
-If you use the Visual Studio generators, just use the -A parameter, like `-A
-Win32`.
+If you use the Visual Studio generators, just use the -A parameter: `-A Win32`.
 
 As a side note, if you want to cross-compile between x86 and x64 using GCC on
 Ubuntu, you need to install the gcc-multilib package.
