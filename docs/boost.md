@@ -11,8 +11,8 @@ can't even store debug/release binaries in the same directory.  What's worse is 
 versions don't support the architecture suffix, choking on the Windows example above.
 
 With all of that in mind, I decided to bring some uniformity by sacrificing some flexibility.
-b2 is called with --layout=system, and libraries are put to stage/<platform>/<configuration>/lib,
-where <platform> is x86/x64 and <configuration> is CMake's CMAKE_BUILD_TYPE.  That means that I
+b2 is called with --layout=system, and libraries are put to stage/\<platform\>/\<configuration\>/lib,
+where \<platform\> is x86/x64 and \<configuration\> is CMake's CMAKE_BUILD_TYPE.  That means that I
 can't have libraries with different runtime-link values in the same directory, but I don't really
 care.
 
