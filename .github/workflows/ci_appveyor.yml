@@ -45,14 +45,14 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Create C:\projects
+        run: mkdir C:\projects
+
       - name: Cache Boost
         uses: actions/cache@v2.1.4
         with:
           path: C:\projects\boost_*.tar.gz
           key: 'boost-${{ env.boost_version }}'
-
-      - name: Create C:\projects
-        run: mkdir C:\projects
 
       - name: Build Boost
         run: python -m project.ci.appveyor.boost -- --with-filesystem
