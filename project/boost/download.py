@@ -26,7 +26,7 @@ import urllib.request
 
 from project.boost.archive import Archive, PermanentStorage, TemporaryStorage
 from project.boost.version import Version
-from project.utils import normalize_path, retry, setup_logging
+from project.utils import normalize_path, mkdir_parent, retry, setup_logging
 
 
 @retry(urllib.request.URLError)
@@ -76,11 +76,17 @@ class DownloadParameters:
             else:
                 unpack_dir = cache_dir
 
-        self.version = version
-        self.unpack_dir = normalize_path(unpack_dir)
-        self.storage = TemporaryStorage(unpack_dir)
+        unpack_dir = normalize_path(unpack_dir)
+        mkdir_parent(unpack_dir)
         if cache_dir is not None:
             cache_dir = normalize_path(cache_dir)
+            mkdir_parent(cache_dir)
+
+        self.version = version
+        self.unpack_dir = unpack_dir
+        if cache_dir is None:
+            self.storage = TemporaryStorage(unpack_dir)
+        else:
             self.storage = PermanentStorage(cache_dir)
         self.dest_path = dest_path
 

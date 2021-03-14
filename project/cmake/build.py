@@ -31,7 +31,7 @@ from project.cmake.toolchain import Toolchain
 from project.configuration import Configuration
 from project.platform import Platform
 from project.toolchain import ToolchainType
-from project.utils import normalize_path, run, setup_logging
+from project.utils import normalize_path, mkdir_parent, run, setup_logging
 
 
 DEFAULT_PLATFORM = None
@@ -153,8 +153,7 @@ class BuildParameters:
     def create_build_dir(self):
         if self.build_dir is not None:
             logging.info('Build directory: %s', self.build_dir)
-            if not os.path.exists(self.build_dir):
-                os.makedirs(self.build_dir, exist_ok=True)
+            mkdir_parent(self.build_dir)
             yield self.build_dir
             return
 

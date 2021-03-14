@@ -16,6 +16,10 @@ def normalize_path(s):
     return os.path.abspath(os.path.normpath(s))
 
 
+def mkdir_parent(path):
+    os.makedirs(path, exist_ok=True)
+
+
 @contextmanager
 def setup_logging():
     logging.basicConfig(
