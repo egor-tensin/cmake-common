@@ -79,23 +79,18 @@ class BuildParameters:
         self.b2_args = b2_args
 
     @staticmethod
-    def from_args(args):
+    def from_cmd_args(args):
         return BuildParameters(**vars(args))
-
-    def get_bootstrap_args(self):
-        return self.toolset.get_bootstrap_args()
 
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
                 with Toolchain.detect(self.toolset, platform) as toolchain:
                     for configuration in self.configurations:
-                        for link, runtime_link in self._linkage_options():
-                            yield self._build_params(build_dir, toolchain,
-                                                     configuration, link,
-                                                     runtime_link)
+                        for link, runtime_link in self._enum_linkage_options():
+                            yield self._b2_args(build_dir, toolchain, configuration, link, runtime_link)
 
-    def _linkage_options(self):
+    def _enum_linkage_options(self):
         for link in self.link:
             runtime_link = self.runtime_link
             if runtime_link is Linkage.STATIC:
@@ -122,32 +117,16 @@ class BuildParameters:
                 logging.info('Removing build directory: %s', build_dir)
             return
 
-    def _build_params(self, build_dir, toolchain, configuration, link, runtime_link):
-        params = []
-        params.append(self._build_dir(build_dir))
-        params.append(self._link(link))
-        params.append(self._runtime_link(runtime_link))
-        params.append('--layout=system')
-        params += toolchain.b2_args(configuration)
-        params += configuration.b2_args()
-        params += self.b2_args
-        return params
-
-    @staticmethod
-    def _build_dir(build_dir):
-        return f'--build-dir={build_dir}'
-
-    @staticmethod
-    def _link(link):
-        return f'link={link}'
-
-    @staticmethod
-    def _runtime_link(runtime_link):
-        return f'runtime-link={runtime_link}'
-
-    @staticmethod
-    def _variant(configuration):
-        return f'variant={configuration.to_boost_variant()}'
+    def _b2_args(self, build_dir, toolchain, configuration, link, runtime_link):
+        result = []
+        result.append(f'--build-dir={build_dir}')
+        result.append('--layout=system')
+        result += toolchain.b2_args(configuration)
+        result += configuration.b2_args()
+        result += link.b2_args()
+        result += runtime_link.b2_args('runtime-link')
+        result += self.b2_args
+        return result
 
 
 def build(params):
@@ -211,7 +190,7 @@ def _parse_args(argv=None):
 
 def _main(argv=None):
     with setup_logging():
-        build(BuildParameters.from_args(_parse_args(argv)))
+        build(BuildParameters.from_cmd_args(_parse_args(argv)))
 
 
 if __name__ == '__main__':

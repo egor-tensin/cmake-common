@@ -24,3 +24,6 @@ class Linkage(Enum):
             return Linkage(s)
         except ValueError as e:
             raise argparse.ArgumentTypeError(f'invalid linkage: {s}') from e
+
+    def b2_args(self, name='link'):
+        return [f'{name}={self}']
