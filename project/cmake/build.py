@@ -45,8 +45,7 @@ def run_cmake(cmake_args):
 
 class GenerationPhase:
     def __init__(self, src_dir, build_dir, install_dir=None, platform=None,
-                 configuration=None, boost_dir=None, toolset=None,
-                 cmake_args=None):
+                 configuration=None, boost_dir=None, cmake_args=None):
         src_dir = normalize_path(src_dir)
         build_dir = normalize_path(build_dir)
         if install_dir is not None:
@@ -55,7 +54,6 @@ class GenerationPhase:
         configuration = configuration or DEFAULT_CONFIGURATION
         if boost_dir is not None:
             boost_dir = normalize_path(boost_dir)
-        toolset = toolset or DEFAULT_TOOLSET
         cmake_args = cmake_args or []
 
         self.src_dir = src_dir
@@ -64,21 +62,18 @@ class GenerationPhase:
         self.platform = platform
         self.configuration = configuration
         self.boost_dir = boost_dir
-        self.toolset = toolset
         self.cmake_args = cmake_args
 
     def _cmake_args(self, toolchain):
         result = []
-        if self.install_dir is not None:
-            result += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
         result += toolchain.get_cmake_args()
-        result += ['-D', f'CMAKE_BUILD_TYPE={self.configuration}']
-        result += self._get_boost_args()
+        result += self.configuration.cmake_args()
+        result += self._cmake_boost_args()
         result += self.cmake_args
-        result += [f'-B{self.build_dir}', f'-H{self.src_dir}']
+        result += self._cmake_dir_args()
         return result
 
-    def _get_boost_args(self):
+    def _cmake_boost_args(self):
         if self.boost_dir is None:
             return []
         root = self.boost_dir
@@ -88,6 +83,15 @@ class GenerationPhase:
             '-D', f'BOOST_ROOT={root}',
             '-D', f'BOOST_LIBRARYDIR={librarydir}',
         ]
+
+    def _cmake_dir_args(self):
+        args = [
+            f'-B{self.build_dir}',
+            f'-H{self.src_dir}'
+        ]
+        if self.install_dir is not None:
+            args += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
+        return args
 
     def run(self, toolchain):
         run_cmake(self._cmake_args(toolchain))
@@ -171,7 +175,6 @@ def build(params):
                                     platform=params.platform,
                                     configuration=params.configuration,
                                     boost_dir=params.boost_dir,
-                                    toolset=params.toolset,
                                     cmake_args=params.cmake_args)
         gen_phase.run(toolchain)
         build_phase = BuildPhase(build_dir, install_dir=params.install_dir,
