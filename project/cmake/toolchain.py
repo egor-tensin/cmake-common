@@ -11,7 +11,6 @@ import shutil
 
 import project.mingw
 from project.os import on_windows
-from project.platform import Platform
 from project.toolchain import ToolchainType
 
 
@@ -68,11 +67,9 @@ class MSVC(Auto):
         self.platform = platform
 
     def get_cmake_args(self):
-        if self.platform is None:
-            return []
         # This doesn't actually specify the generator of course, but I don't
         # want to implement VS detection logic.
-        return ['-A', self.platform.get_cmake_arch()]
+        return self.platform.cmake_msvc_args()
 
     def get_build_args(self):
         return ['/m']
@@ -102,17 +99,6 @@ class Makefile(Toolchain):
             file.write(contents)
         return cls(path)
 
-    @staticmethod
-    def _format_platform_compiler_flags(platform):
-        if platform is None:
-            # If the platform wasn't specified, don't use the -m flag, etc.
-            return ''
-        # Otherwise, use the standard -m32/-m64 flags.
-        return f'''
-set(CMAKE_C_FLAGS   -m{platform.get_address_model()})
-set(CMAKE_CXX_FLAGS -m{platform.get_address_model()})
-'''
-
     def get_cmake_args(self):
         return [
             '-D', f'CMAKE_TOOLCHAIN_FILE={self.path}',
@@ -131,7 +117,7 @@ class GCC(Makefile):
         return f'''
 set(CMAKE_C_COMPILER   gcc)
 set(CMAKE_CXX_COMPILER g++)
-{Makefile._format_platform_compiler_flags(platform)}'''
+{platform.makefile_toolchain_file()}'''
 
     @staticmethod
     def setup(platform, build_dir):
@@ -141,16 +127,13 @@ set(CMAKE_CXX_COMPILER g++)
 class MinGW(Makefile):
     @staticmethod
     def _format(platform):
-        if platform is None:
-            # MinGW only supports x86/x64, plus we need the platform for the
-            # compiler file name, so default to x64 unless specified.
-            platform = Platform.X64
+        paths = project.mingw.MinGW(platform)
         return f'''
-set(CMAKE_C_COMPILER   {project.mingw.get_gcc(platform)})
-set(CMAKE_CXX_COMPILER {project.mingw.get_gxx(platform)})
-set(CMAKE_AR           {project.mingw.get_ar(platform)})
-set(CMAKE_RANLIB       {project.mingw.get_ranlib(platform)})
-set(CMAKE_RC_COMPILER  {project.mingw.get_windres(platform)})
+set(CMAKE_C_COMPILER   {paths.gcc()})
+set(CMAKE_CXX_COMPILER {paths.gxx()})
+set(CMAKE_AR           {paths.ar()})
+set(CMAKE_RANLIB       {paths.ranlib()})
+set(CMAKE_RC_COMPILER  {paths.windres()})
 set(CMAKE_SYSTEM_NAME  Windows)
 '''
 
@@ -170,7 +153,7 @@ else()
     set(CMAKE_C_COMPILER   clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-{Makefile._format_platform_compiler_flags(platform)}'''
+{platform.makefile_toolchain_file()}'''
 
     def _get_makefile_generator(self):
         if on_windows():
@@ -192,7 +175,7 @@ class ClangCL(Clang):
 set(CMAKE_C_COMPILER   clang-cl)
 set(CMAKE_CXX_COMPILER clang-cl)
 set(CMAKE_SYSTEM_NAME  Windows)
-{Makefile._format_platform_compiler_flags(platform)}'''
+{platform.makefile_toolchain_file()}'''
 
     @staticmethod
     def setup(platform, build_dir):

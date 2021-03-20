@@ -104,11 +104,8 @@ class Toolchain(abc.ABC):
     def __init__(self, platform):
         self.platform = platform
 
-    def get_b2_args(self):
-        return [
-            # Always pass the address-model explicitly.
-            f'address-model={self.platform.get_address_model()}'
-        ]
+    def b2_args(self, configuration):
+        return self.platform.b2_args(configuration)
 
     @staticmethod
     @contextmanager
@@ -139,8 +136,8 @@ class Auto(Toolchain):
 
 
 class MSVC(Auto):
-    def get_b2_args(self):
-        return super().get_b2_args() + [
+    def b2_args(self, configuration):
+        return super().b2_args(configuration) + [
             'toolset=msvc',
         ]
 
@@ -187,14 +184,16 @@ class BoostBuildToolset:
         self.options = options
 
     @property
-    def toolset_id(self):
+    def toolset(self):
         if self.version:
             return f'{self.compiler}-{self.version}'
         return self.compiler
 
-    @property
-    def b2_arg(self):
-        return f'toolset={self.toolset_id}'
+    def b2_toolset(self):
+        return f'toolset={self.toolset}'
+
+    def b2_args(self):
+        return [self.b2_toolset()]
 
     def _format_using_options(self):
         return ''.join(f'\n    <{name}>{val}' for name, val in self.options)
@@ -232,13 +231,14 @@ class ConfigFile(Toolchain):
         with tmp as path:
             yield cls(platform, path, toolset)
 
-    def get_b2_args(self):
+    def b2_args(self, configuration):
         # All the required options and the toolset definition should be in the
         # user configuration file.
-        return super().get_b2_args() + [
-            f'--user-config={self.config_path}',
-            self.toolset.b2_arg,
-        ]
+        args = []
+        args += super().b2_args(configuration)
+        args.append(f'--user-config={self.config_path}')
+        args += self.toolset.b2_args()
+        return args
 
 
 class GCC(ConfigFile):
@@ -273,8 +273,9 @@ class MinGW(GCC):
 
     @staticmethod
     def get_toolset(platform):
-        path = project.mingw.get_gxx(platform)
-        return BoostBuildToolset(MinGW.COMPILER, path, MinGW.get_options())
+        paths = project.mingw.MinGW(platform)
+        compiler = paths.gxx()
+        return BoostBuildToolset(MinGW.COMPILER, compiler, MinGW.get_options())
 
 
 class Clang(ConfigFile):
@@ -320,8 +321,8 @@ class Clang(ConfigFile):
 
 
 class ClangCL(Toolchain):
-    def get_b2_args(self):
-        return super().get_b2_args() + [
+    def b2_args(self, configuration):
+        return super().b2_args(configuration) + [
             'toolset=clang-win',
             'define=BOOST_USE_WINDOWS_H',
         ]

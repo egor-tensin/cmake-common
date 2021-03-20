@@ -34,7 +34,7 @@ from project.toolchain import ToolchainType
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
 
 
-DEFAULT_PLATFORM = None
+DEFAULT_PLATFORM = Platform.AUTO
 DEFAULT_CONFIGURATION = Configuration.DEBUG
 DEFAULT_TOOLSET = ToolchainType.AUTO
 
@@ -81,17 +81,13 @@ class GenerationPhase:
     def _get_boost_args(self):
         if self.boost_dir is None:
             return []
-        stagedir = self._stagedir(self.boost_dir, self.platform, self.configuration)
+        root = self.boost_dir
+        librarydir = self.platform.boost_librarydir(self.configuration)
+        librarydir = os.path.join(self.boost_dir, librarydir)
         return [
-            '-D', f'BOOST_ROOT={self.boost_dir}',
-            '-D', f'BOOST_LIBRARYDIR={stagedir}',
+            '-D', f'BOOST_ROOT={root}',
+            '-D', f'BOOST_LIBRARYDIR={librarydir}',
         ]
-
-    @staticmethod
-    def _stagedir(boost_dir, platform, configuration):
-        if platform is None:
-            platform = Platform.native()
-        return os.path.join(boost_dir, 'stage', str(platform), str(configuration), 'lib')
 
     def run(self, toolchain):
         run_cmake(self._cmake_args(toolchain))

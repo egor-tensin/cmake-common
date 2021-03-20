@@ -40,7 +40,7 @@ from project.os import on_linux_like
 from project.utils import normalize_path, setup_logging
 
 
-DEFAULT_PLATFORMS = (Platform.native(),)
+DEFAULT_PLATFORMS = (Platform.AUTO,)
 DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
 # For my development, I link everything statically (to be able to pull the
 # binaries from a CI, etc. and run them everywhere):
@@ -71,7 +71,6 @@ class BuildParameters:
 
         self.boost_dir = boost_dir
         self.build_dir = build_dir
-        self.stage_dir = 'stage'
         self.platforms = platforms
         self.configurations = configurations
         self.link = link
@@ -126,23 +125,17 @@ class BuildParameters:
     def _build_params(self, build_dir, toolchain, configuration, link, runtime_link):
         params = []
         params.append(self._build_dir(build_dir))
-        params.append(self._stagedir(toolchain, configuration))
-        params.append('--layout=system')
-        params += toolchain.get_b2_args()
-        params.append(self._variant(configuration))
         params.append(self._link(link))
         params.append(self._runtime_link(runtime_link))
+        params.append('--layout=system')
+        params += toolchain.b2_args(configuration)
+        params += configuration.b2_args()
         params += self.b2_args
         return params
 
     @staticmethod
     def _build_dir(build_dir):
         return f'--build-dir={build_dir}'
-
-    def _stagedir(self, toolchain, configuration):
-        platform = str(toolchain.platform)
-        configuration = str(configuration)
-        return f'--stagedir={os.path.join(self.stage_dir, platform, configuration)}'
 
     @staticmethod
     def _link(link):
