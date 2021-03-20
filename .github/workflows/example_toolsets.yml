@@ -11,7 +11,6 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: false
       matrix:
         example: [simple, static, dynamic]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
