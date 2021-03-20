@@ -234,8 +234,7 @@ class ConfigFile(Toolchain):
     def b2_args(self, configuration):
         # All the required options and the toolset definition should be in the
         # user configuration file.
-        args = []
-        args += super().b2_args(configuration)
+        args = super().b2_args(configuration)
         args.append(f'--user-config={self.config_path}')
         args += self.toolset.b2_args()
         return args

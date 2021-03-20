@@ -69,7 +69,7 @@ class MSVC(Auto):
     def get_cmake_args(self):
         # This doesn't actually specify the generator of course, but I don't
         # want to implement VS detection logic.
-        return self.platform.cmake_msvc_args()
+        return ['-A', self.platform.msvc_arch()]
 
     def get_build_args(self):
         return ['/m']

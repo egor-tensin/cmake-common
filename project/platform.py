@@ -135,12 +135,3 @@ set(CMAKE_CXX_FLAGS -m{address_model})
         if self is Platform.X64:
             return 'x64'
         raise NotImplementedError(f'unsupported platform: {self}')
-
-    def cmake_msvc_arch(self):
-        return ['-A', self.msvc_arch()]
-
-    def cmake_msvc_args(self):
-        # When using the MSVC toolset, pass the appropriate -A flag.
-        args = []
-        args += self.cmake_msvc_arch()
-        return args
