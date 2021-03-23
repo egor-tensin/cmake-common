@@ -68,7 +68,7 @@ def delete(path):
 
 
 @contextmanager
-def temp_file(contents, **kwargs):
+def temp_file(**kwargs):
     '''Make NamedTemporaryFile usable on Windows.
 
     It can't be opened a second time on Windows, hence this silliness.
@@ -76,8 +76,7 @@ def temp_file(contents, **kwargs):
     tmp = tempfile.NamedTemporaryFile(delete=False, **kwargs)
     with tmp as file, delete_on_error(file.name):
         path = file.name
-        logging.info('Writing temporary file: %s', path)
-        file.write(contents)
+        logging.info('Created temporary file: %s', path)
     with delete(path):
         yield path
 

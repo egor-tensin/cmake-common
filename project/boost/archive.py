@@ -75,7 +75,9 @@ class TemporaryStorage(ArchiveStorage):
 
     @contextmanager
     def write_archive(self, version, contents):
-        tmp = temp_file(contents, prefix=f'boost_{version}_',
+        tmp = temp_file(prefix=f'boost_{version}_',
                         suffix=version.archive_ext, dir=self._dir)
-        with tmp as path:
-            yield path
+        with tmp as archive_path:
+            with open(archive_path, mode='wb') as fd:
+                fd.write(contents)
+            yield archive_path

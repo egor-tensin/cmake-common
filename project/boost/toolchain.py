@@ -169,74 +169,72 @@ def _full_exe_name(exe):
     return os.path.basename(path)
 
 
-class BoostBuildToolset:
-    CUSTOM = 'custom'
+class CustomToolchain(Toolchain):
+    COMPILER_VERSION = 'custom'
 
-    def __init__(self, compiler, path, options):
+    def __init__(self, platform, config_path):
+        super().__init__(platform)
+        self.config_path = config_path
+        compiler = self.get_compiler()
         if not compiler:
             raise RuntimeError('compiler type is required (like gcc, clang, etc.)')
         self.compiler = compiler
-        self.version = BoostBuildToolset.CUSTOM
-        path = path or ''
+        version = CustomToolchain.COMPILER_VERSION
+        self.version = version
+        path = self.get_compiler_path() or ''
         path = path and _full_exe_name(path)
         self.path = path
-        options = options or []
-        self.options = options
 
-    @property
+    @abc.abstractmethod
+    def get_compiler(self):
+        pass
+
+    def get_compiler_version(self):
+        return CustomToolchain.COMPILER_VERSION
+
+    @abc.abstractmethod
+    def get_compiler_path(self):
+        pass
+
+    @abc.abstractmethod
+    def get_build_options(self):
+        pass
+
+    def format_build_options(self):
+        return ''.join(f'\n    <{name}>{val}' for name, val in self.get_build_options())
+
     def toolset(self):
         if self.version:
             return f'{self.compiler}-{self.version}'
         return self.compiler
 
     def b2_toolset(self):
-        return f'toolset={self.toolset}'
+        return f'toolset={self.toolset()}'
 
-    def b2_args(self):
-        return [self.b2_toolset()]
-
-    def _format_using_options(self):
-        return ''.join(f'\n    <{name}>{val}' for name, val in self.options)
-
-    def format_using(self):
+    def format_config(self):
         version = self.version and f'{self.version} '
         path = self.path and f'{self.path} '
-        return f'''using {self.compiler} : {version}: {path}:{self._format_using_options()}
+        return f'''using {self.compiler} : {version}: {path}:{self.format_build_options()}
 ;'''
-
-
-class CustomToolchain(Toolchain):
-    def __init__(self, platform, config_path, toolset):
-        super().__init__(platform)
-        self.config_path = config_path
-        self.toolset = toolset
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_toolset(platform):
-        pass
-
-    @staticmethod
-    @abc.abstractmethod
-    def format_config(toolset):
-        pass
 
     @classmethod
     @contextmanager
     def setup(cls, platform):
-        toolset = cls.get_toolset(platform)
-        config = cls.format_config(toolset)
-        logging.info('Using user config:\n%s', config)
-        tmp = temp_file(config, mode='w', prefix='user_config_', suffix='.jam')
-        with tmp as path:
-            yield cls(platform, path, toolset)
+        config_file = temp_file(prefix='user_config_', suffix='.jam')
+        with config_file as config_path:
+            toolset = cls(platform, config_path)
+            config = toolset.format_config()
+            logging.info('Using user config:\n%s', config)
+            with open(config_path, mode='w') as fd:
+                fd.write(config)
+            yield toolset
 
     def b2_args(self, configuration):
         # All the required options and the toolset definition should be in the
         # user configuration file.
         args = super().b2_args(configuration)
+        args.append(self.b2_toolset())
         args.append(f'--user-config={self.config_path}')
-        args += self.toolset.b2_args()
         return args
 
 
@@ -245,8 +243,13 @@ class GCC(CustomToolchain):
     # MinGW-flavoured GCC on Windows.
     COMPILER = 'gcc'
 
-    @staticmethod
-    def get_options():
+    def get_compiler(self):
+        return GCC.COMPILER
+
+    def get_compiler_path(self):
+        return 'g++'
+
+    def get_build_options(self):
         return [
             # TODO: this is a petty attempt to get rid of build warnings in
             # older Boost versions.  Revise and expand this list or remove it?
@@ -256,33 +259,30 @@ class GCC(CustomToolchain):
             ('cxxflags', '-Wno-parentheses'),
         ]
 
-    @staticmethod
-    def get_toolset(platform):
-        return BoostBuildToolset(GCC.COMPILER, 'g++', GCC.get_options())
-
-    @staticmethod
-    def format_config(toolset):
-        return toolset.format_using()
-
 
 class MinGW(GCC):
     # It's important that Boost.Build is actually smart enough to detect the
     # GCC prefix (like "x86_64-w64-mingw32" and prepend it to other tools like
     # "ar").
 
-    @staticmethod
-    def get_toolset(platform):
-        paths = project.mingw.MinGW(platform)
+    def get_compiler_path(self):
+        paths = project.mingw.MinGW(self.platform)
         compiler = paths.gxx()
-        return BoostBuildToolset(MinGW.COMPILER, compiler, MinGW.get_options())
+        return compiler
 
 
-class Clang(CustomToolchain):
+class Clang(GCC):
     COMPILER = 'clang'
 
-    @staticmethod
-    def get_toolset(platform):
-        options = [
+    def get_compiler(self):
+        return Clang.COMPILER
+
+    def get_compiler_path(self):
+        return 'clang++'
+
+    def get_build_options(self):
+        options = super().get_build_options()
+        options += [
             ('cxxflags', '-DBOOST_USE_WINDOWS_H'),
             # TODO: this is a petty attempt to get rid of build warnings in
             # older Boost versions.  Revise and expand this list or remove it?
@@ -290,17 +290,16 @@ class Clang(CustomToolchain):
             ('cxxflags', '-Wno-unused-local-typedef'),
             # error: constant expression evaluates to -105 which cannot be narrowed to type 'boost::re_detail::cpp_regex_traits_implementation<char>::char_class_type' (aka 'unsigned int')
             ('cxxflags', '-Wno-c++11-narrowing'),
-        ] + GCC.get_options()
+        ]
         if project.os.on_windows():
             # Prefer LLVM binutils:
             if shutil.which('llvm-ar') is not None:
                 options.append(('archiver', 'llvm-ar'))
             if shutil.which('llvm-ranlib') is not None:
                 options.append(('ranlib', 'llvm-ranlib'))
-        return BoostBuildToolset(Clang.COMPILER, 'clang++', options)
+        return options
 
-    @staticmethod
-    def format_config(toolset):
+    def format_config(self):
         # To make clang.exe/clang++.exe work on Windows, some tweaks are
         # required.  I borrowed them from CMake's Windows-Clang.cmake [1].
         # Adding them globally to Boost.Build options is described in [2].
@@ -315,7 +314,7 @@ class Clang(CustomToolchain):
     <target-os>windows,<runtime-link>shared,<variant>debug:<cxxflags>"-D_DLL -Xclang --dependent-lib=msvcrtd"
     <target-os>windows,<runtime-link>shared,<variant>release:<cxxflags>"-D_DLL -Xclang --dependent-lib=msvcrt"
 ;
-{toolset.format_using()}
+{super().format_config()}
 '''
 
 
