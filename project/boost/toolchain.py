@@ -205,7 +205,7 @@ class BoostBuildToolset:
 ;'''
 
 
-class ConfigFile(Toolchain):
+class CustomToolchain(Toolchain):
     def __init__(self, platform, config_path, toolset):
         super().__init__(platform)
         self.config_path = config_path
@@ -240,7 +240,7 @@ class ConfigFile(Toolchain):
         return args
 
 
-class GCC(ConfigFile):
+class GCC(CustomToolchain):
     # Force GCC.  We don't care whether it's a native Linux GCC or a
     # MinGW-flavoured GCC on Windows.
     COMPILER = 'gcc'
@@ -277,7 +277,7 @@ class MinGW(GCC):
         return BoostBuildToolset(MinGW.COMPILER, compiler, MinGW.get_options())
 
 
-class Clang(ConfigFile):
+class Clang(CustomToolchain):
     COMPILER = 'clang'
 
     @staticmethod

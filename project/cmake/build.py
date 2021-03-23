@@ -66,7 +66,7 @@ class GenerationPhase:
 
     def _cmake_args(self, toolchain):
         result = []
-        result += toolchain.get_cmake_args()
+        result += toolchain.cmake_args()
         result += self.configuration.cmake_args()
         result += self._cmake_boost_args()
         result += self.cmake_args
@@ -112,7 +112,7 @@ class BuildPhase:
         result += ['--config', str(self.configuration)]
         if self.install_dir is not None:
             result += ['--target', 'install']
-        result += ['--'] + toolchain.get_build_args()
+        result += ['--'] + toolchain.build_system_args()
         return result
 
     def run(self, toolchain):

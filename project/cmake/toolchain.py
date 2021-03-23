@@ -16,11 +16,11 @@ from project.toolchain import ToolchainType
 
 class Toolchain(abc.ABC):
     @abc.abstractmethod
-    def get_cmake_args(self):
+    def cmake_args(self):
         pass
 
     @abc.abstractmethod
-    def get_build_args(self):
+    def build_system_args(self):
         pass
 
     @staticmethod
@@ -55,10 +55,10 @@ class Toolchain(abc.ABC):
 
 
 class Auto(Toolchain):
-    def get_cmake_args(self):
+    def cmake_args(self):
         return []
 
-    def get_build_args(self):
+    def build_system_args(self):
         return []
 
 
@@ -66,12 +66,12 @@ class MSVC(Auto):
     def __init__(self, platform):
         self.platform = platform
 
-    def get_cmake_args(self):
+    def cmake_args(self):
         # This doesn't actually specify the generator of course, but I don't
         # want to implement VS detection logic.
         return ['-A', self.platform.msvc_arch()]
 
-    def get_build_args(self):
+    def build_system_args(self):
         return ['/m']
 
 
@@ -99,7 +99,7 @@ class Makefile(Toolchain):
             file.write(contents)
         return cls(path)
 
-    def get_cmake_args(self):
+    def cmake_args(self):
         return [
             '-D', f'CMAKE_TOOLCHAIN_FILE={self.path}',
             # The Visual Studio generator is the default on Windows, override
@@ -107,7 +107,7 @@ class Makefile(Toolchain):
             '-G', self._get_makefile_generator(),
         ]
 
-    def get_build_args(self):
+    def build_system_args(self):
         return []
 
 
