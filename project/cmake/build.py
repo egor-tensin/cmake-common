@@ -39,8 +39,15 @@ DEFAULT_CONFIGURATION = Configuration.DEBUG
 DEFAULT_TOOLSET = ToolchainType.AUTO
 
 
+# This way of basically passing `-j` to make is more universal compared to
+# _guessing_ that the build system is make and passing -j explicitly.  Plus it
+# works with older CMake versions, which don't support the --parallel flag.
+cmake_env = os.environ.copy()
+cmake_env['CMAKE_BUILD_PARALLEL_LEVEL'] = str(os.cpu_count())
+
+
 def run_cmake(cmake_args):
-    return run(['cmake'] + cmake_args)
+    return run(['cmake'] + cmake_args, env=cmake_env)
 
 
 class GenerationPhase:

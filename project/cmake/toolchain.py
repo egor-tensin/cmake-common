@@ -72,7 +72,7 @@ class MSVC(Auto):
         return ['-A', self.platform.msvc_arch()]
 
     def build_system_args(self):
-        return ['/m']
+        return []
 
 
 class Makefile(Toolchain):

@@ -47,9 +47,9 @@ def cd(path):
         os.chdir(cwd)
 
 
-def run(cmd_line):
+def run(cmd_line, **kwargs):
     logging.info('Running executable: %s', cmd_line)
-    return subprocess.run(cmd_line, check=True)
+    return subprocess.run(cmd_line, check=True, **kwargs)
 
 
 @contextmanager
