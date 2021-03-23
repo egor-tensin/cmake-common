@@ -8,6 +8,7 @@ import functools
 import logging
 import os.path
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -25,7 +26,10 @@ def setup_logging():
     logging.basicConfig(
         format='%(asctime)s | %(levelname)s | %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
-        level=logging.INFO)
+        level=logging.INFO,
+        # Log to stdout, because that's where subprocess's output goes (so that
+        # they don't get interleaved).
+        stream=sys.stdout)
     try:
         yield
     except Exception as e:
