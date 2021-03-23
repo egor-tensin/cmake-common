@@ -11,6 +11,7 @@ import shutil
 
 import project.mingw
 from project.os import on_windows
+from project.platform import Platform
 from project.toolchain import ToolchainType
 
 
@@ -26,20 +27,19 @@ class Toolchain(abc.ABC):
     @staticmethod
     def detect(hint, platform, build_dir):
         if hint is ToolchainType.AUTO:
-            # If the platform wasn't specified, auto-detect everything.
-            # There's no need to set -mXX flags, etc.
-            if platform is None:
-                return Auto()
-            # If a specific platform was requested, we might need to set some
-            # CMake/compiler flags.
             if on_windows():
-                # We need to specify the -A parameter.  This might break if
-                # none of the Visual Studio generators are available, but the
-                # NMake one is, although I don't know how this can be possible
-                # normally.
+                # On Windows, 'auto' means 'msvc', and we need to specify the
+                # -A parameter.  This might break if none of the Visual Studio
+                # generators are available, but the NMake one is, although I
+                # don't know how this can be possible normally.
                 hint = ToolchainType.MSVC
             else:
-                # Same thing for the -m32/-m64 flags.
+                # On Linux, if the platform wasn't specified, auto-detect
+                # everything.  There's no need to set -mXX flags, etc.
+                if platform is Platform.AUTO:
+                    return Auto()
+                # If a specific platform was requested, we might need to set
+                # some CMake/compiler flags, like -m32/-m64.
                 hint = ToolchainType.GCC
         if hint is ToolchainType.MSVC:
             return MSVC(platform)
