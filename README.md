@@ -87,15 +87,15 @@ and CMake projects on multiple CI systems.
 They work by calling the generic scripts from above, auto-filling some
 parameters from environment variables.
 
-|                   | Travis           | AppVeyor              | GitHub Actions
-| ----------------- | ---------------- | --------------------- | ----------------------------
-| `--toolset`       | `$toolset`       | `$toolset`            | `$toolset`
-| `--platform`      | `$platform`      | `$PLATFORM`           | `$platform`
-| `--configuration` | `$configuration` | `$CONFIGURATION`      | `$configuration`
-| Boost version     | `$boost_version` | `$boost_version`      | `$boost_version`
-| Boost path        | `$HOME/boost/`   | `C:\projects\boost`   | `$RUNNER_WORKSPACE/boost/`
-| Build path        | `$HOME/build/`   | `C:\projects\build`   | `$RUNNER_WORKSPACE/build/`
-| Install path      | `$HOME/install/` | `C:\projects\install` | `$RUNNER_WORKSPACE/install/`
+|                   | Travis                               | AppVeyor                                   | GitHub Actions
+| ----------------- | ------------------------------------ | ------------------------------------------ | ------------------------------------
+| `--toolset`       | `$toolset`                           | `%toolset%`                                | `$toolset`
+| `--platform`      | `$platform`                          | `%PLATFORM%`                               | `$platform`
+| `--configuration` | `$configuration`                     | `%CONFIGURATION%`                          | `$configuration`
+| Boost version     | `$boost_version`                     | `%boost_version%`                          | `$boost_version`
+| Boost path        | `$TRAVIS_BUILD_DIR/../build/boost`   | `%APPVEYOR_BUILD_FOLDER%\..\build\boost`   | `$GITHUB_WORKSPACE/../build/boost`
+| Build path        | `$TRAVIS_BUILD_DIR/../build/cmake`   | `%APPVEYOR_BUILD_FOLDER%\..\build\cmake`   | `$GITHUB_WORKSPACE/../build/cmake`
+| Install path      | `$TRAVIS_BUILD_DIR/../build/install` | `%APPVEYOR_BUILD_FOLDER%\..\build\install` | `$GITHUB_WORKSPACE/../build/install`
 
 For example, the following Travis workflow:
 

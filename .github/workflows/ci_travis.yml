@@ -56,7 +56,7 @@ jobs:
 
       - name: Run example project
         run: |
-          cd "$env:HOME/install/bin"
+          cd "$env:TRAVIS_BUILD_DIR/../build/install/bin"
           $foo_path = Join-Path (Get-Location).Path foo
 
           $relative = 'test.txt'

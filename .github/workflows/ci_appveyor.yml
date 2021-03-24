@@ -45,9 +45,6 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Create C:\projects
-        run: mkdir C:\projects
-
       - name: Cache Boost
         uses: actions/cache@v2.1.4
         with:
@@ -62,7 +59,7 @@ jobs:
 
       - name: Run example project
         run: |
-          cd C:\projects\install\bin
+          cd "$env:APPVEYOR_BUILD_FOLDER/../build/install/bin"
           $foo_path = Join-Path (Get-Location).Path foo.exe
 
           $relative = 'test.txt'

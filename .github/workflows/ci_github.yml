@@ -59,7 +59,7 @@ jobs:
 
       - name: Run example project
         run: |
-          cd (Join-Path $env:GITHUB_WORKSPACE .. install bin)
+          cd "$env:GITHUB_WORKSPACE/../build/install/bin"
           $foo_path = Join-Path (Get-Location).Path foo
           if ('${{ runner.os }}' -eq 'Windows') {
               $foo_path += '.exe'
