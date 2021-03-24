@@ -115,31 +115,32 @@ before_script: python3 -m project.ci.boost -- --with-filesystem
 script: python3 -m project.ci.cmake --install
 ```
 
-is equivalent to running
+is roughly equivalent to running
 
 ```
-python3 -m project.boost.download --unpack "$HOME" -- 1.65.0
-mv -- "$HOME/boost_1_65_0" "$HOME/boost"
+python3 -m project.boost.download --cache "$TRAVIS_BUILD_DIR/../build" -- 1.65.0
+mv -- \
+    "$TRAVIS_BUILD_DIR/../build/boost_1_65_0" \
+    "$TRAVIS_BUILD_DIR/../build/boost"
 
-python3 -m project.boost.build \
-    --platform x64             \
-    --configuration Debug      \
-    --                         \
-    "$HOME/boost"              \
+python3 -m project.boost.build         \
+    --platform x64                     \
+    --configuration Debug Release      \
+    --                                 \
+    "$TRAVIS_BUILD_DIR/../build/boost" \
     --with-filesystem
 
-python3 -m project.cmake.build \
-    --platform x64             \
-    --configuration Debug      \
-    --boost "$HOME/boost"      \
-    --build "$HOME/build"      \
-    --install "$HOME/install"  \
-    --                         \
-    "$TRAVIS_BUILD_DIR"
+for configuration in Debug Release; do
+    python3 -m project.cmake.build                     \
+        --platform x64                                 \
+        --configuration "$configuration"               \
+        --boost "$TRAVIS_BUILD_DIR/../build/boost"     \
+        --build "$TRAVIS_BUILD_DIR/../build/cmake"     \
+        --install "$TRAVIS_BUILD_DIR/../build/install" \
+        --                                             \
+        "$TRAVIS_BUILD_DIR"
+done
 ```
-
-twice (the `--configuration` parameter having the value of `Release` for the
-second run).
 
 ### clang-format.py
 
