@@ -27,10 +27,10 @@ jobs:
     name: '${{ matrix.os }} / ${{ matrix.toolset }} / ${{ matrix.configuration }}'
 
     env:
-      toolset: '${{ matrix.toolset }}'
-      platform: x64
-      configuration: '${{ matrix.configuration }}'
-      boost_version: 1.72.0
+      TOOLSET: '${{ matrix.toolset }}'
+      PLATFORM: x64
+      CONFIGURATION: '${{ matrix.configuration }}'
+      BOOST_VERSION: 1.72.0
 
     defaults:
       run:

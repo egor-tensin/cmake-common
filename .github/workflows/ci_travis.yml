@@ -25,9 +25,9 @@ jobs:
       # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
       TRAVIS: 'true'
       TRAVIS_BUILD_DIR: '${{ github.workspace }}/examples/boost'
-      platform: x64
-      configuration: '${{ matrix.configuration }}'
-      boost_version: 1.72.0
+      PLATFORM: x64
+      CONFIGURATION: '${{ matrix.configuration }}'
+      BOOST_VERSION: 1.72.0
 
     defaults:
       run:

@@ -40,17 +40,15 @@ class Dirs(abc.ABC):
         pass
 
     def get_toolset(self):
-        if 'toolset' in os.environ:
-            return ToolchainType.parse(os.environ['toolset'])
+        if 'TOOLSET' in os.environ:
+            return ToolchainType.parse(os.environ['TOOLSET'])
         return None
 
-    @abc.abstractmethod
     def get_platform(self):
-        pass
+        return Platform.parse(env('PLATFORM'))
 
-    @abc.abstractmethod
     def get_configuration(self):
-        pass
+        return Configuration.parse(env('CONFIGURATION'))
 
     @abc.abstractmethod
     def get_src_dir(self):
@@ -64,7 +62,7 @@ class Dirs(abc.ABC):
         pass
 
     def get_boost_version(self):
-        return Version.from_string(env('boost_version'))
+        return Version.from_string(env('BOOST_VERSION'))
 
     def get_boost_dir(self):
         return os.path.join(self.get_build_dir(), 'boost')
@@ -110,12 +108,6 @@ class Travis(Dirs):
     def this_one(self):
         return 'TRAVIS' in os.environ
 
-    def get_platform(self):
-        return Platform.parse(env('platform'))
-
-    def get_configuration(self):
-        return Configuration.parse(env('configuration'))
-
     def get_src_dir(self):
         return env('TRAVIS_BUILD_DIR')
 
@@ -136,12 +128,6 @@ class AppVeyor(Dirs):
     def this_one(self):
         return 'APPVEYOR' in os.environ
 
-    def get_platform(self):
-        return Platform.parse(env('PLATFORM'))
-
-    def get_configuration(self):
-        return Configuration.parse(env('CONFIGURATION'))
-
     def get_src_dir(self):
         return env('APPVEYOR_BUILD_FOLDER')
 
@@ -159,12 +145,6 @@ class GitHub(Dirs):
 
     def this_one(self):
         return 'GITHUB_ACTIONS' in os.environ
-
-    def get_platform(self):
-        return Platform.parse(env('platform'))
-
-    def get_configuration(self):
-        return Configuration.parse(env('configuration'))
 
     def get_src_dir(self):
         return env('GITHUB_WORKSPACE')

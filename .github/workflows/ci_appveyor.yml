@@ -30,7 +30,7 @@ jobs:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       PLATFORM: '${{ matrix.platform }}'
       CONFIGURATION: '${{ matrix.configuration }}'
-      boost_version: 1.72.0
+      BOOST_VERSION: 1.72.0
 
     defaults:
       run:
