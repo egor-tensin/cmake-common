@@ -77,6 +77,8 @@ class GenerationPhase:
         result += self.configuration.cmake_args()
         result += self._cmake_boost_args()
         result += self.cmake_args
+        # Important! -H must come as the last parameter, older CMake versions
+        # don't like it when it's not.
         result += self._cmake_dir_args()
         return result
 
@@ -92,12 +94,15 @@ class GenerationPhase:
         ]
 
     def _cmake_dir_args(self):
-        args = [
+        args = []
+        if self.install_dir is not None:
+            args += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
+        # Important! -H must come as the last parameter, older CMake versions
+        # don't like it when it's not.
+        args += [
             f'-B{self.build_dir}',
             f'-H{self.src_dir}'
         ]
-        if self.install_dir is not None:
-            args += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
         return args
 
     def run(self, toolchain):
