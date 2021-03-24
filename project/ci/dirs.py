@@ -149,12 +149,8 @@ class GitHub(Dirs):
         return env('GITHUB_WORKSPACE')
 
     def get_prebuilt_boost_dir(self):
-        # As of 2021-01-25, Boost 1.72.0 is pre-built (on all images except for
-        # ubuntu-20.04 for some reason).  The path is stored in environment
-        # variable BOOST_ROOT_1_72_0.
-        var_name = 'BOOST_ROOT_1_72_0'
-        if var_name in os.environ:
-            return os.environ[var_name]
+        # Used to have 1.72.0 pre-built binaries, but not anymore:
+        # https://github.com/actions/virtual-environments/issues/2667
         return None
 
     def get_cmake_args(self):
