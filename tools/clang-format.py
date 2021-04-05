@@ -16,7 +16,7 @@ import argparse
 from contextlib import contextmanager
 import difflib
 import logging
-import os.path
+import os
 import subprocess
 import sys
 
@@ -34,7 +34,17 @@ def _setup_logging():
         raise
 
 
-def _run_executable(cmd_line):
+@contextmanager
+def _cd(path):
+    cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+
+
+def _run(cmd_line):
     logging.debug('Running executable: %s', cmd_line)
     try:
         return subprocess.run(cmd_line, check=True, universal_newlines=True,
@@ -64,7 +74,7 @@ class ClangFormat:
         return cmd_line
 
     def format_in_place(self, paths):
-        _run_executable(self._get_command_line(paths, in_place=True))
+        _run(self._get_command_line(paths, in_place=True))
 
     @staticmethod
     def _show_diff(path, formatted):
@@ -85,14 +95,22 @@ class ClangFormat:
     def show_diff(self, paths):
         clean = True
         for path in paths:
-            formatted = _run_executable(self._get_command_line([path])).stdout
+            formatted = _run(self._get_command_line([path])).stdout
             clean = self._show_diff(path, formatted) and clean
         return clean
 
 
+def _git_root_dir():
+    cmd_line = ['git', 'rev-parse', '--show-toplevel']
+    root_dir = _run(cmd_line).stdout
+    if root_dir[-1] != '\n':
+        raise RuntimeError('git rev-parse --show-toplevel should append a newline?')
+    return root_dir[:-1]
+
+
 def _list_all_files():
     cmd_line = ['git', 'ls-tree', '-r', '-z', '--name-only', 'HEAD']
-    repo_files = _run_executable(cmd_line).stdout
+    repo_files = _run(cmd_line).stdout
     repo_files = repo_files.split('\0')
     return repo_files
 
@@ -109,12 +127,13 @@ def _list_cpp_files():
 
 def _process_cpp_files(args):
     clang_format = ClangFormat(args.clang_format, args.style)
-    cpp_files = _list_cpp_files()
-    if args.in_place:
-        clang_format.format_in_place(cpp_files)
-    else:
-        if not clang_format.show_diff(cpp_files):
-            sys.exit(1)
+    with _cd(_git_root_dir()):
+        cpp_files = _list_cpp_files()
+        if args.in_place:
+            clang_format.format_in_place(cpp_files)
+        else:
+            if not clang_format.show_diff(cpp_files):
+                sys.exit(1)
 
 
 DEFAULT_CLANG_FORMAT = 'clang-format'
