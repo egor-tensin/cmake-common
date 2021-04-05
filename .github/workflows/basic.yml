@@ -9,6 +9,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    name: Linting
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run clang-format
+        run: ./tools/clang-format.py --clang-format clang-format-10
+
   build:
     strategy:
       matrix:
