@@ -142,13 +142,15 @@ for configuration in Debug Release; do
 done
 ```
 
-### clang-format.py
+Tools
+-----
 
-`clang-format` all C/C++ files in a project.
+* [clang-format.py] &mdash; `clang-format` all C/C++ files in the project.
+* [ctest-driver.py] &mdash; wrap an executable for testing with CTest;
+cross-platform `grep`.
 
-    $ cd project/
-    $ python3 path/to/tools/clang-format.py      # Prints a diff
-    $ python3 path/to/tools/clang-format.py -i   # Edits files in-place
+[clang-format.py]: docs/clang-format.md
+[ctest-driver.py]: docs/ctest-driver.md
 
 Examples
 --------

@@ -5,9 +5,9 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Feed C/C++ files in the repository to clang-format
+'''clang-format all C/C++ files in the project
 
-This script runs clang-format on every C/C++ file in the repository, either
+This script feeds every C/C++ file in the repository to clang-format, either
 printing a unified diff between the original and the formatted versions, or
 formatting the files in-place.
 '''

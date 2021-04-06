@@ -5,12 +5,12 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Wrap your actual test driver for CTest
+'''Wrap your actual test driver to use with CTest
 
 CTest suffers from at least two issues, in particular with regard to its
 PASS_REGULAR_EXPRESSION feature:
 
-1. The regular expression syntax is deficient.
+1. The regular expression syntax used by CMake is deficient.
 2. The exit code of a test is ignored if one of the regexes matches.
 
 This script tries to fix them.
