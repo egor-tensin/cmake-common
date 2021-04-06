@@ -61,22 +61,38 @@ def run_new_window(cmd_line):
         sys.exit(e.returncode)
 
 
+def match(s, regex):
+    return re.search(regex, s, flags=re.MULTILINE)
+
+
 def match_any(s, regexes):
-    if not regexes:
-        return True
-    for regex in regexes:
-        if re.search(regex, s, flags=re.MULTILINE):
-            return True
-    return False
+    return any([match(s, regex) for regex in regexes])
+
+
+def match_all(s, regexes):
+    return all([match(s, regex) for regex in regexes])
 
 
 def match_pass_regexes(output, regexes):
-    if not match_any(output, regexes):
-        err("Couldn't match test program's output against any of the"\
+    if not regexes:
+        return
+    if not match_all(output, regexes):
+        err("Couldn't match test program's output against all of the"\
             " regular expressions:")
         for regex in regexes:
             err(f'\t{regex}')
-            sys.exit(1)
+        sys.exit(1)
+
+
+def match_fail_regexes(output, regexes):
+    if not regexes:
+        return
+    if match_any(output, regexes):
+        err("Matched test program's output against some of the regular"\
+            " expressions:")
+        for regex in regexes:
+            err(f'\t{regex}')
+        sys.exit(1)
 
 
 def run_actual_test_driver(args):
@@ -85,16 +101,18 @@ def run_actual_test_driver(args):
     if args.new_window:
         run_func = run_new_window
     output = run_func(cmd_line)
-    if args.new_window and args.pass_regexes:
+    if args.new_window and (args.pass_regexes or args.fail_regexes):
         err("Cannot launch child process in a new window and capture its output")
     if output is not None:
         sys.stdout.write(output)
         match_pass_regexes(output, args.pass_regexes)
+        match_fail_regexes(output, args.fail_regexes)
 
 
 def grep_file(args):
     contents = read_file(args.path)
     match_pass_regexes(contents, args.pass_regexes)
+    match_fail_regexes(contents, args.fail_regexes)
 
 
 def parse_args(argv=None):
@@ -108,9 +126,12 @@ def parse_args(argv=None):
     subparsers = parser.add_subparsers(dest='command')
 
     parser_run = subparsers.add_parser('run', help='run an executable and check its output')
-    parser_run.add_argument('-r', '--pass-regex', nargs='*',
+    parser_run.add_argument('-p', '--pass-regex', nargs='*',
                             dest='pass_regexes', metavar='REGEX',
-                            help='regular expressions to match program output against')
+                            help='pass if all of these regexes match')
+    parser_run.add_argument('-f', '--fail-regex', nargs='*',
+                            dest='fail_regexes', metavar='REGEX',
+                            help='fail if any of these regexes matches')
     parser_run.add_argument('-n', '--new-window', action='store_true',
                             help='launch child process in a new console window')
     parser_run.add_argument('exe_path', metavar='PATH',
@@ -121,9 +142,12 @@ def parse_args(argv=None):
     parser_run.set_defaults(func=run_actual_test_driver)
 
     parser_grep = subparsers.add_parser('grep', help='check file contents for matching patterns')
-    parser_grep.add_argument('-r', '--pass-regex', nargs='*',
+    parser_grep.add_argument('-p', '--pass-regex', nargs='*',
                              dest='pass_regexes', metavar='REGEX',
-                             help='regular expressions to check file contents against')
+                             help='pass if all of these regexes match')
+    parser_grep.add_argument('-f', '--fail-regex', nargs='*',
+                             dest='fail_regexes', metavar='REGEX',
+                             help='fail if any of these regexes matches')
     parser_grep.add_argument('path', metavar='PATH', help='text file path')
     parser_grep.set_defaults(func=grep_file)
 
