@@ -22,7 +22,7 @@ import sys
 
 
 @contextmanager
-def _setup_logging():
+def setup_logging():
     logging.basicConfig(
         format='%(asctime)s | %(levelname)s | %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
@@ -35,7 +35,7 @@ def _setup_logging():
 
 
 @contextmanager
-def _cd(path):
+def cd(path):
     cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -44,7 +44,7 @@ def _cd(path):
         os.chdir(cwd)
 
 
-def _run(cmd_line):
+def run(cmd_line):
     logging.debug('Running executable: %s', cmd_line)
     try:
         return subprocess.run(cmd_line, check=True, universal_newlines=True,
@@ -55,7 +55,7 @@ def _run(cmd_line):
         raise
 
 
-def _read_file(path):
+def read_file(path):
     with open(path) as file:
         return file.read()
 
@@ -74,11 +74,11 @@ class ClangFormat:
         return cmd_line
 
     def format_in_place(self, paths):
-        _run(self._get_command_line(paths, in_place=True))
+        run(self._get_command_line(paths, in_place=True))
 
     @staticmethod
     def _show_diff(path, formatted):
-        original = _read_file(path).split('\n')
+        original = read_file(path).split('\n')
         formatted = formatted.split('\n')
         original_lbl = f'{path} (original)'
         formatted_lbl = f'{path} (formatted)'
@@ -95,22 +95,22 @@ class ClangFormat:
     def show_diff(self, paths):
         clean = True
         for path in paths:
-            formatted = _run(self._get_command_line([path])).stdout
+            formatted = run(self._get_command_line([path])).stdout
             clean = self._show_diff(path, formatted) and clean
         return clean
 
 
-def _git_root_dir():
+def git_root_dir():
     cmd_line = ['git', 'rev-parse', '--show-toplevel']
-    root_dir = _run(cmd_line).stdout
+    root_dir = run(cmd_line).stdout
     if root_dir[-1] != '\n':
         raise RuntimeError('git rev-parse --show-toplevel should append a newline?')
     return root_dir[:-1]
 
 
-def _list_all_files():
+def list_all_files():
     cmd_line = ['git', 'ls-tree', '-r', '-z', '--name-only', 'HEAD']
-    repo_files = _run(cmd_line).stdout
+    repo_files = run(cmd_line).stdout
     repo_files = repo_files.split('\0')
     return repo_files
 
@@ -118,17 +118,17 @@ def _list_all_files():
 CPP_FILE_EXTENSIONS = {'.c', '.h', '.cc', '.hh', '.cpp', '.hpp', '.cxx', '.hxx', '.cp', '.c++'}
 
 
-def _list_cpp_files():
-    for path in _list_all_files():
+def list_cpp_files():
+    for path in list_all_files():
         ext = os.path.splitext(path)[1]
         if ext in CPP_FILE_EXTENSIONS:
             yield path
 
 
-def _process_cpp_files(args):
+def process_cpp_files(args):
     clang_format = ClangFormat(args.clang_format, args.style)
-    with _cd(_git_root_dir()):
-        cpp_files = _list_cpp_files()
+    with cd(git_root_dir()):
+        cpp_files = list_cpp_files()
         if args.in_place:
             clang_format.format_in_place(cpp_files)
         else:
@@ -140,7 +140,7 @@ DEFAULT_CLANG_FORMAT = 'clang-format'
 DEFAULT_STYLE = 'file'
 
 
-def _parse_args(argv=None):
+def parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
@@ -159,9 +159,9 @@ def _parse_args(argv=None):
 
 
 def main(argv=None):
-    with _setup_logging():
-        args = _parse_args(argv)
-        _process_cpp_files(args)
+    with setup_logging():
+        args = parse_args(argv)
+        process_cpp_files(args)
 
 
 if __name__ == '__main__':
