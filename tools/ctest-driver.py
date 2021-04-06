@@ -50,7 +50,7 @@ def match_any(s, regexes):
     if not regexes:
         return True
     for regex in regexes:
-        if re.search(regex, s):
+        if re.search(regex, s, flags=re.MULTILINE):
             return True
     return False
 
