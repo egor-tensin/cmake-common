@@ -96,7 +96,8 @@ def parse_args(argv=None):
                             help='launch child process in a new console window')
     parser_run.add_argument('exe_path', metavar='PATH',
                             help='path to the test executable')
-    parser_run.add_argument('exe_args', metavar='ARG', nargs='*',
+    # nargs='*' here would discard additional '--'s.
+    parser_run.add_argument('exe_args', metavar='ARG', nargs=argparse.REMAINDER,
                             help='test executable arguments')
     parser_run.set_defaults(func=run_actual_test_driver)
 
