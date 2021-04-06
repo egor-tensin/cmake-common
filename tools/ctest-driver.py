@@ -34,15 +34,25 @@ def read_file(path):
         return fd.read()
 
 
-def run(cmd_line, **kwargs):
+def run(cmd_line):
     try:
         result = subprocess.run(cmd_line, check=True, universal_newlines=True,
                                 stderr=subprocess.STDOUT,
-                                stdout=subprocess.PIPE, **kwargs)
+                                stdout=subprocess.PIPE)
         assert result.returncode == 0
         return result.stdout
     except subprocess.CalledProcessError as e:
         sys.stdout.write(e.output)
+        sys.exit(e.returncode)
+
+
+def run_new_window(cmd_line):
+    try:
+        result = subprocess.run(cmd_line, check=True,
+                                creationflags=subprocess.CREATE_NEW_CONSOLE)
+        assert result.returncode == 0
+        return None
+    except subprocess.CalledProcessError as e:
         sys.exit(e.returncode)
 
 
@@ -65,12 +75,16 @@ def match_pass_regexes(output, regexes):
 
 
 def run_actual_test_driver(args):
-    creationflags = 0
-    if args.new_window and hasattr(subprocess, 'CREATE_NEW_CONSOLE'):
-        creationflags = subprocess.CREATE_NEW_CONSOLE
-    output = run([args.exe_path] + args.exe_args, creationflags=creationflags)
-    sys.stdout.write(output)
-    match_pass_regexes(output, args.pass_regexes)
+    cmd_line = [args.exe_path] + args.exe_args
+    run_func = run
+    if args.new_window:
+        run_func = run_new_window
+    output = run_func(cmd_line)
+    if args.new_window and args.pass_regexes:
+        err("Cannot launch child process in a new window and capture its output")
+    if output is not None:
+        sys.stdout.write(output)
+        match_pass_regexes(output, args.pass_regexes)
 
 
 def grep_file(args):
