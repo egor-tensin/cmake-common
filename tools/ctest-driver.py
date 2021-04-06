@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2021 Egor Tensin <Egor.Tensin@gmail.com>
+# This file is part of the "cmake-common" project.
+# For details, see https://github.com/egor-tensin/cmake-common.
+# Distributed under the MIT License.
+
 '''Wrap your actual test driver for CTest
 
 CTest suffers from at least two issues, in particular with regard to its
