@@ -1,9 +1,9 @@
 cmake-common
 ============
 
-[![Basic usage](https://github.com/egor-tensin/cmake-common/workflows/Basic%20usage/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Basic+usage%22)
-[![Boost (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Boost%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Boost+%28toolsets%29%22)
-[![Examples (toolsets)](https://github.com/egor-tensin/cmake-common/workflows/Examples%20(toolsets)/badge.svg)](https://github.com/egor-tensin/cmake-common/actions?query=workflow%3A%22Examples+%28toolsets%29%22)
+[![Basic usage](https://github.com/egor-tensin/cmake-common/actions/workflows/basic.yml/badge.svg)](https://github.com/egor-tensin/cmake-common/actions/workflows/basic.yml)
+[![Boost (toolsets)](https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml/badge.svg)](https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml)
+[![Examples (toolsets)](https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml/badge.svg)](https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml)
 
 Various utilities to help develop C++/CMake projects.
 
