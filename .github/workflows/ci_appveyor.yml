@@ -1,6 +1,5 @@
 # This workflow pretends like it's being run on AppVeyor by setting the
-# appropriate environment variables.  The project.ci.appveyor package is
-# tested.
+# appropriate environment variables.
 
 name: CI (AppVeyor)
 
@@ -52,10 +51,10 @@ jobs:
           key: 'boost-${{ env.boost_version }}'
 
       - name: Build Boost
-        run: python -m project.ci.appveyor.boost -- --with-filesystem
+        run: python -m project.ci.boost -- --with-filesystem
 
       - name: Build example project
-        run: python -m project.ci.appveyor.cmake --install
+        run: python -m project.ci.cmake --install
 
       - name: Run example project
         run: |

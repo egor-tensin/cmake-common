@@ -1,5 +1,3 @@
-# The project.ci.github package is tested.
-
 name: CI (GitHub)
 
 on:

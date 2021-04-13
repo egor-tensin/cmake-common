@@ -109,7 +109,6 @@ def download(params):
 def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
-    logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -132,8 +131,9 @@ def _parse_args(argv=None):
 
 
 def _main(argv=None):
+    args = _parse_args(argv)
     with setup_logging():
-        download(DownloadParameters.from_args(_parse_args(argv)))
+        download(DownloadParameters.from_args(args))
 
 
 if __name__ == '__main__':

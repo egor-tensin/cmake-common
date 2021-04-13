@@ -1,5 +1,5 @@
 # This workflow pretends like it's being run on Travis by setting the
-# appropriate environment variables.  The project.ci.travis package is tested.
+# appropriate environment variables.
 
 name: CI (Travis)
 
@@ -49,10 +49,10 @@ jobs:
           key: 'boost-${{ env.boost_version }}'
 
       - name: Build Boost
-        run: python -m project.ci.travis.boost -- --with-filesystem
+        run: python -m project.ci.boost -- --with-filesystem
 
       - name: Build example project
-        run: python -m project.ci.travis.cmake --install
+        run: python -m project.ci.cmake --install
 
       - name: Run example project
         run: |

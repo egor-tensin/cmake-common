@@ -17,7 +17,6 @@ from project.utils import setup_logging
 def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
-    logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser(
         description=Dirs.get_boost_help(),
@@ -39,28 +38,28 @@ def _parse_args(argv=None):
 
 def build_ci(dirs, argv=None):
     args = _parse_args(argv)
-    if dirs is None:
-        dirs = Dirs.detect()
+    with setup_logging():
+        if dirs is None:
+            dirs = Dirs.detect()
 
-    version = dirs.get_boost_version()
-    build_dir = dirs.get_build_dir()
-    boost_dir = dirs.get_boost_dir()
-    params = DownloadParameters(version, cache_dir=build_dir, dest_path=boost_dir)
-    download(params)
+        version = dirs.get_boost_version()
+        build_dir = dirs.get_build_dir()
+        boost_dir = dirs.get_boost_dir()
+        params = DownloadParameters(version, cache_dir=build_dir, dest_path=boost_dir)
+        download(params)
 
-    params = BuildParameters(boost_dir,
-                             platforms=(dirs.get_platform(),),
-                             configurations=(dirs.get_configuration(),),
-                             link=args.link,
-                             runtime_link=args.runtime_link,
-                             toolset=dirs.get_toolset(),
-                             b2_args=args.b2_args)
-    build(params)
+        params = BuildParameters(boost_dir,
+                                 platforms=(dirs.get_platform(),),
+                                 configurations=(dirs.get_configuration(),),
+                                 link=args.link,
+                                 runtime_link=args.runtime_link,
+                                 toolset=dirs.get_toolset(),
+                                 b2_args=args.b2_args)
+        build(params)
 
 
 def main(argv=None):
-    with setup_logging():
-        build_ci(None, argv)
+    build_ci(None, argv)
 
 
 if __name__ == '__main__':

@@ -16,7 +16,6 @@ from project.utils import setup_logging
 def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
-    logging.info('Command line arguments: %s', argv)
 
     parser = argparse.ArgumentParser(
         description=Dirs.get_cmake_help(),
@@ -35,37 +34,37 @@ def _parse_args(argv=None):
 
 def build_ci(dirs, argv=None):
     args = _parse_args(argv)
-    if dirs is None:
-        dirs = Dirs.detect()
+    with setup_logging():
+        if dirs is None:
+            dirs = Dirs.detect()
 
-    src_dir = dirs.get_src_dir()
-    if args.subdir:
-        src_dir = os.path.join(src_dir, args.subdir)
-    install_dir = dirs.get_install_dir() if args.install else None
+        src_dir = dirs.get_src_dir()
+        if args.subdir:
+            src_dir = os.path.join(src_dir, args.subdir)
+        install_dir = dirs.get_install_dir() if args.install else None
 
-    boost_dir = args.boost_dir
-    if not boost_dir:
-        # If we've built Boost using project.ci.boost already, use that.
-        # Otherwise, try to use the latest pre-built Boost provided by the CI
-        # system.
-        boost_dir = dirs.get_boost_dir()
-        if not os.path.isdir(boost_dir):
-            boost_dir = dirs.get_prebuilt_boost_dir()
+        boost_dir = args.boost_dir
+        if not boost_dir:
+            # If we've built Boost using project.ci.boost already, use that.
+            # Otherwise, try to use the latest pre-built Boost provided by the CI
+            # system.
+            boost_dir = dirs.get_boost_dir()
+            if not os.path.isdir(boost_dir):
+                boost_dir = dirs.get_prebuilt_boost_dir()
 
-    params = BuildParameters(src_dir,
-                             build_dir=dirs.get_cmake_dir(),
-                             install_dir=install_dir,
-                             platform=dirs.get_platform(),
-                             configuration=dirs.get_configuration(),
-                             boost_dir=boost_dir,
-                             toolset=dirs.get_toolset(),
-                             cmake_args=dirs.get_cmake_args() + args.cmake_args)
-    build(params)
+        params = BuildParameters(src_dir,
+                                 build_dir=dirs.get_cmake_dir(),
+                                 install_dir=install_dir,
+                                 platform=dirs.get_platform(),
+                                 configuration=dirs.get_configuration(),
+                                 boost_dir=boost_dir,
+                                 toolset=dirs.get_toolset(),
+                                 cmake_args=dirs.get_cmake_args() + args.cmake_args)
+        build(params)
 
 
 def main(argv=None):
-    with setup_logging():
-        build_ci(None, argv)
+    build_ci(None, argv)
 
 
 if __name__ == '__main__':
