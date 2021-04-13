@@ -34,7 +34,7 @@ def _parse_args(argv=None):
     # real CI workflow.
     parser.add_argument('--hint', metavar='CI_NAME',
                         choices=Dirs.all_ci_names(),
-                        help='CI system to use')
+                        help=argparse.SUPPRESS)
 
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],

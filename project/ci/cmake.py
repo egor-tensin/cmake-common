@@ -26,7 +26,7 @@ def _parse_args(argv=None):
     # real CI workflow.
     parser.add_argument('--hint', metavar='CI_NAME',
                         choices=Dirs.all_ci_names(),
-                        help='CI system to use')
+                        help=argparse.SUPPRESS)
     parser.add_argument('--install', action='store_true',
                         help='install the project')
     parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
