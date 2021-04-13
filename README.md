@@ -40,22 +40,6 @@ All of those are verified continuously by the "Boost (toolsets)" and "Examples
 Usage
 -----
 
-### common.cmake
-
-Use in a project by putting
-
-    include(path/to/common.cmake)
-
-in CMakeLists.txt.
-
-This file aids in quick-and-dirty development by
-
-* linking everything (including the runtime) statically by default,
-* setting some useful compilation options (enables warnings, defines useful
-Windows-specific macros, strips debug symbols in release builds, etc.).
-
-Everything is optional (use the `CC_*` CMake options to opt out).
-
 ### Boost
 
 Download & build the Boost libraries in a cross-platform way.
@@ -79,6 +63,22 @@ Build (and optionally, install) a CMake project.
     foo
 
 Pass the `--help` flag to view detailed usage information.
+
+### common.cmake
+
+Use in a project by putting
+
+    include(path/to/common.cmake)
+
+in CMakeLists.txt.
+
+This file aids in quick-and-dirty development by
+
+* linking everything (including the runtime) statically by default,
+* setting some useful compilation options (enables warnings, defines useful
+Windows-specific macros, strips debug symbols in release builds, etc.).
+
+Everything is optional (use the `CC_*` CMake options to opt out).
 
 ### CI
 
