@@ -18,7 +18,7 @@ jobs:
       - name: Run clang-format
         run: ./tools/clang-format.py --clang-format clang-format-10
 
-  build:
+  basic:
     strategy:
       matrix:
         os: [ubuntu-18.04, windows-2016, windows-2019]
@@ -83,3 +83,32 @@ jobs:
           if (Compare-Object $actual $expected -CaseSensitive) {
               throw 'Unexpected output'
           }
+
+  publish:
+    # TODO: figure out how to add a dependency on the *toolsets workflows.
+    needs: [lint, basic]
+    runs-on: ubuntu-20.04
+    name: Publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3
+      - name: Install tools
+        run: python3 -m pip install --upgrade build
+      - name: Build package
+        run: python3 -m build
+      - name: Upload dist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+      - name: Publish package
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
