@@ -4,7 +4,6 @@
 # Distributed under the MIT License.
 
 import argparse
-import logging
 import sys
 
 from project.boost.build import BuildParameters, build

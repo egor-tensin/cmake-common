@@ -189,7 +189,8 @@ class CustomToolchain(Toolchain):
     def get_compiler(self):
         pass
 
-    def get_compiler_version(self):
+    @staticmethod
+    def get_compiler_version():
         return CustomToolchain.COMPILER_VERSION
 
     @abc.abstractmethod

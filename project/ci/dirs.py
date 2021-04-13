@@ -44,15 +44,18 @@ class Dirs(abc.ABC):
     def this_one(self):
         pass
 
-    def get_toolset(self):
+    @staticmethod
+    def get_toolset():
         if 'TOOLSET' in os.environ:
             return ToolchainType.parse(os.environ['TOOLSET'])
         return None
 
-    def get_platform(self):
+    @staticmethod
+    def get_platform():
         return Platform.parse(env('PLATFORM'))
 
-    def get_configuration(self):
+    @staticmethod
+    def get_configuration():
         return Configuration.parse(env('CONFIGURATION'))
 
     @abc.abstractmethod
@@ -66,7 +69,8 @@ class Dirs(abc.ABC):
     def get_prebuilt_boost_dir(self):
         pass
 
-    def get_boost_version(self):
+    @staticmethod
+    def get_boost_version():
         return Version.from_string(env('BOOST_VERSION'))
 
     def get_boost_dir(self):

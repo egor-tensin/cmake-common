@@ -4,7 +4,6 @@
 # Distributed under the MIT License.
 
 import argparse
-import logging
 import os.path
 import sys
 
