@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Run clang-format
-        run: ./tools/clang-format.py --clang-format clang-format-10
+        run: ./tools/project-clang-format --clang-format clang-format-10
 
   basic:
     strategy:
