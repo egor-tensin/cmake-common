@@ -29,6 +29,13 @@ def _parse_args(argv=None):
                         type=Linkage.parse,
                         help='how the libraries link to the runtime')
 
+    # The hint parameter is basically a workaround for when this is run on a
+    # CI, _but_ testing another CI is desired.  This shouldn't be used in a
+    # real CI workflow.
+    parser.add_argument('--hint', metavar='CI_NAME',
+                        choices=Dirs.all_ci_names(),
+                        help='CI system to use')
+
     parser.add_argument('b2_args', metavar='B2_ARG',
                         nargs='*', default=[],
                         help='additional b2 arguments, to be passed verbatim')
@@ -40,7 +47,7 @@ def build_ci(dirs, argv=None):
     args = _parse_args(argv)
     with setup_logging():
         if dirs is None:
-            dirs = Dirs.detect()
+            dirs = Dirs.detect(args.hint)
 
         version = dirs.get_boost_version()
         build_dir = dirs.get_build_dir()

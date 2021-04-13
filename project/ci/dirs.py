@@ -17,14 +17,20 @@ from project.utils import env
 
 class Dirs(abc.ABC):
     @staticmethod
-    def detect():
+    def detect(hint=None):
         matching = [ci for ci in _ALL_CI_LIST if ci.this_one()]
         if len(matching) == 0:
             raise RuntimeError('no CI system was detected')
-        if len(matching) > 1:
-            names = ', '.join(ci.get_name() for ci in matching)
-            raise RuntimeError(f"can't select a single CI system out of these: {names}")
-        return matching[0]
+        if len(matching) == 1:
+            return matching[0]
+        # The hint parameter is basically a workaround for when this is run
+        # on a CI, _but_ testing another CI is desired.
+        if hint is not None:
+            for ci in matching:
+                if ci.get_name() == hint:
+                    return ci
+        names = ', '.join(ci.get_name() for ci in matching)
+        raise RuntimeError(f"can't select a single CI system out of these: {names}")
 
     def __init__(self):
         pass
@@ -77,25 +83,31 @@ class Dirs(abc.ABC):
         pass
 
     @staticmethod
+    def all_ci_names():
+        return [ci.get_name() for ci in _ALL_CI_LIST]
+
+    @staticmethod
+    def join_ci_names():
+        return ', '.join(Dirs.all_ci_names())
+
+    @staticmethod
     def get_boost_help():
-        names = ', '.join(ci.get_name() for ci in _ALL_CI_LIST)
         return f'''Download & build Boost during a CI run.
 
 This is similar to running both project.boost.download & project.boost.build,
 but auto-fills some parameters from environment variables.
 
-The supported CI systems are: {names}.
+The supported CI systems are: {Dirs.join_ci_names()}.
 '''
 
     @staticmethod
     def get_cmake_help():
-        names = ', '.join(ci.get_name() for ci in _ALL_CI_LIST)
         return f'''Build a CMake project during a CI run.
 
 This is similar to running project.cmake.build, but auto-fills some parameters
 from environment variables.
 
-The supported CI systems are: {names}.
+The supported CI systems are: {Dirs.join_ci_names()}.
 '''
 
 

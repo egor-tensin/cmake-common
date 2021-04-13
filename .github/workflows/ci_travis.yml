@@ -49,10 +49,10 @@ jobs:
           key: 'boost-${{ env.boost_version }}'
 
       - name: Build Boost
-        run: python -m project.ci.boost -- --with-filesystem
+        run: python -m project.ci.boost --hint Travis -- --with-filesystem
 
       - name: Build example project
-        run: python -m project.ci.cmake --install
+        run: python -m project.ci.cmake --hint Travis --install
 
       - name: Run example project
         run: |

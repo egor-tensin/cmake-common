@@ -21,6 +21,12 @@ def _parse_args(argv=None):
         description=Dirs.get_cmake_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    # The hint parameter is basically a workaround for when this is run on a
+    # CI, _but_ testing another CI is desired.  This shouldn't be used in a
+    # real CI workflow.
+    parser.add_argument('--hint', metavar='CI_NAME',
+                        choices=Dirs.all_ci_names(),
+                        help='CI system to use')
     parser.add_argument('--install', action='store_true',
                         help='install the project')
     parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
@@ -36,7 +42,7 @@ def build_ci(dirs, argv=None):
     args = _parse_args(argv)
     with setup_logging():
         if dirs is None:
-            dirs = Dirs.detect()
+            dirs = Dirs.detect(args.hint)
 
         src_dir = dirs.get_src_dir()
         if args.subdir:
