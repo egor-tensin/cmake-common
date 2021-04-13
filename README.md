@@ -7,6 +7,11 @@ cmake-common
 
 Various utilities to help develop C++/CMake projects.
 
+Installation
+------------
+
+    pip install cmake-common
+
 Toolchains
 ----------
 
@@ -55,22 +60,19 @@ Everything is optional (use the `CC_*` CMake options to opt out).
 
 Download & build the Boost libraries in a cross-platform way.
 
-    $ python3 -m project.boost.download 1.72.0
+    $ boost-download 1.72.0
     ...
 
-    $ python3 -m project.boost.build -- boost_1_72_0/ --with-filesystem --with-program_options
+    $ boost-build -- boost_1_72_0/ --with-filesystem --with-program_options
     ...
 
 Pass the `--help` flag to view detailed usage information.
-
-    $ python3 -m project.boost.download --help
-    $ python3 -m project.boost.build --help
 
 ### CMake project
 
 Build (and optionally, install) a CMake project.
 
-    $ python3 -m project.cmake.build --configuration Release --install path/to/somewhere -- examples/simple
+    $ cmake-build --configuration Release --install path/to/somewhere --boost path/to/boost -- examples/simple
     ...
 
     $ ./path/to/somewhere/bin/foo
@@ -78,12 +80,10 @@ Build (and optionally, install) a CMake project.
 
 Pass the `--help` flag to view detailed usage information.
 
-    $ python3 -m project.cmake.build --help
-
 ### CI
 
-Utility modules `project.ci.boost` and `project.ci.cmake` allow building Boost
-and CMake projects on multiple CI systems.
+Utility scripts `ci-boost` and `ci-cmake` allow building Boost and CMake
+projects on multiple CI systems.
 They work by calling the generic scripts from above, auto-filling some
 parameters from environment variables.
 
@@ -111,19 +111,19 @@ env:
     - configuration=Debug   platform=x64
     - configuration=Release platform=x64
 
-before_script: python3 -m project.ci.boost -- --with-filesystem
-script: python3 -m project.ci.cmake --install
+before_script: ci-boost -- --with-filesystem
+script: ci-cmake --install
 ```
 
 is roughly equivalent to running
 
 ```
-python3 -m project.boost.download --cache "$TRAVIS_BUILD_DIR/../build" -- 1.65.0
+boost-download --cache "$TRAVIS_BUILD_DIR/../build" -- 1.65.0
 mv -- \
     "$TRAVIS_BUILD_DIR/../build/boost_1_65_0" \
     "$TRAVIS_BUILD_DIR/../build/boost"
 
-python3 -m project.boost.build         \
+boost-build                            \
     --platform x64                     \
     --configuration Debug Release      \
     --                                 \
@@ -131,7 +131,7 @@ python3 -m project.boost.build         \
     --with-filesystem
 
 for configuration in Debug Release; do
-    python3 -m project.cmake.build                     \
+    cmake-build                                        \
         --platform x64                                 \
         --configuration "$configuration"               \
         --boost "$TRAVIS_BUILD_DIR/../build/boost"     \

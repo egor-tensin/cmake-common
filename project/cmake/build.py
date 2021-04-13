@@ -12,7 +12,7 @@ but written in bash and PowerShell, respectively).
 
 A simple usage example:
 
-    $ python -m project.cmake.build --configuration Release --install path/to/somewhere -- examples/simple
+    $ cmake-build --configuration Release --install path/to/somewhere -- examples/simple
     ...
 
     $ ./path/to/somewhere/bin/foo

@@ -10,7 +10,7 @@ correct --stagedir parameter value to avoid name clashes.
 
 Usage example:
 
-    $ python -m project.boost.build -- boost_1_71_0/ --with-filesystem --with-program_options
+    $ boost-build -- boost_1_71_0/ --with-filesystem --with-program_options
     ...
 
 Consult the output of `python -m project.boost.build --help` for more details.

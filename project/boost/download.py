@@ -10,10 +10,10 @@ utility is that it's supposed to be cross-platform.
 
 Usage examples:
 
-    $ python -m project.boost.download 1.71.0
+    $ boost-download 1.71.0
     ...
 
-    $ python -m project.boost.download --unpack ~/workspace/third-party/ 1.65.0
+    $ boost-download --unpack ~/workspace/third-party/ 1.65.0
     ...
 '''
 
