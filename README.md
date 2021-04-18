@@ -145,12 +145,13 @@ done
 Tools
 -----
 
-* [project-clang-format] &mdash; `clang-format` all C/C++ files in the project.
-* [ctest-driver] &mdash; wrap an executable for testing with CTest;
+* [project-clang-format.py] &mdash; `clang-format` all C/C++ files in the
+project.
+* [ctest-driver.py] &mdash; wrap an executable for testing with CTest;
 cross-platform `grep`.
 
-[project-clang-format]: docs/project-clang-format.md
-[ctest-driver]: docs/ctest-driver.md
+[project-clang-format.py]: docs/project-clang-format.md
+[ctest-driver.py]: docs/ctest-driver.md
 
 Examples
 --------
