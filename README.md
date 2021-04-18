@@ -10,7 +10,24 @@ Various utilities to help develop C++/CMake projects.
 Installation
 ------------
 
-    pip install cmake-common
+* Via PyPI:
+
+      pip install cmake-common
+
+* As a submodule:
+
+      git submodule add https://github.com/egor-tensin/cmake-common.git
+
+  All the scripts provided by the PyPI package are thin wrappers around the
+  `project` package modules:
+
+  | Script         | Module
+  | -------------- | ------
+  | boost-download | `python3 -m project.boost.download`
+  | boost-build    | `python3 -m project.boost.build`
+  | cmake-build    | `python3 -m project.cmake.build`
+  | ci-boost       | `python3 -m project.ci.boost`
+  | ci-cmake       | `python3 -m project.ci.cmake`
 
 Toolchains
 ----------
@@ -34,8 +51,11 @@ limited to:
 1. Both GNU `make` and MinGW `mingw32-make`.
 2. Boost 1.69.0 or higher only.
 
-All of those are verified continuously by the "Boost (toolsets)" and "Examples
-(toolsets)" workflows.
+All of those are verified continuously by the [Boost (toolsets)] and [Examples
+(toolsets)] workflows.
+
+[Boost (toolsets)]: https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml
+[Examples (toolsets)]: https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml
 
 Usage
 -----
@@ -88,7 +108,7 @@ They work by calling the generic scripts from above, auto-filling some
 parameters from environment variables.
 
 |                   | Travis                               | AppVeyor                                   | GitHub Actions
-| ----------------- | ------------------------------------ | ------------------------------------------ | ------------------------------------
+| ----------------- | ------------------------------------ | ------------------------------------------ | --------------
 | `--toolset`       | `$TOOLSET`                           | `%TOOLSET%`                                | `$TOOLSET`
 | `--platform`      | `$PLATFORM`                          | `%PLATFORM%`                               | `$PLATFORM`
 | `--configuration` | `$CONFIGURATION`                     | `%CONFIGURATION%`                          | `$CONFIGURATION`
