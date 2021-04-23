@@ -46,8 +46,8 @@ DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
 # binaries from a CI, etc. and run them everywhere):
 DEFAULT_LINK = (Linkage.STATIC,)
 DEFAULT_RUNTIME_LINK = Linkage.STATIC
-B2_QUIET = ['-d0']
-B2_VERBOSE = ['-d2', '--debug-configuration']
+B2_QUIET = ['warnings=off', '-d0']
+B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
 
 
 class BuildParameters:

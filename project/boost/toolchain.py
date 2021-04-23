@@ -251,14 +251,7 @@ class GCC(CustomToolchain):
         return 'g++'
 
     def get_build_options(self):
-        return [
-            # TODO: this is a petty attempt to get rid of build warnings in
-            # older Boost versions.  Revise and expand this list or remove it?
-            # warning: 'template<class> class std::auto_ptr' is deprecated
-            ('cxxflags', '-Wno-deprecated-declarations'),
-            # warning: unnecessary parentheses in declaration of 'assert_arg'
-            ('cxxflags', '-Wno-parentheses'),
-        ]
+        return []
 
 
 class MinGW(GCC):
@@ -285,11 +278,11 @@ class Clang(GCC):
         options = super().get_build_options()
         options += [
             ('cxxflags', '-DBOOST_USE_WINDOWS_H'),
-            # TODO: this is a petty attempt to get rid of build warnings in
-            # older Boost versions.  Revise and expand this list or remove it?
-            # warning: unused typedef 'boost_concept_check464' [-Wunused-local-typedef]
-            ('cxxflags', '-Wno-unused-local-typedef'),
-            # error: constant expression evaluates to -105 which cannot be narrowed to type 'boost::re_detail::cpp_regex_traits_implementation<char>::char_class_type' (aka 'unsigned int')
+
+            # Even with <warnings>off, the build might sometimes fail with the
+            # following error:
+            #
+            #     error: constant expression evaluates to -105 which cannot be narrowed to type 'boost::re_detail::cpp_regex_traits_implementation<char>::char_class_type' (aka 'unsigned int')
             ('cxxflags', '-Wno-c++11-narrowing'),
         ]
         if project.os.on_windows():
