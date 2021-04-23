@@ -43,7 +43,6 @@ runs:
 
         & $python `
             -m project.boost.build `
-            --verbose `
             --toolset '${{ inputs.toolset }}' `
             --platform '${{ inputs.platform }}' `
             --configuration '${{ inputs.configuration }}' `
