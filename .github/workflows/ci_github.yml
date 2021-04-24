@@ -46,8 +46,8 @@ jobs:
       - name: Cache Boost
         uses: actions/cache@v2.1.4
         with:
-          path: '${{ runner.workspace }}/boost_*.tar.gz'
-          key: 'boost-${{ env.boost_version }}'
+          path: '${{ runner.workspace }}/build/boost_*.tar.gz'
+          key: 'boost_${{ env.BOOST_VERSION }}'
 
       - name: Build Boost
         run: python -m project.ci.boost -- --with-filesystem
