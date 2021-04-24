@@ -126,10 +126,10 @@ dist: focal
 
 env:
   global:
-    boost_version: 1.65.0
+    BOOST_VERSION: 1.65.0
   jobs:
-    - configuration=Debug   platform=x64
-    - configuration=Release platform=x64
+    - CONFIGURATION=Debug   PLATFORM=x64
+    - CONFIGURATION=Release PLATFORM=x64
 
 before_script: ci-boost -- --with-filesystem
 script: ci-cmake --install
