@@ -45,7 +45,7 @@ jobs:
           python-version: '3.x'
 
       - name: Cache Boost
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v2
         with:
           path: '${{ github.workspace }}/examples/build/boost_*.tar.gz'
           key: 'boost_${{ env.BOOST_VERSION }}'
