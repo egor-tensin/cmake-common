@@ -117,50 +117,9 @@ parameters from environment variables.
 | Build path        | `$TRAVIS_BUILD_DIR/../build/cmake`   | `%APPVEYOR_BUILD_FOLDER%\..\build\cmake`   | `$GITHUB_WORKSPACE/../build/cmake`
 | Install path      | `$TRAVIS_BUILD_DIR/../build/install` | `%APPVEYOR_BUILD_FOLDER%\..\build\install` | `$GITHUB_WORKSPACE/../build/install`
 
-For example, the following Travis workflow:
 
-```
-language: cpp
-os: linux
-dist: focal
-
-env:
-  global:
-    BOOST_VERSION: 1.65.0
-  jobs:
-    - CONFIGURATION=Debug   PLATFORM=x64
-    - CONFIGURATION=Release PLATFORM=x64
-
-before_script: ci-boost -- --with-filesystem
-script: ci-cmake --install
-```
-
-is roughly equivalent to running
-
-```
-boost-download --cache "$TRAVIS_BUILD_DIR/../build" -- 1.65.0
-mv -- \
-    "$TRAVIS_BUILD_DIR/../build/boost_1_65_0" \
-    "$TRAVIS_BUILD_DIR/../build/boost"
-
-boost-build                            \
-    --platform x64                     \
-    --configuration Debug Release      \
-    --                                 \
-    "$TRAVIS_BUILD_DIR/../build/boost" \
-    --with-filesystem
-
-for configuration in Debug Release; do
-    cmake-build                                        \
-        --platform x64                                 \
-        --configuration "$configuration"               \
-        --boost "$TRAVIS_BUILD_DIR/../build/boost"     \
-        --build "$TRAVIS_BUILD_DIR/../build/cmake"     \
-        --install "$TRAVIS_BUILD_DIR/../build/install" \
-        --                                             \
-        "$TRAVIS_BUILD_DIR"
-done
-```
+For an example of how to integrate `ci-boost` and `ci-cmake` into a CI
+workflow, see [docs/ci.md](docs/ci.md).
 
 Tools
 -----
