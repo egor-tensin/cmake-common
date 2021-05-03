@@ -35,6 +35,7 @@ jobs:
         uses: ./.github/actions/download-boost
         with:
           boost-version: '${{ matrix.boost-version }}'
+          no-retry: 1
 
       - name: Check that Boost was downloaded
         uses: ./.github/actions/check-boost-download

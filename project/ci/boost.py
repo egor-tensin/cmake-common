@@ -7,7 +7,7 @@ import argparse
 import sys
 
 from project.boost.build import BuildParameters, build
-from project.boost.download import DownloadParameters, download
+from project.boost.download import Download, download
 from project.ci.dirs import Dirs
 from project.linkage import Linkage
 from project.utils import setup_logging
@@ -51,7 +51,7 @@ def build_ci(dirs, argv=None):
         version = dirs.get_boost_version()
         build_dir = dirs.get_build_dir()
         boost_dir = dirs.get_boost_dir()
-        params = DownloadParameters(version, cache_dir=build_dir, dest_path=boost_dir)
+        params = Download(version, cache_dir=build_dir, dest_path=boost_dir)
         download(params)
 
         params = BuildParameters(boost_dir,

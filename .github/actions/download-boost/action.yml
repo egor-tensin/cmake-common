@@ -2,8 +2,12 @@ name: Download Boost
 description: Download & unpack Boost
 inputs:
   boost-version:
-    description: 'Boost version'
+    description: Boost version
     required: true
+  no-retry:
+    description: Don't retry downloads
+    required: false
+    default: 0
 runs:
   using: composite
   steps:
@@ -31,10 +35,17 @@ runs:
         $python = 'python'
         $cache_dir = $env:BOOST_CACHE_DIR
 
+        $no_retry = '${{ inputs.no-retry }}' -eq '1'
+
+        $args = @()
+        if ($no_retry) {
+            $args += '--no-retry'
+        }
+
         if ($env:CI_HOST_CYGWIN) {
             $python = 'python3'
             $cache_dir = cygpath.exe -ua $cache_dir
         }
 
-        & $python -m project.boost.download --cache $cache_dir -- $env:BOOST_VERSION
+        & $python -m project.boost.download --cache $cache_dir $args -- $env:BOOST_VERSION
       shell: pwsh
