@@ -1,0 +1,19 @@
+name: Check that Boost was downloaded
+description: Check that Boost was downloaded
+runs:
+  using: composite
+  steps:
+    - run: |
+        echo ''
+        echo '----------------------------------------------------------------'
+        echo 'Checking that config.hpp exists'
+        echo '----------------------------------------------------------------'
+        $name = 'config.hpp'
+        $path = Join-Path $env:BOOST_DIR 'boost' $name
+
+        $exists = Test-Path $path -Type Leaf
+
+        if (!(Test-Path $path -Type Leaf)) {
+            throw "$name wasn't found"
+        }
+      shell: pwsh
