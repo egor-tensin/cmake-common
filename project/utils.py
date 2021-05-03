@@ -91,17 +91,19 @@ def env(name):
     return os.environ[name]
 
 
-def retry(exc_type, timeout=5, retries=3, backoff=2):
+def retry(exc_type, timeout=5, tries=3, backoff=2):
     def wrapper(func):
         @functools.wraps(func)
         def func2(*args, **kwargs):
             current_timeout = timeout
-            for retry_n in range(retries):
+            current_try = 0
+            while True:
                 try:
                     return func(*args, **kwargs)
                 except exc_type as e:
                     logging.exception(e)
-                    if retry_n < retries:
+                    current_try += 1
+                    if current_try < tries:
                         logging.error('Retrying after %d seconds', current_timeout)
                         time.sleep(current_timeout)
                         current_timeout *= backoff
