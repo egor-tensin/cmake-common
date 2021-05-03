@@ -34,7 +34,7 @@ def setup_logging():
         yield
     except Exception as e:
         logging.exception(e)
-        raise
+        sys.exit(1)
 
 
 @contextmanager
