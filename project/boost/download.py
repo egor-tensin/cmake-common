@@ -81,12 +81,6 @@ class Download:
             logging.error("Couldn't download from this mirror, an error occured:")
             logging.exception(e)
 
-    @contextmanager
-    def _try_primary_url(self):
-        urls = self.version.get_download_urls()
-        for url in urls:
-            return self._try_url(url)
-
     def _try_urls(self):
         urls = self.version.get_download_urls()
         for url in urls:
