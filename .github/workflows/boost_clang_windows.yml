@@ -17,8 +17,6 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
-
     strategy:
       matrix:
         toolset: [clang, clang-cl]
@@ -26,6 +24,8 @@ jobs:
         include:
           - {toolset: clang, b2_toolset: clang}
           - {toolset: clang-cl, b2_toolset: clang-win}
+
+    runs-on: windows-2019
 
     name: '${{ matrix.toolset }} / ${{ matrix.boost-version }}'
 

@@ -16,11 +16,11 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
-
     runs-on: ubuntu-18.04
-
     name: '${{ matrix.configuration }}'
-
+    defaults:
+      run:
+        shell: pwsh
     env:
       # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
       TRAVIS: 'true'
@@ -28,48 +28,21 @@ jobs:
       PLATFORM: x64
       CONFIGURATION: '${{ matrix.configuration }}'
       BOOST_VERSION: 1.72.0
-
-    defaults:
-      run:
-        shell: pwsh
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
-
       - name: Cache Boost
         uses: actions/cache@v2
         with:
           path: '${{ github.workspace }}/examples/build/boost_*.tar.gz'
           key: 'boost_${{ env.BOOST_VERSION }}'
-
       - name: Build Boost
         run: python -m project.ci.boost --hint Travis -- --with-filesystem
-
       - name: Build example project
         run: python -m project.ci.cmake --hint Travis --install
-
       - name: Run example project
-        run: |
-          cd "$env:TRAVIS_BUILD_DIR/../build/install/bin"
-          $foo_path = Join-Path (Get-Location).Path foo
-
-          $relative = 'test.txt'
-          $absolute = Join-Path (Get-Location).Path $relative
-
-          $actual = & $foo_path $relative
-          echo 'Actual output:'
-          echo $actual
-
-          $expected = $foo_path,$absolute
-          echo 'Expected output:'
-          echo $expected
-
-          if (Compare-Object $actual $expected -CaseSensitive) {
-              throw 'Unexpected output'
-          }
+        run: ./.ci/run_foo.ps1 (Join-Path $env:TRAVIS_BUILD_DIR .. build install bin foo)

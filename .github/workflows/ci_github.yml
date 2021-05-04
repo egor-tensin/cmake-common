@@ -19,61 +19,31 @@ jobs:
           - {os: ubuntu-18.04, toolset: msvc}
           - {os: windows-2019, toolset: gcc}
           - {os: windows-2019, toolset: clang}
-
     runs-on: '${{ matrix.os }}'
-
     name: '${{ matrix.os }} / ${{ matrix.toolset }} / ${{ matrix.configuration }}'
-
+    defaults:
+      run:
+        shell: pwsh
     env:
       TOOLSET: '${{ matrix.toolset }}'
       PLATFORM: x64
       CONFIGURATION: '${{ matrix.configuration }}'
       BOOST_VERSION: 1.72.0
-
-    defaults:
-      run:
-        shell: pwsh
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
-
       - name: Cache Boost
         uses: actions/cache@v2
         with:
           path: '${{ runner.workspace }}/build/boost_*.tar.gz'
           key: 'boost_${{ env.BOOST_VERSION }}'
-
       - name: Build Boost
         run: python -m project.ci.boost -- --with-filesystem
-
       - name: Build example project
         run: python -m project.ci.cmake --install --subdir examples/boost
-
       - name: Run example project
-        run: |
-          cd "$env:GITHUB_WORKSPACE/../build/install/bin"
-          $foo_path = Join-Path (Get-Location).Path foo
-          if ('${{ runner.os }}' -eq 'Windows') {
-              $foo_path += '.exe'
-          }
-
-          $relative = 'test.txt'
-          $absolute = Join-Path (Get-Location).Path $relative
-
-          $actual = & $foo_path $relative
-          echo 'Actual output:'
-          echo $actual
-
-          $expected = $foo_path,$absolute
-          echo 'Expected output:'
-          echo $expected
-
-          if (Compare-Object $actual $expected -CaseSensitive) {
-              throw 'Unexpected output'
-          }
+        run: ./.ci/run_foo.ps1 (Join-Path $env:GITHUB_WORKSPACE .. build install bin foo)
