@@ -80,6 +80,7 @@ class Download:
         except urllib.request.URLError as e:
             logging.error("Couldn't download from this mirror, an error occured:")
             logging.exception(e)
+            return None
 
     def _try_urls(self):
         urls = self.version.get_download_urls()

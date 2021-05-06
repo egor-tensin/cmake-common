@@ -43,18 +43,17 @@ class Toolchain(abc.ABC):
     def detect(hint):
         if hint is ToolchainType.AUTO:
             return Auto
-        elif hint is ToolchainType.MSVC:
+        if hint is ToolchainType.MSVC:
             return MSVC
-        elif hint is ToolchainType.GCC:
+        if hint is ToolchainType.GCC:
             return GCC
-        elif hint is ToolchainType.MINGW:
+        if hint is ToolchainType.MINGW:
             return MinGW
-        elif hint is ToolchainType.CLANG:
+        if hint is ToolchainType.CLANG:
             return Clang
-        elif hint is ToolchainType.CLANG_CL:
+        if hint is ToolchainType.CLANG_CL:
             return ClangCL
-        else:
-            raise NotImplementedError(f'unrecognized toolset: {hint}')
+        raise NotImplementedError(f'unrecognized toolset: {hint}')
 
     @staticmethod
     def make(hint, platform):
@@ -173,7 +172,7 @@ class GCC(Custom):
 
     @staticmethod
     def get_bootstrap_sh_args():
-        return [f'--with-toolset=gcc']
+        return ['--with-toolset=gcc']
 
     @staticmethod
     def get_build_options():
