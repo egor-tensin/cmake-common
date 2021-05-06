@@ -27,10 +27,10 @@ import os.path
 import sys
 import tempfile
 
-from project.cmake.toolchain import Toolchain
+from project.cmake.toolset import Toolchain
 from project.configuration import Configuration
 from project.platform import Platform
-from project.toolchain import ToolchainType
+from project.toolset import ToolchainType
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
 
 

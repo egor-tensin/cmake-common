@@ -13,7 +13,7 @@ import shutil
 
 import project.mingw
 import project.os
-from project.toolchain import ToolchainType
+from project.toolset import ToolchainType
 from project.utils import temp_file
 
 

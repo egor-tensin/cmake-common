@@ -31,8 +31,8 @@ import sys
 import tempfile
 
 from project.boost.directory import BoostDir
-from project.toolchain import ToolchainType
-from project.boost.toolchain import Toolchain
+from project.toolset import ToolchainType
+from project.boost.toolset import Toolchain
 from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform

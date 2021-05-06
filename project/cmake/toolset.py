@@ -12,7 +12,7 @@ import shutil
 import project.mingw
 from project.os import on_windows
 from project.platform import Platform
-from project.toolchain import ToolchainType
+from project.toolset import ToolchainType
 
 
 class Toolchain(abc.ABC):

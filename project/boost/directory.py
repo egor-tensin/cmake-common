@@ -6,7 +6,7 @@
 import logging
 import os.path
 
-from project.boost.toolchain import Toolchain
+from project.boost.toolset import Toolchain
 from project.utils import cd, run
 from project.os import on_windows
 
