@@ -104,8 +104,8 @@ class Platform(Enum):
         args += self.b2_stagedir(configuration)
         return args
 
-    def makefile_toolchain_file(self):
-        # For Makefile generators, we make a special toolchain file that
+    def makefile_toolset_file(self):
+        # For Makefile generators, we make a special toolset file that
         # specifies the -m32/-m64 flags, etc.
         if self is Platform.AUTO:
             # Let the compiler decide.

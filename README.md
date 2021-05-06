@@ -29,8 +29,8 @@ Installation
   | ci-boost       | `python3 -m project.ci.boost`
   | ci-cmake       | `python3 -m project.ci.cmake`
 
-Toolchains
-----------
+Toolsets
+--------
 
 Supported platform/build system/compiler combinations include, but are not
 limited to:

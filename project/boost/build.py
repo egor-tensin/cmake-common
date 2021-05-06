@@ -31,8 +31,8 @@ import sys
 import tempfile
 
 from project.boost.directory import BoostDir
-from project.toolset import ToolchainType
-from project.boost.toolset import Toolchain
+from project.toolset import ToolsetHint
+from project.boost.toolset import Toolset
 from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
@@ -53,7 +53,7 @@ B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
 class BuildParameters:
     def __init__(self, boost_dir, build_dir=None, platforms=None,
                  configurations=None, link=None, runtime_link=None,
-                 toolset=None, verbose=False, b2_args=None):
+                 toolset_hint=None, verbose=False, b2_args=None):
 
         boost_dir = normalize_path(boost_dir)
         if build_dir is not None:
@@ -62,7 +62,7 @@ class BuildParameters:
         configurations = configurations or DEFAULT_CONFIGURATIONS
         link = link or DEFAULT_LINK
         runtime_link = runtime_link or DEFAULT_RUNTIME_LINK
-        toolset = toolset or ToolchainType.AUTO
+        toolset_hint = toolset_hint or ToolsetHint.AUTO
         verbosity = B2_VERBOSE if verbose else B2_QUIET
         if b2_args:
             b2_args = verbosity + b2_args
@@ -75,7 +75,7 @@ class BuildParameters:
         self.configurations = configurations
         self.link = link
         self.runtime_link = runtime_link
-        self.toolset = toolset
+        self.toolset_hint = toolset_hint
         self.b2_args = b2_args
 
     @staticmethod
@@ -85,10 +85,10 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                toolchain = Toolchain.make(self.toolset, platform)
+                toolset = Toolset.make(self.toolset_hint, platform)
                 for configuration in self.configurations:
                     for link, runtime_link in self._enum_linkage_options():
-                        with self._b2_args(build_dir, toolchain, platform, configuration, link, runtime_link) as args:
+                        with self._b2_args(build_dir, toolset, platform, configuration, link, runtime_link) as args:
                             yield args
 
     def _enum_linkage_options(self):
@@ -119,8 +119,8 @@ class BuildParameters:
             return
 
     @contextmanager
-    def _b2_args(self, build_dir, toolchain, platform, configuration, link, runtime_link):
-        with toolchain.b2_args() as result:
+    def _b2_args(self, build_dir, toolset, platform, configuration, link, runtime_link):
+        with toolset.b2_args() as result:
             result.append(f'--build-dir={build_dir}')
             result.append('--layout=system')
             result += platform.b2_args(configuration)
@@ -168,9 +168,9 @@ def _parse_args(argv=None):
                         type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
                         help=f'how the libraries link to the runtime ({linkage_options})')
 
-    toolset_options = '/'.join(map(str, ToolchainType.all()))
-    parser.add_argument('--toolset', metavar='TOOLSET',
-                        type=ToolchainType.parse, default=ToolchainType.AUTO,
+    toolset_options = '/'.join(map(str, ToolsetHint.all()))
+    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_hint',
+                        type=ToolsetHint.parse, default=ToolsetHint.AUTO,
                         help=f'toolset to use ({toolset_options})')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',

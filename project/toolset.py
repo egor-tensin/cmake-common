@@ -27,7 +27,7 @@ import argparse
 from enum import Enum
 
 
-class ToolchainType(Enum):
+class ToolsetHint(Enum):
     AUTO = 'auto'   # This most commonly means GCC on Linux and MSVC on Windows.
     MSVC = 'msvc'   # Force MSVC.
     GCC = 'gcc'     # Force GCC.
@@ -40,11 +40,11 @@ class ToolchainType(Enum):
 
     @staticmethod
     def all():
-        return tuple(ToolchainType)
+        return tuple(ToolsetHint)
 
     @staticmethod
     def parse(s):
         try:
-            return ToolchainType(s)
+            return ToolsetHint(s)
         except ValueError as e:
             raise argparse.ArgumentTypeError(f'invalid toolset: {s}') from e

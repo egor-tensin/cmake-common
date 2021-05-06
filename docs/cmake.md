@@ -62,7 +62,7 @@ Cross-compilation
 -----------------
 
 If you want to e.g. build x86 binaries on x64 and vice versa, the easiest way
-seems to be to make a CMake "toolchain file", which initializes the proper
+seems to be to make a CMake "toolset file", which initializes the proper
 compiler flags (like -m64/-m32, etc.).  Such file could look like this:
 
     set(CMAKE_C_COMPILER   gcc)

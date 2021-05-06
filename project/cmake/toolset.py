@@ -12,10 +12,10 @@ import shutil
 import project.mingw
 from project.os import on_windows
 from project.platform import Platform
-from project.toolset import ToolchainType
+from project.toolset import ToolsetHint
 
 
-class Toolchain(abc.ABC):
+class Toolset(abc.ABC):
     @abc.abstractmethod
     def cmake_args(self):
         pass
@@ -26,13 +26,13 @@ class Toolchain(abc.ABC):
 
     @staticmethod
     def detect(hint, platform, build_dir):
-        if hint is ToolchainType.AUTO:
+        if hint is ToolsetHint.AUTO:
             if on_windows():
                 # On Windows, 'auto' means 'msvc', and we need to specify the
                 # -A parameter.  This might break if none of the Visual Studio
                 # generators are available, but the NMake one is, although I
                 # don't know how this can be possible normally.
-                hint = ToolchainType.MSVC
+                hint = ToolsetHint.MSVC
             else:
                 # On Linux, if the platform wasn't specified, auto-detect
                 # everything.  There's no need to set -mXX flags, etc.
@@ -40,21 +40,21 @@ class Toolchain(abc.ABC):
                     return Auto()
                 # If a specific platform was requested, we might need to set
                 # some CMake/compiler flags, like -m32/-m64.
-                hint = ToolchainType.GCC
-        if hint is ToolchainType.MSVC:
+                hint = ToolsetHint.GCC
+        if hint is ToolsetHint.MSVC:
             return MSVC(platform)
-        if hint is ToolchainType.GCC:
+        if hint is ToolsetHint.GCC:
             return GCC.setup(platform, build_dir)
-        if hint is ToolchainType.MINGW:
+        if hint is ToolsetHint.MINGW:
             return MinGW.setup(platform, build_dir)
-        if hint is ToolchainType.CLANG:
+        if hint is ToolsetHint.CLANG:
             return Clang.setup(platform, build_dir)
-        if hint is ToolchainType.CLANG_CL:
+        if hint is ToolsetHint.CLANG_CL:
             return ClangCL.setup(platform, build_dir)
         raise NotImplementedError(f'unrecognized toolset: {hint}')
 
 
-class Auto(Toolchain):
+class Auto(Toolset):
     def cmake_args(self):
         return []
 
@@ -75,7 +75,7 @@ class MSVC(Auto):
         return []
 
 
-class Makefile(Toolchain):
+class Makefile(Toolset):
     def __init__(self, path):
         self.path = path
 
@@ -117,7 +117,7 @@ class GCC(Makefile):
         return f'''
 set(CMAKE_C_COMPILER   gcc)
 set(CMAKE_CXX_COMPILER g++)
-{platform.makefile_toolchain_file()}'''
+{platform.makefile_toolset_file()}'''
 
     @staticmethod
     def setup(platform, build_dir):
@@ -153,7 +153,7 @@ else()
     set(CMAKE_C_COMPILER   clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-{platform.makefile_toolchain_file()}'''
+{platform.makefile_toolset_file()}'''
 
     def _get_makefile_generator(self):
         if on_windows():
@@ -175,7 +175,7 @@ class ClangCL(Clang):
 set(CMAKE_C_COMPILER   clang-cl)
 set(CMAKE_CXX_COMPILER clang-cl)
 set(CMAKE_SYSTEM_NAME  Windows)
-{platform.makefile_toolchain_file()}'''
+{platform.makefile_toolset_file()}'''
 
     @staticmethod
     def setup(platform, build_dir):

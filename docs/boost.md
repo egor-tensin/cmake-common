@@ -80,7 +80,7 @@ Windows & Clang
 ---------------
 
 Building Boost using Clang on Windows is a sad story.  As of 2020, there're
-three main ways to install the native Clang toolchain on Windows:
+three main ways to install the native Clang toolset on Windows:
 
   * download the installer from llvm.org (`choco install llvm` does this)
     a.k.a. the upstream,
@@ -98,7 +98,7 @@ clang-linux, and it's hardcoded to require the ar & ranlib executables to
 create static libraries.  Which is fine on Linux, since, and I'm quoting the
 source, "ar is always available".  But it's not fine on Windows, since
 ar/ranlib are not, in fact, available there by default.  Sure, you can install
-some kind of MinGW toolchain, and it might even work, but what the hell,
+some kind of MinGW toolset, and it might even work, but what the hell,
 honestly?
 
 Luckily, both the upstream distribution and the MSYS2 mingw-w64-x86_64-llvm

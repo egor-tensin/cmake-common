@@ -59,7 +59,7 @@ def build_ci(dirs, argv=None):
                                  configurations=(dirs.get_configuration(),),
                                  link=args.link,
                                  runtime_link=args.runtime_link,
-                                 toolset=dirs.get_toolset(),
+                                 toolset_hint=dirs.get_toolset(),
                                  b2_args=args.b2_args)
         build(params)
 

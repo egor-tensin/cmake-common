@@ -13,7 +13,7 @@ import shutil
 
 import project.mingw
 import project.os
-from project.toolset import ToolchainType
+from project.toolset import ToolsetHint
 from project.utils import temp_file
 
 
@@ -23,7 +23,7 @@ def _gcc_or_auto():
     return []
 
 
-class Toolchain(abc.ABC):
+class Toolset(abc.ABC):
     @contextmanager
     def b2_args(self):
         # Write the config file, etc.
@@ -41,31 +41,31 @@ class Toolchain(abc.ABC):
 
     @staticmethod
     def detect(hint):
-        if hint is ToolchainType.AUTO:
+        if hint is ToolsetHint.AUTO:
             return Auto
-        if hint is ToolchainType.MSVC:
+        if hint is ToolsetHint.MSVC:
             return MSVC
-        if hint is ToolchainType.GCC:
+        if hint is ToolsetHint.GCC:
             return GCC
-        if hint is ToolchainType.MINGW:
+        if hint is ToolsetHint.MINGW:
             return MinGW
-        if hint is ToolchainType.CLANG:
+        if hint is ToolsetHint.CLANG:
             return Clang
-        if hint is ToolchainType.CLANG_CL:
+        if hint is ToolsetHint.CLANG_CL:
             return ClangCL
         raise NotImplementedError(f'unrecognized toolset: {hint}')
 
     @staticmethod
     def make(hint, platform):
-        # Platform is required here, since some toolchains (MinGW-w64) require
+        # Platform is required here, since some toolsets (MinGW-w64) require
         # it for the compiler path.
-        cls = Toolchain.detect(hint)
+        cls = Toolset.detect(hint)
         if cls is MinGW:
             return MinGW(platform)
         return cls()
 
 
-class Auto(Toolchain):
+class Auto(Toolset):
     # Let Boost.Build do the detection.  Most commonly it means GCC on
     # Linux-likes and MSVC on Windows.
 
@@ -113,7 +113,7 @@ def _full_exe_name(exe):
     return os.path.basename(path)
 
 
-class Custom(Toolchain):
+class Custom(Toolset):
     COMPILER_VERSION = 'custom'
 
     def __init__(self, compiler, path=None, build_options=None):
@@ -253,7 +253,7 @@ class Clang(Custom):
 '''
 
 
-class ClangCL(Toolchain):
+class ClangCL(Toolset):
     @contextmanager
     def b2_args(self):
         yield [
