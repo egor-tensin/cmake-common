@@ -7,8 +7,8 @@ import logging
 import os.path
 
 from project.boost.toolset import Toolset
-from project.utils import cd, run
 from project.os import on_windows
+from project.utils import cd, run
 
 
 class BoostDir:

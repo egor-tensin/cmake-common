@@ -31,12 +31,12 @@ import sys
 import tempfile
 
 from project.boost.directory import BoostDir
-from project.toolset import ToolsetHint
 from project.boost.toolset import Toolset
 from project.configuration import Configuration
 from project.linkage import Linkage
-from project.platform import Platform
 from project.os import on_linux_like
+from project.platform import Platform
+from project.toolset import ToolsetHint
 from project.utils import normalize_path, setup_logging
 
 

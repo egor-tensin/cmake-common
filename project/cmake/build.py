@@ -23,7 +23,6 @@ import argparse
 from contextlib import contextmanager
 import logging
 import os
-import os.path
 import sys
 import tempfile
 

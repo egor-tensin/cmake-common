@@ -5,8 +5,8 @@
 
 import argparse
 from enum import Enum
-import platform
 import os.path
+import platform
 
 from project.os import on_windows
 
