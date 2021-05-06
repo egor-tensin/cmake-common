@@ -16,69 +16,61 @@ from project.toolset import ToolsetHint
 
 
 class Toolset(abc.ABC):
-    @abc.abstractmethod
-    def cmake_args(self):
-        pass
+    def cmake_args(self, build_dir, platform):
+        return []
 
-    @abc.abstractmethod
     def build_system_args(self):
-        pass
+        return []
 
     @staticmethod
-    def detect(hint, platform, build_dir):
+    def detect(hint):
         if hint is ToolsetHint.AUTO:
-            if on_windows():
-                # On Windows, 'auto' means 'msvc', and we need to specify the
-                # -A parameter.  This might break if none of the Visual Studio
-                # generators are available, but the NMake one is, although I
-                # don't know how this can be possible normally.
-                hint = ToolsetHint.MSVC
-            else:
-                # On Linux, if the platform wasn't specified, auto-detect
-                # everything.  There's no need to set -mXX flags, etc.
-                if platform is Platform.AUTO:
-                    return Auto()
-                # If a specific platform was requested, we might need to set
-                # some CMake/compiler flags, like -m32/-m64.
-                hint = ToolsetHint.GCC
+            return Auto
         if hint is ToolsetHint.MSVC:
-            return MSVC(platform)
+            return MSVC
         if hint is ToolsetHint.GCC:
-            return GCC.setup(platform, build_dir)
+            return GCC
         if hint is ToolsetHint.MINGW:
-            return MinGW.setup(platform, build_dir)
+            return MinGW
         if hint is ToolsetHint.CLANG:
-            return Clang.setup(platform, build_dir)
+            return Clang
         if hint is ToolsetHint.CLANG_CL:
-            return ClangCL.setup(platform, build_dir)
+            return ClangCL
         raise NotImplementedError(f'unrecognized toolset: {hint}')
+
+    @staticmethod
+    def make(hint, platform):
+        cls = Toolset.detect(hint)
+        if cls is MinGW:
+            return MinGW(platform)
+        return cls()
 
 
 class Auto(Toolset):
-    def cmake_args(self):
-        return []
-
-    def build_system_args(self):
-        return []
+    def cmake_args(self, build_dir, platform):
+        if on_windows():
+            # On Windows, 'auto' means 'msvc', and we need to specify the -A
+            # parameter.  This might break if none of the Visual Studio
+            # generators are available, but the NMake one is, although I don't
+            # know how this can be possible normally.
+            return MSVC().cmake_args(build_dir, platform)
+        # On Linux, if the platform wasn't specified, auto-detect everything.
+        # There's no need to set -mXX flags, etc.
+        if platform is Platform.AUTO:
+            return []
+        # If a specific platform was requested, we might need to set some
+        # CMake/compiler flags, like -m32/-m64.
+        return GCC().cmake_args(build_dir, platform)
 
 
 class MSVC(Auto):
-    def __init__(self, platform):
-        self.platform = platform
-
-    def cmake_args(self):
+    def cmake_args(self, build_dir, platform):
         # This doesn't actually specify the generator of course, but I don't
         # want to implement VS detection logic.
-        return ['-A', self.platform.msvc_arch()]
-
-    def build_system_args(self):
-        return []
+        return ['-A', platform.msvc_arch()]
 
 
 class Makefile(Toolset):
-    def __init__(self, path):
-        self.path = path
-
     @staticmethod
     def _get_config_path(build_dir):
         return os.path.join(build_dir, 'custom_toolchain.cmake')
@@ -92,59 +84,53 @@ class Makefile(Toolset):
         # On Linux/Cygwin, make all the way:
         return 'Unix Makefiles'
 
-    @classmethod
-    def write_config(cls, build_dir, contents):
+    @staticmethod
+    def _write_config(build_dir, contents):
         path = Makefile._get_config_path(build_dir)
         with open(path, mode='w') as file:
             file.write(contents)
-        return cls(path)
+        return path
 
-    def cmake_args(self):
+    @abc.abstractmethod
+    def format_cmake_toolset_file(self, platform):
+        pass
+
+    def cmake_args(self, build_dir, platform):
+        contents = self.format_cmake_toolset_file(platform)
+        config_path = self._write_config(build_dir, contents)
         return [
-            '-D', f'CMAKE_TOOLCHAIN_FILE={self.path}',
+            '-D', f'CMAKE_TOOLCHAIN_FILE={config_path}',
             # The Visual Studio generator is the default on Windows, override
             # it:
             '-G', self._get_makefile_generator(),
         ]
 
-    def build_system_args(self):
-        return []
-
 
 class GCC(Makefile):
-    @staticmethod
-    def _format(platform):
+    def format_cmake_toolset_file(self, platform):
         return f'''
 set(CMAKE_C_COMPILER   gcc)
 set(CMAKE_CXX_COMPILER g++)
 {platform.makefile_toolset_file()}'''
 
-    @staticmethod
-    def setup(platform, build_dir):
-        return GCC.write_config(build_dir, GCC._format(platform))
-
 
 class MinGW(Makefile):
-    @staticmethod
-    def _format(platform):
-        paths = project.mingw.MinGW(platform)
+    def __init__(self, platform):
+        self.paths = project.mingw.MinGW(platform)
+
+    def format_cmake_toolset_file(self, platform):
         return f'''
-set(CMAKE_C_COMPILER   {paths.gcc()})
-set(CMAKE_CXX_COMPILER {paths.gxx()})
-set(CMAKE_AR           {paths.ar()})
-set(CMAKE_RANLIB       {paths.ranlib()})
-set(CMAKE_RC_COMPILER  {paths.windres()})
+set(CMAKE_C_COMPILER   {self.paths.gcc()})
+set(CMAKE_CXX_COMPILER {self.paths.gxx()})
+set(CMAKE_AR           {self.paths.ar()})
+set(CMAKE_RANLIB       {self.paths.ranlib()})
+set(CMAKE_RC_COMPILER  {self.paths.windres()})
 set(CMAKE_SYSTEM_NAME  Windows)
 '''
 
-    @staticmethod
-    def setup(platform, build_dir):
-        return MinGW.write_config(build_dir, MinGW._format(platform))
-
 
 class Clang(Makefile):
-    @staticmethod
-    def _format(platform):
+    def format_cmake_toolset_file(self, platform):
         return f'''
 if(CMAKE_VERSION VERSION_LESS "3.15" AND WIN32)
     set(CMAKE_C_COMPILER   clang-cl)
@@ -163,20 +149,11 @@ endif()
                 return 'NMake Makefiles'
         return super()._get_makefile_generator()
 
-    @staticmethod
-    def setup(platform, build_dir):
-        return Clang.write_config(build_dir, Clang._format(platform))
-
 
 class ClangCL(Clang):
-    @staticmethod
-    def _format(platform):
+    def format_cmake_toolset_file(self, platform):
         return f'''
 set(CMAKE_C_COMPILER   clang-cl)
 set(CMAKE_CXX_COMPILER clang-cl)
 set(CMAKE_SYSTEM_NAME  Windows)
 {platform.makefile_toolset_file()}'''
-
-    @staticmethod
-    def setup(platform, build_dir):
-        return ClangCL.write_config(build_dir, ClangCL._format(platform))

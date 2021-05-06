@@ -72,7 +72,7 @@ class GenerationPhase:
 
     def _cmake_args(self, toolset):
         result = []
-        result += toolset.cmake_args()
+        result += toolset.cmake_args(self.build_dir, self.platform)
         result += self.configuration.cmake_args()
         result += self._cmake_boost_args()
         result += self.cmake_args
@@ -179,7 +179,7 @@ class BuildParameters:
 
 def build(params):
     with params.create_build_dir() as build_dir:
-        toolset = Toolset.detect(params.toolset_hint, params.platform, build_dir)
+        toolset = Toolset.make(params.toolset_hint, params.platform)
 
         gen_phase = GenerationPhase(params.src_dir, build_dir,
                                     install_dir=params.install_dir,
