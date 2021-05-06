@@ -26,10 +26,9 @@ import os
 import sys
 import tempfile
 
-from project.cmake.toolset import Toolset
 from project.configuration import Configuration
 from project.platform import Platform
-from project.toolset import ToolsetHint
+from project.toolset import Toolset, ToolsetHint
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
 
 
