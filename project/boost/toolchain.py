@@ -17,129 +17,74 @@ from project.toolchain import ToolchainType
 from project.utils import temp_file
 
 
-class BootstrapToolchain(abc.ABC):
-    @abc.abstractmethod
-    def get_bootstrap_bat_args(self):
-        pass
-
-    @abc.abstractmethod
-    def get_bootstrap_sh_args(self):
-        pass
-
-    @staticmethod
-    def detect(hint):
-        if hint is ToolchainType.AUTO:
-            return BootstrapAuto()
-        if hint is ToolchainType.MSVC:
-            return BootstrapMSVC()
-        if hint is ToolchainType.GCC:
-            return BootstrapGCC()
-        if hint is ToolchainType.MINGW:
-            return BootstrapMinGW()
-        if hint is ToolchainType.CLANG:
-            return BootstrapClang()
-        if hint is ToolchainType.CLANG_CL:
-            return BootstrapClangCL()
-        raise NotImplementedError(f'unrecognized toolset: {hint}')
-
-
-class BootstrapAuto(BootstrapToolchain):
-    # Let Boost.Build do the detection.  Most commonly it means GCC on
-    # Linux-likes and MSVC on Windows.
-
-    def get_bootstrap_bat_args(self):
-        return []
-
-    def get_bootstrap_sh_args(self):
-        return []
-
-
-class BootstrapMSVC(BootstrapAuto):
-    # bootstrap.bat picks up MSVC by default.
-    pass
-
-
-class BootstrapGCC(BootstrapToolchain):
-    def get_bootstrap_bat_args(self):
-        return ['gcc']
-
-    def get_bootstrap_sh_args(self):
-        return ['--with-toolset=gcc']
-
-
 def _gcc_or_auto():
     if shutil.which('gcc') is not None:
         return ['gcc']
     return []
 
 
-class BootstrapMinGW(BootstrapToolchain):
-    def get_bootstrap_bat_args(self):
-        # On Windows, prefer GCC if it's available.
-        return _gcc_or_auto()
-
-    def get_bootstrap_sh_args(self):
-        return []
-
-
-class BootstrapClang(BootstrapToolchain):
-    def get_bootstrap_bat_args(self):
-        # As of 1.74.0, bootstrap.bat isn't really aware of Clang, so try GCC,
-        # then auto-detect.
-        return _gcc_or_auto()
-
-    def get_bootstrap_sh_args(self):
-        # bootstrap.sh, on the other hand, is very much aware of Clang, and
-        # it can build b2 using this compiler.
-        return ['--with-toolset=clang']
-
-
-class BootstrapClangCL(BootstrapClang):
-    # There's no point in building b2 using clang-cl; clang though, presumably
-    # installed alongside clang-cl, should still be used if possible.
-    pass
-
-
 class Toolchain(abc.ABC):
-    def __init__(self, platform):
-        self.platform = platform
-
-    def b2_args(self, configuration):
-        return self.platform.b2_args(configuration)
+    @contextmanager
+    def b2_args(self):
+        # Write the config file, etc.
+        yield []
 
     @staticmethod
-    @contextmanager
-    def detect(hint, platform):
+    @abc.abstractmethod
+    def get_bootstrap_bat_args():
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_bootstrap_sh_args():
+        pass
+
+    @staticmethod
+    def detect(hint):
         if hint is ToolchainType.AUTO:
-            yield Auto(platform)
+            return Auto
         elif hint is ToolchainType.MSVC:
-            yield MSVC(platform)
+            return MSVC
         elif hint is ToolchainType.GCC:
-            with GCC.setup(platform) as toolchain:
-                yield toolchain
+            return GCC
         elif hint is ToolchainType.MINGW:
-            with MinGW.setup(platform) as toolchain:
-                yield toolchain
+            return MinGW
         elif hint is ToolchainType.CLANG:
-            with Clang.setup(platform) as toolchain:
-                yield toolchain
+            return Clang
         elif hint is ToolchainType.CLANG_CL:
-            yield ClangCL(platform)
+            return ClangCL
         else:
             raise NotImplementedError(f'unrecognized toolset: {hint}')
+
+    @staticmethod
+    def make(hint, platform):
+        # Platform is required here, since some toolchains (MinGW-w64) require
+        # it for the compiler path.
+        cls = Toolchain.detect(hint)
+        if cls is MinGW:
+            return MinGW(platform)
+        return cls()
 
 
 class Auto(Toolchain):
     # Let Boost.Build do the detection.  Most commonly it means GCC on
     # Linux-likes and MSVC on Windows.
-    pass
+
+    @staticmethod
+    def get_bootstrap_bat_args():
+        return []
+
+    @staticmethod
+    def get_bootstrap_sh_args():
+        return []
 
 
 class MSVC(Auto):
-    def b2_args(self, configuration):
-        return super().b2_args(configuration) + [
-            'toolset=msvc',
-        ]
+    @contextmanager
+    def b2_args(self):
+        yield ['toolset=msvc']
+
+    # Note: bootstrap.bat picks up MSVC by default.
 
 
 def _full_exe_name(exe):
@@ -169,88 +114,69 @@ def _full_exe_name(exe):
     return os.path.basename(path)
 
 
-class CustomToolchain(Toolchain):
+class Custom(Toolchain):
     COMPILER_VERSION = 'custom'
 
-    def __init__(self, platform, config_path):
-        super().__init__(platform)
-        self.config_path = config_path
-        compiler = self.get_compiler()
+    def __init__(self, compiler, path=None, build_options=None):
         if not compiler:
             raise RuntimeError('compiler type is required (like gcc, clang, etc.)')
         self.compiler = compiler
-        version = CustomToolchain.COMPILER_VERSION
+        version = Custom.COMPILER_VERSION
         self.version = version
-        path = self.get_compiler_path() or ''
+        path = path or ''
         path = path and _full_exe_name(path)
         self.path = path
-
-    @abc.abstractmethod
-    def get_compiler(self):
-        pass
-
-    @staticmethod
-    def get_compiler_version():
-        return CustomToolchain.COMPILER_VERSION
-
-    @abc.abstractmethod
-    def get_compiler_path(self):
-        pass
-
-    @abc.abstractmethod
-    def get_build_options(self):
-        pass
-
-    def format_build_options(self):
-        return ''.join(f'\n    <{name}>{val}' for name, val in self.get_build_options())
+        build_options = build_options or []
+        self.build_options = build_options
 
     def toolset(self):
         if self.version:
             return f'{self.compiler}-{self.version}'
         return self.compiler
 
-    def b2_toolset(self):
+    def b2_arg_toolset(self):
         return f'toolset={self.toolset()}'
+
+    def _format_build_options(self):
+        return ''.join(f'\n    <{name}>{val}' for name, val in self.build_options)
 
     def format_config(self):
         version = self.version and f'{self.version} '
         path = self.path and f'{self.path} '
-        return f'''using {self.compiler} : {version}: {path}:{self.format_build_options()}
+        return f'''using {self.compiler} : {version}: {path}:{self._format_build_options()}
 ;'''
 
-    @classmethod
     @contextmanager
-    def setup(cls, platform):
+    def b2_args(self):
         config_file = temp_file(prefix='user_config_', suffix='.jam')
         with config_file as config_path:
-            toolset = cls(platform, config_path)
-            config = toolset.format_config()
+            config = self.format_config()
             logging.info('Using user config:\n%s', config)
             with open(config_path, mode='w') as fd:
                 fd.write(config)
-            yield toolset
-
-    def b2_args(self, configuration):
-        # All the required options and the toolset definition should be in the
-        # user configuration file.
-        args = super().b2_args(configuration)
-        args.append(self.b2_toolset())
-        args.append(f'--user-config={self.config_path}')
-        return args
+            args = []
+            args.append(self.b2_arg_toolset())
+            args.append(f'--user-config={config_path}')
+            yield args
 
 
-class GCC(CustomToolchain):
+class GCC(Custom):
     # Force GCC.  We don't care whether it's a native Linux GCC or a
     # MinGW-flavoured GCC on Windows.
-    COMPILER = 'gcc'
+    def __init__(self, path='g++', build_options=None):
+        build_options = build_options or self.get_build_options()
+        super().__init__('gcc', path, build_options)
 
-    def get_compiler(self):
-        return GCC.COMPILER
+    @staticmethod
+    def get_bootstrap_bat_args():
+        return ['gcc']
 
-    def get_compiler_path(self):
-        return 'g++'
+    @staticmethod
+    def get_bootstrap_sh_args():
+        return [f'--with-toolset=gcc']
 
-    def get_build_options(self):
+    @staticmethod
+    def get_build_options():
         return []
 
 
@@ -259,23 +185,39 @@ class MinGW(GCC):
     # GCC prefix (like "x86_64-w64-mingw32" and prepend it to other tools like
     # "ar").
 
-    def get_compiler_path(self):
-        paths = project.mingw.MinGW(self.platform)
-        compiler = paths.gxx()
-        return compiler
+    def __init__(self, platform):
+        paths = project.mingw.MinGW(platform)
+        super().__init__(paths.gxx())
+
+    @staticmethod
+    def get_bootstrap_bat_args():
+        # On Windows, prefer GCC if it's available.
+        return _gcc_or_auto()
+
+    @staticmethod
+    def get_bootstrap_sh_args():
+        return []
 
 
-class Clang(GCC):
-    COMPILER = 'clang'
+class Clang(Custom):
+    def __init__(self):
+        super().__init__('clang', 'clang++', self.get_build_options())
 
-    def get_compiler(self):
-        return Clang.COMPILER
+    @staticmethod
+    def get_bootstrap_bat_args():
+        # As of 1.74.0, bootstrap.bat isn't really aware of Clang, so try GCC,
+        # then auto-detect.
+        return _gcc_or_auto()
 
-    def get_compiler_path(self):
-        return 'clang++'
+    @staticmethod
+    def get_bootstrap_sh_args():
+        # bootstrap.sh, on the other hand, is very much aware of Clang, and
+        # it can build b2 using this compiler.
+        return ['--with-toolset=clang']
 
-    def get_build_options(self):
-        options = super().get_build_options()
+    @staticmethod
+    def get_build_options():
+        options = GCC.get_build_options()
         options += [
             ('cxxflags', '-DBOOST_USE_WINDOWS_H'),
 
@@ -313,8 +255,20 @@ class Clang(GCC):
 
 
 class ClangCL(Toolchain):
-    def b2_args(self, configuration):
-        return super().b2_args(configuration) + [
+    @contextmanager
+    def b2_args(self):
+        yield [
             'toolset=clang-win',
             'define=BOOST_USE_WINDOWS_H',
         ]
+
+    # There's no point in building b2 using clang-cl; clang though, presumably
+    # installed alongside clang-cl, should still be used if possible.
+
+    @staticmethod
+    def get_bootstrap_bat_args():
+        return Clang.get_bootstrap_bat_args()
+
+    @staticmethod
+    def get_bootstrap_sh_args():
+        return Clang.get_bootstrap_sh_args()

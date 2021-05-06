@@ -6,7 +6,7 @@
 import logging
 import os.path
 
-from project.boost.toolchain import BootstrapToolchain
+from project.boost.toolchain import Toolchain
 from project.utils import cd, run
 from project.os import on_windows
 
@@ -33,8 +33,7 @@ class BoostDir:
 
     def bootstrap(self, params):
         with self._go():
-            toolchain = BootstrapToolchain.detect(params.toolset)
-            run([self._bootstrap_path()] + self._bootstrap_args(toolchain))
+            run([self._bootstrap_path()] + self._bootstrap_args(params.toolset))
 
     def _b2(self, params):
         for b2_params in params.enum_b2_args():
@@ -52,7 +51,8 @@ class BoostDir:
         return f'bootstrap{ext}'
 
     @staticmethod
-    def _bootstrap_args(toolchain):
+    def _bootstrap_args(hint):
+        toolchain = Toolchain.detect(hint)
         if on_windows():
             return toolchain.get_bootstrap_bat_args()
         return toolchain.get_bootstrap_sh_args()

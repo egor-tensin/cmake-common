@@ -85,10 +85,11 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                with Toolchain.detect(self.toolset, platform) as toolchain:
-                    for configuration in self.configurations:
-                        for link, runtime_link in self._enum_linkage_options():
-                            yield self._b2_args(build_dir, toolchain, configuration, link, runtime_link)
+                toolchain = Toolchain.make(self.toolset, platform)
+                for configuration in self.configurations:
+                    for link, runtime_link in self._enum_linkage_options():
+                        with self._b2_args(build_dir, toolchain, platform, configuration, link, runtime_link) as args:
+                            yield args
 
     def _enum_linkage_options(self):
         for link in self.link:
@@ -117,16 +118,17 @@ class BuildParameters:
                 logging.info('Removing build directory: %s', build_dir)
             return
 
-    def _b2_args(self, build_dir, toolchain, configuration, link, runtime_link):
-        result = []
-        result.append(f'--build-dir={build_dir}')
-        result.append('--layout=system')
-        result += toolchain.b2_args(configuration)
-        result += configuration.b2_args()
-        result += link.b2_args()
-        result += runtime_link.b2_args('runtime-link')
-        result += self.b2_args
-        return result
+    @contextmanager
+    def _b2_args(self, build_dir, toolchain, platform, configuration, link, runtime_link):
+        with toolchain.b2_args() as result:
+            result.append(f'--build-dir={build_dir}')
+            result.append('--layout=system')
+            result += platform.b2_args(configuration)
+            result += configuration.b2_args()
+            result += link.b2_args()
+            result += runtime_link.b2_args('runtime-link')
+            result += self.b2_args
+            yield result
 
 
 def build(params):
