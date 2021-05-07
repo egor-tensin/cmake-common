@@ -16,18 +16,18 @@ jobs:
           - msvc-140
           - msvc-141
           - msvc-142
-          - visual-studio-2015
-          - visual-studio-2017
-          - visual-studio-2019
+          - vs-2015
+          - vs-2017
+          - vs-2019
 
         include:
           # Runner image.
           - {toolset: msvc-140, os: windows-2016}
           - {toolset: msvc-141, os: windows-2016}
           - {toolset: msvc-142, os: windows-2019}
-          - {toolset: visual-studio-2015, os: windows-2016}
-          - {toolset: visual-studio-2017, os: windows-2016}
-          - {toolset: visual-studio-2019, os: windows-2019}
+          - {toolset: vs-2015, os: windows-2016}
+          - {toolset: vs-2017, os: windows-2016}
+          - {toolset: vs-2019, os: windows-2019}
 
           # Boost version.
           - boost-version: 1.72.0

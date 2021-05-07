@@ -139,7 +139,7 @@ class VisualStudioVersion(Enum):
 class ToolsetType(Enum):
     AUTO = 'auto'
     MSVC = 'msvc'
-    VISUAL_STUDIO = 'visual-studio'
+    VISUAL_STUDIO = 'vs'
     GCC = 'gcc'
     MINGW = 'mingw'
     CLANG = 'clang'
@@ -154,7 +154,7 @@ class ToolsetType(Enum):
         if self is ToolsetType.MSVC:
             return 'Use cl.exe.'
         if self is ToolsetType.VISUAL_STUDIO:
-            return "Same as 'msvc'."
+            return "Visual Studio; same as 'msvc'."
         if self is ToolsetType.GCC:
             return 'Use gcc/g++.'
         if self is ToolsetType.MINGW:
