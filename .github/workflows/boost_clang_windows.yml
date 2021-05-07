@@ -50,8 +50,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
 
       - name: Install Clang
         uses: egor-tensin/setup-clang@v1
@@ -59,12 +57,12 @@ jobs:
       - name: Set up software environment
         uses: ./.github/actions/software-environment
         with:
-          toolset: ${{ matrix.toolset }}
+          toolset: '${{ matrix.toolset }}'
 
       - name: Download Boost
         uses: ./.github/actions/download-boost
         with:
-          boost-version: ${{ matrix.boost-version }}
+          boost-version: '${{ matrix.boost-version }}'
 
       - name: Bootstrap Boost
         run: |

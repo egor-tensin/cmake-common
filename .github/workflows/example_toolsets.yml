@@ -19,8 +19,8 @@ jobs:
 
         include:
           # Prettier run names.
-          - {os: windows-2019, name: VS 2019}
-          - {os: windows-2016, name: VS 2017}
+          - {os: windows-2019, name: Windows 2019}
+          - {os: windows-2016, name: Windows 2016}
           - {os: ubuntu-18.04, name: Ubuntu}
           - {cygwin: 1, name: Cygwin}
           # Target platform.
@@ -85,8 +85,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
         if: '!env.CI_HOST_CYGWIN'
 
       - name: Install Cygwin

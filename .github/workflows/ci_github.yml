@@ -12,11 +12,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-18.04, windows-2019]
+        os: [ubuntu-20.04, windows-2019]
         toolset: [gcc, clang, msvc]
         configuration: [Debug, Release]
         exclude:
-          - {os: ubuntu-18.04, toolset: msvc}
+          - {os: ubuntu-20.04, toolset: msvc}
           - {os: windows-2019, toolset: gcc}
           - {os: windows-2019, toolset: clang}
     runs-on: '${{ matrix.os }}'
@@ -34,8 +34,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
       - name: Cache Boost
         uses: actions/cache@v2
         with:
