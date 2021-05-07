@@ -33,7 +33,7 @@ class BoostDir:
 
     def bootstrap(self, params):
         with self._go():
-            run([self._bootstrap_path()] + self._bootstrap_args(params.toolset_hint))
+            run([self._bootstrap_path()] + self._bootstrap_args(params.toolset_version))
 
     def _b2(self, params):
         for b2_params in params.enum_b2_args():
@@ -51,8 +51,8 @@ class BoostDir:
         return f'bootstrap{ext}'
 
     @staticmethod
-    def _bootstrap_args(hint):
-        toolset = Toolset.detect(hint)
+    def _bootstrap_args(toolset_version):
+        toolset = Toolset.detect(toolset_version)
         if on_windows():
             return toolset.bootstrap_bat_args()
         return toolset.bootstrap_sh_args()

@@ -28,13 +28,13 @@ import tempfile
 
 from project.configuration import Configuration
 from project.platform import Platform
-from project.toolset import Toolset, ToolsetHint
+from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
 
 
 DEFAULT_PLATFORM = Platform.AUTO
 DEFAULT_CONFIGURATION = Configuration.DEBUG
-DEFAULT_TOOLSET_HINT = ToolsetHint.AUTO
+DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
 
 
 # This way of basically passing `-j` to make is more universal compared to
@@ -132,7 +132,7 @@ class BuildPhase:
 class BuildParameters:
     def __init__(self, src_dir, build_dir=None, install_dir=None,
                  platform=None, configuration=None, boost_dir=None,
-                 toolset_hint=None, cmake_args=None):
+                 toolset_version=None, cmake_args=None):
 
         src_dir = normalize_path(src_dir)
         if build_dir is not None:
@@ -143,7 +143,7 @@ class BuildParameters:
         configuration = configuration or DEFAULT_CONFIGURATION
         if boost_dir is not None:
             boost_dir = normalize_path(boost_dir)
-        toolset_hint = toolset_hint or DEFAULT_TOOLSET_HINT
+        toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
         cmake_args = cmake_args or []
 
         self.src_dir = src_dir
@@ -152,7 +152,7 @@ class BuildParameters:
         self.platform = platform
         self.configuration = configuration
         self.boost_dir = boost_dir
-        self.toolset_hint = toolset_hint
+        self.toolset_version = toolset_version
         self.cmake_args = cmake_args
 
     @staticmethod
@@ -178,7 +178,7 @@ class BuildParameters:
 
 def build(params):
     with params.create_build_dir() as build_dir:
-        toolset = Toolset.make(params.toolset_hint, params.platform)
+        toolset = Toolset.make(params.toolset_version, params.platform)
 
         gen_phase = GenerationPhase(params.src_dir, build_dir,
                                     install_dir=params.install_dir,
@@ -221,10 +221,9 @@ def _parse_args(argv=None):
                         type=normalize_path,
                         help='set Boost directory path')
 
-    toolset_options = '/'.join(map(str, ToolsetHint.all()))
-    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_hint',
-                        type=ToolsetHint.parse, default=ToolsetHint.AUTO,
-                        help=f'toolset to use ({toolset_options})')
+    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
+                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
+                        help=f'toolset to use ({ToolsetVersion.usage()})')
 
     parser.add_argument('src_dir', metavar='DIR',
                         type=normalize_path,

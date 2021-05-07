@@ -1,0 +1,127 @@
+name: Visual Studio versions
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
+    - cron: '30 5 * * 6'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        toolset:
+          - msvc-140
+          - msvc-141
+          - msvc-142
+          - visual-studio-2015
+          - visual-studio-2017
+          - visual-studio-2019
+
+        include:
+          # Runner image.
+          - {toolset: msvc-140, os: windows-2016}
+          - {toolset: msvc-141, os: windows-2016}
+          - {toolset: msvc-142, os: windows-2019}
+          - {toolset: visual-studio-2015, os: windows-2016}
+          - {toolset: visual-studio-2017, os: windows-2016}
+          - {toolset: visual-studio-2019, os: windows-2019}
+
+          # Boost version.
+          - boost-version: 1.72.0
+          # Some Boost libraries commonly used by me.
+          - libraries: filesystem program_options regex system test
+
+          # Build settings.
+          - platform: x64
+          - configuration: Release
+
+    runs-on: '${{ matrix.os }}'
+
+    name: '${{ matrix.toolset }}'
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache Boost
+        uses: actions/cache@v2
+        with:
+          path: '${{ runner.workspace }}/boost/boost_*.tar.gz'
+          key: 'boost_${{ matrix.boost-version }}'
+
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v2
+        if: runner.os == 'Windows'
+
+      - name: Set common variables
+        uses: ./.github/actions/common-variables
+        with:
+          toolset: '${{ matrix.toolset }}'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Set up software environment
+        uses: ./.github/actions/software-environment
+        with:
+          toolset: '${{ matrix.toolset }}'
+          platform: '${{ matrix.platform }}'
+
+      - name: Download Boost
+        uses: ./.github/actions/download-boost
+        with:
+          boost-version: '${{ matrix.boost-version }}'
+
+      - name: Build Boost
+        uses: ./.github/actions/build-boost
+        with:
+          toolset: '${{ matrix.toolset }}'
+          libraries: '${{ matrix.libraries }}'
+          platform: '${{ matrix.platform }}'
+          configuration: '${{ matrix.configuration }}'
+        continue-on-error: true
+
+      - name: Check that Boost was bootstrapped
+        uses: ./.github/actions/check-boost-bootstrapped
+
+      - name: Check that Boost libraries were built
+        uses: ./.github/actions/check-boost-libraries
+        with:
+          libraries: '${{ matrix.libraries }}'
+          platform: '${{ matrix.platform }}'
+          configuration: '${{ matrix.configuration }}'
+
+      - name: Build examples/boost
+        id: build_example
+        uses: ./.github/actions/build-example
+        with:
+          src-dir: examples/boost
+          boost-dir: '${{ env.BOOST_DIR }}'
+          toolset: '${{ matrix.toolset }}'
+          platform: '${{ matrix.platform }}'
+          configuration: '${{ matrix.configuration }}'
+
+      - name: Verify runtime library linkage
+        uses: ./.github/actions/check-runtime-library
+        with:
+          path: '${{ steps.build_example.outputs.install-dir }}'
+
+      - name: Verify architecture
+        uses: ./.github/actions/check-arch
+        with:
+          path: '${{ steps.build_example.outputs.install-dir }}'
+          expected: '${{ matrix.platform }}'
+
+      - name: Run examples/boost
+        uses: ./.github/actions/run-example-boost
+        with:
+          path: '${{ steps.build_example.outputs.install-dir }}'

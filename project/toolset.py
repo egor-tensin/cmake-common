@@ -28,6 +28,7 @@ limited to:
 import abc
 import argparse
 from contextlib import contextmanager
+from decimal import Decimal
 from enum import Enum
 import logging
 import os.path
@@ -39,9 +40,119 @@ from project.platform import Platform
 from project.utils import temp_file
 
 
-class ToolsetHint(Enum):
+class MSVCVersion(Enum):
+    # It's the "toolset" version, or whatever that is.
+    # Source: https://cmake.org/cmake/help/v3.20/variable/MSVC_TOOLSET_VERSION.html#variable:MSVC_TOOLSET_VERSION
+
+    VS2005 = '80'
+    VS2008 = '90'
+    VS2010 = '100'
+    VS2012 = '110'
+    VS2013 = '120'
+    VS2015 = '140'
+    VS2017 = '141'
+    VS2019 = '142'
+
+    def __str__(self):
+        return str(self.value)
+
+    @staticmethod
+    def parse(s):
+        try:
+            return MSVCVersion(s)
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid MSVC version: {s}') from e
+
+    @staticmethod
+    def all():
+        return tuple(MSVCVersion)
+
+    def to_msvc_version(self):
+        return self
+
+    def to_visual_studio_version(self):
+        if MSVCVersion.VS2005:
+            return VisualStudioVersion.VS2005
+        if MSVCVersion.VS2008:
+            return VisualStudioVersion.VS2008
+        if MSVCVersion.VS2010:
+            return VisualStudioVersion.VS2010
+        if MSVCVersion.VS2012:
+            return VisualStudioVersion.VS2012
+        if MSVCVersion.VS2013:
+            return VisualStudioVersion.VS2013
+        if MSVCVersion.VS2015:
+            return VisualStudioVersion.VS2015
+        if MSVCVersion.VS2017:
+            return VisualStudioVersion.VS2017
+        if MSVCVersion.VS2019:
+            return VisualStudioVersion.VS2019
+        raise NotImplementedError(f'unsupported MSVC version: {self}')
+
+    def to_boost_msvc_version(self):
+        try:
+            numeric = int(self.value)
+        except ValueError:
+            raise RuntimeError(f'what? MSVC versions are supposed to be integers: {self.value}')
+        numeric = Decimal(numeric) / 10
+        numeric = numeric.quantize(Decimal('1.0'))
+        return str(numeric)
+
+    def to_cmake_toolset(self):
+        return f'v{self}'
+
+
+class VisualStudioVersion(Enum):
+    VS2005 = '2005'
+    VS2008 = '2008'
+    VS2010 = '2010'
+    VS2012 = '2012'
+    VS2013 = '2013'
+    VS2015 = '2015'
+    VS2017 = '2017'
+    VS2019 = '2019'
+
+    def __str__(self):
+        return str(self.value)
+
+    @staticmethod
+    def parse(s):
+        try:
+            return VisualStudioVersion(s)
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid Visual Studio version: {s}') from e
+
+    @staticmethod
+    def all():
+        return tuple(VisualStudioVersion)
+
+    def to_msvc_version(self):
+        if self is VisualStudioVersion.VS2005:
+            return MSVCVersion.VS2005
+        if self is VisualStudioVersion.VS2008:
+            return MSVCVersion.VS2008
+        if self is VisualStudioVersion.VS2010:
+            return MSVCVersion.VS2010
+        if self is VisualStudioVersion.VS2012:
+            return MSVCVersion.VS2012
+        if self is VisualStudioVersion.VS2013:
+            return MSVCVersion.VS2013
+        if self is VisualStudioVersion.VS2015:
+            return MSVCVersion.VS2015
+        if self is VisualStudioVersion.VS2017:
+            return MSVCVersion.VS2017
+        if self is VisualStudioVersion.VS2019:
+            return MSVCVersion.VS2019
+        raise NotImplementedError(f'unsupported Visual Studio version: {self}')
+
+    def to_visual_studio_version(self):
+        return self
+
+
+class ToolsetType(Enum):
     AUTO = 'auto'   # This most commonly means GCC on Linux and MSVC on Windows.
     MSVC = 'msvc'   # Force MSVC.
+    VISUAL_STUDIO = 'visual-studio' # Same as 'msvc'.
     GCC = 'gcc'     # Force GCC.
     MINGW = 'mingw' # As in MinGW-w64; GCC with the PLATFORM-w64-mingw32 prefix.
     CLANG = 'clang'
@@ -51,20 +162,83 @@ class ToolsetHint(Enum):
         return str(self.value)
 
     @staticmethod
+    def parse(s):
+        try:
+            return ToolsetType(s)
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f'invalid toolset: {s}') from e
+
+    @property
+    def supports_version(self):
+        if self is ToolsetType.MSVC or self is ToolsetType.VISUAL_STUDIO:
+            return True
+        return False
+
+    def parse_version(self, s):
+        if self is ToolsetType.MSVC:
+            return MSVCVersion.parse(s)
+        if self is ToolsetType.VISUAL_STUDIO:
+            return VisualStudioVersion.parse(s)
+        raise RuntimeError(f"this toolset doesn't support versions: {self}")
+
+    @staticmethod
     def all():
-        return tuple(ToolsetHint)
+        return tuple(ToolsetType)
+
+    @staticmethod
+    def versioned():
+        return (t for t in ToolsetType.all() if t.supports_version)
+
+    @staticmethod
+    def non_versioned():
+        return (t for t in ToolsetType.all() if not t.supports_version)
+
+
+class ToolsetVersion:
+    _VERSION_SEP = '-'
+
+    def __init__(self, hint, version):
+        self.hint = hint
+        self.version = version
+
+    def __str__(self):
+        if self.version is None:
+            return str(self.hint)
+        return f'{self.hint}{ToolsetVersion._VERSION_SEP}{self.version}'
+
+    @staticmethod
+    def default():
+        return ToolsetVersion(ToolsetType.AUTO, None)
+
+    @staticmethod
+    def all_usage_placeholders():
+        for hint in ToolsetType.all():
+            if hint.supports_version:
+                yield f'{hint}[{ToolsetVersion._VERSION_SEP}VERSION]'
+            else:
+                yield str(hint)
+
+    @staticmethod
+    def usage():
+        return '/'.join(ToolsetVersion.all_usage_placeholders())
 
     @staticmethod
     def parse(s):
         try:
-            return ToolsetHint(s)
-        except ValueError as e:
-            raise argparse.ArgumentTypeError(f'invalid toolset: {s}') from e
+            return ToolsetVersion(ToolsetType(s), None)
+        except ValueError:
+            pass
+        for hint in ToolsetType.versioned():
+            prefix = f'{hint}{ToolsetVersion._VERSION_SEP}'
+            if s.startswith(prefix):
+                return ToolsetVersion(hint, hint.parse_version(s[len(prefix):]))
+        raise argparse.ArgumentTypeError(f'invalid toolset: {s}')
 
 
 class Toolset(abc.ABC):
+    @staticmethod
     @contextmanager
-    def b2_args(self):
+    def b2_args():
         # Write the config file, etc.
         yield []
 
@@ -77,36 +251,45 @@ class Toolset(abc.ABC):
         return []
 
     @staticmethod
-    def cmake_args(build_dir, platform):
-        return []
+    def cmake_generator():
+        return None
+
+    def cmake_args(self, build_dir, platform):
+        args = []
+        generator = self.cmake_generator()
+        if generator is not None:
+            args += ['-G', generator]
+        return args
 
     @staticmethod
     def build_system_args():
         return []
 
     @staticmethod
-    def detect(hint):
-        if hint is ToolsetHint.AUTO:
+    def detect(version):
+        if version.hint is ToolsetType.AUTO:
             return Auto
-        if hint is ToolsetHint.MSVC:
+        if version.hint is ToolsetType.MSVC or version.hint is ToolsetType.VISUAL_STUDIO:
             return MSVC
-        if hint is ToolsetHint.GCC:
+        if version.hint is ToolsetType.GCC:
             return GCC
-        if hint is ToolsetHint.MINGW:
+        if version.hint is ToolsetType.MINGW:
             return MinGW
-        if hint is ToolsetHint.CLANG:
+        if version.hint is ToolsetType.CLANG:
             return Clang
-        if hint is ToolsetHint.CLANG_CL:
+        if version.hint is ToolsetType.CLANG_CL:
             return ClangCL
-        raise NotImplementedError(f'unrecognized toolset: {hint}')
+        raise NotImplementedError(f'unrecognized toolset: {version}')
 
     @staticmethod
-    def make(hint, platform):
+    def make(version, platform):
         # Platform is required here, since some toolsets (MinGW-w64) require
         # it for the compiler path.
-        cls = Toolset.detect(hint)
+        cls = Toolset.detect(version)
         if cls is MinGW:
             return MinGW(platform)
+        if version.hint.supports_version:
+            return cls(version.version)
         return cls()
 
 
@@ -124,23 +307,35 @@ class Auto(Toolset):
         # On Linux, if the platform wasn't specified, auto-detect everything.
         # There's no need to set -mXX flags, etc.
         if platform is Platform.AUTO:
-            return []
+            return super().cmake_args(build_dir, platform)
         # If a specific platform was requested, we might need to set some
         # CMake/compiler flags, like -m32/-m64.
         return GCC().cmake_args(build_dir, platform)
 
 
 class MSVC(Toolset):
+    def __init__(self, version=None):
+        self.version = version
+
+    def b2_toolset(self):
+        if self.version is not None:
+            return f'msvc-{self.version.to_msvc_version().to_boost_msvc_version()}'
+        return 'msvc'
+
     @contextmanager
     def b2_args(self):
-        yield ['toolset=msvc']
+        yield [f'toolset={self.b2_toolset()}']
 
     # Note: bootstrap.bat picks up MSVC by default.
 
     def cmake_args(self, build_dir, platform):
         # This doesn't actually specify the generator of course, but I don't
         # want to implement VS detection logic.
-        return ['-A', platform.msvc_arch()]
+        args = super().cmake_args(build_dir, platform)
+        args += ['-A', platform.msvc_arch()]
+        if self.version is not None:
+            args += ['-T', self.version.to_msvc_version().to_cmake_toolset()]
+        return args
 
 
 def _full_exe_name(exe):
@@ -224,6 +419,7 @@ class BoostCustom(Toolset):
 class CMakeCustom(Toolset):
     @staticmethod
     def cmake_generator():
+        # The Visual Studio generator is the default on Windows, override it:
         return CMakeCustom.makefiles()
 
     @staticmethod
@@ -258,11 +454,9 @@ class CMakeCustom(Toolset):
     def cmake_args(self, build_dir, platform):
         contents = self.cmake_format_config(platform)
         config_path = self._cmake_write_config(build_dir, contents)
-        return [
+
+        return super().cmake_args(build_dir, platform) + [
             '-D', f'CMAKE_TOOLCHAIN_FILE={config_path}',
-            # The Visual Studio generator is the default on Windows, override
-            # it:
-            '-G', self.cmake_generator(),
         ]
 
 

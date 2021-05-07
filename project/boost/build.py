@@ -35,7 +35,7 @@ from project.configuration import Configuration
 from project.linkage import Linkage
 from project.os import on_linux_like
 from project.platform import Platform
-from project.toolset import Toolset, ToolsetHint
+from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, setup_logging
 
 
@@ -45,6 +45,7 @@ DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
 # binaries from a CI, etc. and run them everywhere):
 DEFAULT_LINK = (Linkage.STATIC,)
 DEFAULT_RUNTIME_LINK = Linkage.STATIC
+DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
 B2_QUIET = ['warnings=off', '-d0']
 B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
 
@@ -52,7 +53,7 @@ B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
 class BuildParameters:
     def __init__(self, boost_dir, build_dir=None, platforms=None,
                  configurations=None, link=None, runtime_link=None,
-                 toolset_hint=None, verbose=False, b2_args=None):
+                 toolset_version=None, verbose=False, b2_args=None):
 
         boost_dir = normalize_path(boost_dir)
         if build_dir is not None:
@@ -61,7 +62,7 @@ class BuildParameters:
         configurations = configurations or DEFAULT_CONFIGURATIONS
         link = link or DEFAULT_LINK
         runtime_link = runtime_link or DEFAULT_RUNTIME_LINK
-        toolset_hint = toolset_hint or ToolsetHint.AUTO
+        toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
         verbosity = B2_VERBOSE if verbose else B2_QUIET
         if b2_args:
             b2_args = verbosity + b2_args
@@ -74,7 +75,7 @@ class BuildParameters:
         self.configurations = configurations
         self.link = link
         self.runtime_link = runtime_link
-        self.toolset_hint = toolset_hint
+        self.toolset_version = toolset_version
         self.b2_args = b2_args
 
     @staticmethod
@@ -84,7 +85,7 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                toolset = Toolset.make(self.toolset_hint, platform)
+                toolset = Toolset.make(self.toolset_version, platform)
                 for configuration in self.configurations:
                     for link, runtime_link in self._enum_linkage_options():
                         with self._b2_args(build_dir, toolset, platform, configuration, link, runtime_link) as args:
@@ -167,10 +168,9 @@ def _parse_args(argv=None):
                         type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
                         help=f'how the libraries link to the runtime ({linkage_options})')
 
-    toolset_options = '/'.join(map(str, ToolsetHint.all()))
-    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_hint',
-                        type=ToolsetHint.parse, default=ToolsetHint.AUTO,
-                        help=f'toolset to use ({toolset_options})')
+    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
+                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
+                        help=f'toolset to use ({ToolsetVersion.usage()})')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=normalize_path,

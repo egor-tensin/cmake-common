@@ -63,7 +63,7 @@ def build_ci(dirs, argv=None):
                                  platform=dirs.get_platform(),
                                  configuration=dirs.get_configuration(),
                                  boost_dir=boost_dir,
-                                 toolset_hint=dirs.get_toolset(),
+                                 toolset_version=dirs.get_toolset(),
                                  cmake_args=dirs.get_cmake_args() + args.cmake_args)
         build(params)
 

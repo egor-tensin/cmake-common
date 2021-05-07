@@ -11,7 +11,7 @@ from project.boost.version import Version
 from project.ci.appveyor.generator import Generator, Image
 from project.configuration import Configuration
 from project.platform import Platform
-from project.toolset import ToolsetHint
+from project.toolset import ToolsetVersion
 from project.utils import env
 
 
@@ -47,7 +47,7 @@ class Dirs(abc.ABC):
     @staticmethod
     def get_toolset():
         if 'TOOLSET' in os.environ:
-            return ToolsetHint.parse(os.environ['TOOLSET'])
+            return ToolsetVersion.parse(os.environ['TOOLSET'])
         return None
 
     @staticmethod
