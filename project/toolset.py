@@ -69,11 +69,11 @@ class Toolset(abc.ABC):
         yield []
 
     @staticmethod
-    def get_bootstrap_bat_args():
+    def bootstrap_bat_args():
         return []
 
     @staticmethod
-    def get_bootstrap_sh_args():
+    def bootstrap_sh_args():
         return []
 
     def cmake_args(self, build_dir, platform):
@@ -128,7 +128,7 @@ class Auto(Toolset):
         return GCC().cmake_args(build_dir, platform)
 
 
-class MSVC(Auto):
+class MSVC(Toolset):
     @contextmanager
     def b2_args(self):
         yield ['toolset=msvc']
@@ -168,16 +168,14 @@ def _full_exe_name(exe):
     return os.path.basename(path)
 
 
-class Custom(Toolset):
-    # Boost.Build toolset defined using a config file.
-
+class BoostCustom(Toolset):
     COMPILER_VERSION = 'custom'
 
     def __init__(self, compiler, path=None, build_options=None):
         if not compiler:
             raise RuntimeError('compiler type is required (like gcc, clang, etc.)')
         self.compiler = compiler
-        version = Custom.COMPILER_VERSION
+        version = BoostCustom.COMPILER_VERSION
         self.version = version
         path = path or ''
         path = path and _full_exe_name(path)
@@ -185,46 +183,49 @@ class Custom(Toolset):
         build_options = build_options or []
         self.build_options = build_options
 
-    def toolset(self):
+    def b2_toolset(self):
         if self.version:
             return f'{self.compiler}-{self.version}'
         return self.compiler
 
-    def b2_arg_toolset(self):
-        return f'toolset={self.toolset()}'
+    def b2_toolset_arg(self):
+        return f'toolset={self.b2_toolset()}'
 
-    def _format_build_options(self):
+    @contextmanager
+    def _b2_write_config(self):
+        config_file = temp_file(prefix='user_config_', suffix='.jam')
+        with config_file as config_path:
+            config = self.b2_format_config()
+            logging.info('Using user config:\n%s', config)
+            with open(config_path, mode='w') as fd:
+                fd.write(config)
+            yield config_path
+
+    def _b2_format_build_options(self):
         return ''.join(f'\n    <{name}>{val}' for name, val in self.build_options)
 
-    def format_config(self):
+    def b2_format_config(self):
         version = self.version and f'{self.version} '
         path = self.path and f'{self.path} '
-        return f'''using {self.compiler} : {version}: {path}:{self._format_build_options()}
+        return f'''using {self.compiler} : {version}: {path}:{self._b2_format_build_options()}
 ;'''
 
     @contextmanager
     def b2_args(self):
-        config_file = temp_file(prefix='user_config_', suffix='.jam')
-        with config_file as config_path:
-            config = self.format_config()
-            logging.info('Using user config:\n%s', config)
-            with open(config_path, mode='w') as fd:
-                fd.write(config)
+        with self._b2_write_config() as config_path:
             args = []
-            args.append(self.b2_arg_toolset())
+            args.append(self.b2_toolset_arg())
             args.append(f'--user-config={config_path}')
             yield args
 
 
-class Makefile(Toolset):
-    # One of CMake's "... Makefiles" generator toolsets.
+class CMakeCustom(Toolset):
+    @staticmethod
+    def cmake_generator():
+        return CMakeCustom.makefiles()
 
     @staticmethod
-    def _get_config_path(build_dir):
-        return os.path.join(build_dir, 'custom_toolchain.cmake')
-
-    @staticmethod
-    def _get_makefile_generator():
+    def makefiles():
         if on_windows():
             if shutil.which('mingw32-make'):
                 return 'MinGW Makefiles'
@@ -233,52 +234,61 @@ class Makefile(Toolset):
         return 'Unix Makefiles'
 
     @staticmethod
-    def _write_config(build_dir, contents):
-        path = Makefile._get_config_path(build_dir)
+    def nmake_or_makefiles():
+        if on_windows():
+            # MinGW utilities like make might be unavailable, but NMake can
+            # very much be there.
+            if shutil.which('nmake'):
+                return 'NMake Makefiles'
+        return CMakeCustom.cmake_generator()
+
+    @staticmethod
+    def _cmake_write_config(build_dir, contents):
+        path = os.path.join(build_dir, 'custom_toolchain.cmake')
         with open(path, mode='w') as file:
             file.write(contents)
         return path
 
     @abc.abstractmethod
-    def format_cmake_toolset_file(self, platform):
+    def cmake_format_config(self, platform):
         pass
 
     def cmake_args(self, build_dir, platform):
-        contents = self.format_cmake_toolset_file(platform)
-        config_path = self._write_config(build_dir, contents)
+        contents = self.cmake_format_config(platform)
+        config_path = self._cmake_write_config(build_dir, contents)
         return [
             '-D', f'CMAKE_TOOLCHAIN_FILE={config_path}',
             # The Visual Studio generator is the default on Windows, override
             # it:
-            '-G', self._get_makefile_generator(),
+            '-G', self.cmake_generator(),
         ]
 
 
-class GCC(Custom, Makefile):
+class GCC(BoostCustom, CMakeCustom):
     # Force GCC.  We don't care whether it's a native Linux GCC or a
     # MinGW-flavoured GCC on Windows.
 
     def __init__(self):
-        Custom.__init__(self, 'gcc', 'g++', self.get_build_options())
-        Makefile.__init__(self)
+        BoostCustom.__init__(self, 'gcc', 'g++', self.b2_build_options())
+        CMakeCustom.__init__(self)
 
     @staticmethod
-    def get_bootstrap_bat_args():
+    def bootstrap_bat_args():
         return ['gcc']
 
     @staticmethod
-    def get_bootstrap_sh_args():
+    def bootstrap_sh_args():
         return ['--with-toolset=gcc']
 
     @staticmethod
-    def get_build_options():
+    def b2_build_options():
         return []
 
-    def format_cmake_toolset_file(self, platform):
+    def cmake_format_config(self, platform):
         return f'''
 set(CMAKE_C_COMPILER   gcc)
 set(CMAKE_CXX_COMPILER g++)
-{platform.makefile_toolset_file()}'''
+{platform.cmake_toolset_file()}'''
 
 
 def _gcc_or_auto():
@@ -287,30 +297,30 @@ def _gcc_or_auto():
     return []
 
 
-class MinGW(Custom, Makefile):
+class MinGW(BoostCustom, CMakeCustom):
     # It's important that Boost.Build is actually smart enough to detect the
     # GCC prefix (like "x86_64-w64-mingw32" and prepend it to other tools like
     # "ar").
 
     def __init__(self, platform):
         self.paths = project.mingw.MinGW(platform)
-        Custom.__init__(self, 'gcc', self.paths.gxx(), self.get_build_options())
-        Makefile.__init__(self)
+        BoostCustom.__init__(self, 'gcc', self.paths.gxx(), self.b2_build_options())
+        CMakeCustom.__init__(self)
 
     @staticmethod
-    def get_bootstrap_bat_args():
+    def bootstrap_bat_args():
         # On Windows, prefer GCC if it's available.
         return _gcc_or_auto()
 
     @staticmethod
-    def get_bootstrap_sh_args():
+    def bootstrap_sh_args():
         return []
 
     @staticmethod
-    def get_build_options():
-        return GCC.get_build_options()
+    def b2_build_options():
+        return GCC.b2_build_options()
 
-    def format_cmake_toolset_file(self, platform):
+    def cmake_format_config(self, platform):
         return f'''
 set(CMAKE_C_COMPILER   {self.paths.gcc()})
 set(CMAKE_CXX_COMPILER {self.paths.gxx()})
@@ -321,26 +331,26 @@ set(CMAKE_SYSTEM_NAME  Windows)
 '''
 
 
-class Clang(Custom, Makefile):
+class Clang(BoostCustom, CMakeCustom):
     def __init__(self):
-        Custom.__init__(self, 'clang', 'clang++', self.get_build_options())
-        Makefile.__init__(self)
+        BoostCustom.__init__(self, 'clang', 'clang++', self.b2_build_options())
+        CMakeCustom.__init__(self)
 
     @staticmethod
-    def get_bootstrap_bat_args():
+    def bootstrap_bat_args():
         # As of 1.74.0, bootstrap.bat isn't really aware of Clang, so try GCC,
         # then auto-detect.
         return _gcc_or_auto()
 
     @staticmethod
-    def get_bootstrap_sh_args():
+    def bootstrap_sh_args():
         # bootstrap.sh, on the other hand, is very much aware of Clang, and
         # it can build b2 using this compiler.
         return ['--with-toolset=clang']
 
     @staticmethod
-    def get_build_options():
-        options = GCC.get_build_options()
+    def b2_build_options():
+        options = GCC.b2_build_options()
         options += [
             ('cxxflags', '-DBOOST_USE_WINDOWS_H'),
 
@@ -358,7 +368,7 @@ class Clang(Custom, Makefile):
                 options.append(('ranlib', 'llvm-ranlib'))
         return options
 
-    def format_config(self):
+    def b2_format_config(self):
         # To make clang.exe/clang++.exe work on Windows, some tweaks are
         # required.  I borrowed them from CMake's Windows-Clang.cmake [1].
         # Adding them globally to Boost.Build options is described in [2].
@@ -373,10 +383,10 @@ class Clang(Custom, Makefile):
     <target-os>windows,<runtime-link>shared,<variant>debug:<cxxflags>"-D_DLL -Xclang --dependent-lib=msvcrtd"
     <target-os>windows,<runtime-link>shared,<variant>release:<cxxflags>"-D_DLL -Xclang --dependent-lib=msvcrt"
 ;
-{Custom.format_config(self)}
+{BoostCustom.b2_format_config(self)}
 '''
 
-    def format_cmake_toolset_file(self, platform):
+    def cmake_format_config(self, platform):
         return f'''
 if(CMAKE_VERSION VERSION_LESS "3.15" AND WIN32)
     set(CMAKE_C_COMPILER   clang-cl)
@@ -385,19 +395,14 @@ else()
     set(CMAKE_C_COMPILER   clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-{platform.makefile_toolset_file()}'''
+{platform.cmake_toolset_file()}'''
 
     @staticmethod
-    def _get_makefile_generator():
-        if on_windows():
-            # MinGW utilities like make might be unavailable, but NMake can
-            # very much be there.
-            if shutil.which('nmake'):
-                return 'NMake Makefiles'
-        return Makefile._get_makefile_generator()
+    def cmake_generator():
+        return CMakeCustom.nmake_or_makefiles()
 
 
-class ClangCL(Makefile):
+class ClangCL(CMakeCustom):
     @contextmanager
     def b2_args(self):
         yield [
@@ -409,20 +414,20 @@ class ClangCL(Makefile):
     # installed alongside clang-cl, should still be used if possible.
 
     @staticmethod
-    def get_bootstrap_bat_args():
-        return Clang.get_bootstrap_bat_args()
+    def bootstrap_bat_args():
+        return Clang.bootstrap_bat_args()
 
     @staticmethod
-    def get_bootstrap_sh_args():
-        return Clang.get_bootstrap_sh_args()
+    def bootstrap_sh_args():
+        return Clang.bootstrap_sh_args()
 
-    def format_cmake_toolset_file(self, platform):
+    def cmake_format_config(self, platform):
         return f'''
 set(CMAKE_C_COMPILER   clang-cl)
 set(CMAKE_CXX_COMPILER clang-cl)
 set(CMAKE_SYSTEM_NAME  Windows)
-{platform.makefile_toolset_file()}'''
+{platform.cmake_toolset_file()}'''
 
     @staticmethod
-    def _get_makefile_generator():
-        return Clang._get_makefile_generator()
+    def cmake_generator():
+        return Clang.cmake_generator()

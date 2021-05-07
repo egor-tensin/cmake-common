@@ -54,8 +54,8 @@ class BoostDir:
     def _bootstrap_args(hint):
         toolset = Toolset.detect(hint)
         if on_windows():
-            return toolset.get_bootstrap_bat_args()
-        return toolset.get_bootstrap_sh_args()
+            return toolset.bootstrap_bat_args()
+        return toolset.bootstrap_sh_args()
 
     @staticmethod
     def _b2_path():
