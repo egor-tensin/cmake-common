@@ -76,10 +76,12 @@ class Toolset(abc.ABC):
     def bootstrap_sh_args():
         return []
 
-    def cmake_args(self, build_dir, platform):
+    @staticmethod
+    def cmake_args(build_dir, platform):
         return []
 
-    def build_system_args(self):
+    @staticmethod
+    def build_system_args():
         return []
 
     @staticmethod
