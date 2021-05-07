@@ -6,21 +6,20 @@
 '''Supported platform/build system/compiler combinations include, but are not
 limited to:
 
-| Platform | Build system | Compiler
-| -------- | ------------ | --------
-| Linux    | make         | Clang
-|          |              | GCC
-|          |              | MinGW-w64
-| Windows  | make [1]     | Clang (clang/clang++)
-|          |              | Clang (clang-cl [2])
-|          |              | MinGW-w64
-|          | msbuild      | MSVC
-| Cygwin   | make         | Clang
-|          |              | GCC
-|          |              | MinGW-w64
+| Platform | Build system | Compiler  |
+| -------- | ------------ | --------- |
+| Linux    | make         | Clang     |
+|          |              | GCC       |
+|          |              | MinGW-w64 |
+| Windows  | make [1]     | Clang [2] |
+|          |              | MinGW-w64 |
+|          | msbuild      | MSVC      |
+| Cygwin   | make         | Clang     |
+|          |              | GCC       |
+|          |              | MinGW-w64 |
 
 1. Both GNU make and MinGW mingw32-make.
-2. Boost 1.69.0 or higher only.
+2. clang-cl is supported by Boost 1.69.0 or higher only.
 '''
 
 # See docs/{boost,cmake}.md for a more thorough description of my pain.
@@ -41,11 +40,9 @@ from project.utils import full_exe_name, temp_file
 
 
 class MSVCVersion(Enum):
-    # It's the "toolset" version, or whatever that is.
+    # It's the MSVC "toolset" version, or whatever.
     # Source: https://cmake.org/cmake/help/v3.20/variable/MSVC_TOOLSET_VERSION.html#variable:MSVC_TOOLSET_VERSION
 
-    VS2005 = '80'
-    VS2008 = '90'
     VS2010 = '100'
     VS2012 = '110'
     VS2013 = '120'
@@ -71,10 +68,6 @@ class MSVCVersion(Enum):
         return self
 
     def to_visual_studio_version(self):
-        if MSVCVersion.VS2005:
-            return VisualStudioVersion.VS2005
-        if MSVCVersion.VS2008:
-            return VisualStudioVersion.VS2008
         if MSVCVersion.VS2010:
             return VisualStudioVersion.VS2010
         if MSVCVersion.VS2012:
@@ -103,8 +96,6 @@ class MSVCVersion(Enum):
 
 
 class VisualStudioVersion(Enum):
-    VS2005 = '2005'
-    VS2008 = '2008'
     VS2010 = '2010'
     VS2012 = '2012'
     VS2013 = '2013'
@@ -127,10 +118,6 @@ class VisualStudioVersion(Enum):
         return tuple(VisualStudioVersion)
 
     def to_msvc_version(self):
-        if self is VisualStudioVersion.VS2005:
-            return MSVCVersion.VS2005
-        if self is VisualStudioVersion.VS2008:
-            return MSVCVersion.VS2008
         if self is VisualStudioVersion.VS2010:
             return MSVCVersion.VS2010
         if self is VisualStudioVersion.VS2012:
@@ -150,16 +137,33 @@ class VisualStudioVersion(Enum):
 
 
 class ToolsetType(Enum):
-    AUTO = 'auto'   # This most commonly means GCC on Linux and MSVC on Windows.
-    MSVC = 'msvc'   # Force MSVC.
-    VISUAL_STUDIO = 'visual-studio' # Same as 'msvc'.
-    GCC = 'gcc'     # Force GCC.
-    MINGW = 'mingw' # As in MinGW-w64; GCC with the PLATFORM-w64-mingw32 prefix.
+    AUTO = 'auto'
+    MSVC = 'msvc'
+    VISUAL_STUDIO = 'visual-studio'
+    GCC = 'gcc'
+    MINGW = 'mingw'
     CLANG = 'clang'
     CLANG_CL = 'clang-cl'
 
     def __str__(self):
         return str(self.value)
+
+    def help(self):
+        if self is ToolsetType.AUTO:
+            return "Most commonly means 'gcc' on Linux and 'msvc' on Windows."
+        if self is ToolsetType.MSVC:
+            return 'Use cl.exe.'
+        if self is ToolsetType.VISUAL_STUDIO:
+            return "Same as 'msvc'."
+        if self is ToolsetType.GCC:
+            return 'Use gcc/g++.'
+        if self is ToolsetType.MINGW:
+            return 'Use gcc/g++ with the PLATFORM-w64-mingw32 prefix.'
+        if self is ToolsetType.CLANG:
+            return 'Use clang/clang++.'
+        if self is ToolsetType.CLANG_CL:
+            return 'Use clang-cl.exe.'
+        raise NotImplementedError(f'unsupported toolset: {self}')
 
     @staticmethod
     def parse(s):
@@ -169,7 +173,7 @@ class ToolsetType(Enum):
             raise argparse.ArgumentTypeError(f'invalid toolset: {s}') from e
 
     @property
-    def supports_version(self):
+    def is_versioned(self):
         if self is ToolsetType.MSVC or self is ToolsetType.VISUAL_STUDIO:
             return True
         return False
@@ -181,17 +185,24 @@ class ToolsetType(Enum):
             return VisualStudioVersion.parse(s)
         raise RuntimeError(f"this toolset doesn't support versions: {self}")
 
+    def all_versions(self):
+        if self is ToolsetType.MSVC:
+            return MSVCVersion.all()
+        if self is ToolsetType.VISUAL_STUDIO:
+            return VisualStudioVersion.all()
+        raise RuntimeError(f"this toolset doesn't support versions: {self}")
+
     @staticmethod
     def all():
         return tuple(ToolsetType)
 
     @staticmethod
-    def versioned():
-        return (t for t in ToolsetType.all() if t.supports_version)
+    def all_versioned():
+        return (t for t in ToolsetType.all() if t.is_versioned)
 
     @staticmethod
-    def non_versioned():
-        return (t for t in ToolsetType.all() if not t.supports_version)
+    def all_unversioned():
+        return (t for t in ToolsetType.all() if not t.is_versioned)
 
 
 class ToolsetVersion:
@@ -211,16 +222,36 @@ class ToolsetVersion:
         return ToolsetVersion(ToolsetType.AUTO, None)
 
     @staticmethod
-    def all_usage_placeholders():
-        for hint in ToolsetType.all():
-            if hint.supports_version:
-                yield f'{hint}[{ToolsetVersion._VERSION_SEP}VERSION]'
-            else:
-                yield str(hint)
+    def usage():
+        return '/'.join(map(str, ToolsetType.all()))
 
     @staticmethod
-    def usage():
-        return '/'.join(ToolsetVersion.all_usage_placeholders())
+    def help_toolsets():
+        return f'''{__doc__}
+{ToolsetVersion.help_all_toolsets()}
+{ToolsetVersion.help_versioned_toolsets()}'''
+
+    @staticmethod
+    def help_all_toolsets():
+        s = '''All supported toolsets are listed below.
+
+'''
+        max_name = max((len(str(hint)) for hint in ToolsetType.all()))
+        for hint in ToolsetType.all():
+            name_padding = ' ' * (max_name - len(str(hint)))
+            s += f'| {hint}{name_padding} | {hint.help()}\n'
+        return s
+
+    @staticmethod
+    def help_versioned_toolsets():
+        s = '''Some toolsets support specifying a version using the [-VERSION] suffix.  This
+is a list of all supported toolset versions:
+
+'''
+        for hint in ToolsetType.all_versioned():
+            for version in hint.all_versions():
+                s += f'  * {hint}{ToolsetVersion._VERSION_SEP}{version}\n'
+        return s
 
     @staticmethod
     def parse(s):
@@ -228,7 +259,7 @@ class ToolsetVersion:
             return ToolsetVersion(ToolsetType(s), None)
         except ValueError:
             pass
-        for hint in ToolsetType.versioned():
+        for hint in ToolsetType.all_versioned():
             prefix = f'{hint}{ToolsetVersion._VERSION_SEP}'
             if s.startswith(prefix):
                 return ToolsetVersion(hint, hint.parse_version(s[len(prefix):]))
@@ -288,7 +319,7 @@ class Toolset(abc.ABC):
         cls = Toolset.detect(version)
         if cls is MinGW:
             return MinGW(platform)
-        if version.hint.supports_version:
+        if version.hint.is_versioned:
             return cls(version.version)
         return cls()
 

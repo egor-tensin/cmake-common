@@ -35,24 +35,26 @@ Toolsets
 Supported platform/build system/compiler combinations include, but are not
 limited to:
 
-| Platform | Build system | Compiler
-| -------- | ------------ | --------
-| Linux    | make         | Clang
-|          |              | GCC
-|          |              | MinGW-w64
-| Windows  | make \[1\]   | Clang (clang/clang++)
-|          |              | Clang (clang-cl \[2\])
-|          |              | MinGW-w64
-|          | msbuild      | MSVC
-| Cygwin   | make         | Clang
-|          |              | GCC
-|          |              | MinGW-w64
+| Platform | Build system   | Compiler    |
+| -------- | -------------- | ----------- |
+| Linux    | make           | Clang       |
+|          |                | GCC         |
+|          |                | MinGW-w64   |
+| Windows  | make \[1\]     | Clang \[2\] |
+|          |                | MinGW-w64   |
+|          | msbuild        | MSVC        |
+| Cygwin   | make           | Clang       |
+|          |                | GCC         |
+|          |                | MinGW-w64   |
 
-1. Both GNU `make` and MinGW `mingw32-make`.
-2. Boost 1.69.0 or higher only.
+1. Both GNU make and MinGW mingw32-make.
+2. clang-cl is supported by Boost 1.69.0 or higher only.
 
 All of those are verified continuously by the [Boost (toolsets)] and [Examples
 (toolsets)] workflows.
+
+For a complete list of possible `--toolset` parameter values, pass the
+`--help-toolsets` flag to either `boost-build` or `cmake-build`.
 
 [Boost (toolsets)]: https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml
 [Examples (toolsets)]: https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml

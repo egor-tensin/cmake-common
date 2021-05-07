@@ -157,7 +157,9 @@ class BuildParameters:
 
     @staticmethod
     def from_args(args):
-        return BuildParameters(**vars(args))
+        args = vars(args)
+        args.pop('help_toolsets', None)
+        return BuildParameters(**args)
 
     @contextmanager
     def create_build_dir(self):
@@ -196,6 +198,10 @@ def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
+    if '--help-toolsets' in argv:
+        sys.stdout.write(ToolsetVersion.help_toolsets())
+        sys.exit(0)
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -224,6 +230,8 @@ def _parse_args(argv=None):
     parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
                         type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
                         help=f'toolset to use ({ToolsetVersion.usage()})')
+    parser.add_argument('--help-toolsets', action='store_true',
+                        help='show detailed info about supported toolsets')
 
     parser.add_argument('src_dir', metavar='DIR',
                         type=normalize_path,
