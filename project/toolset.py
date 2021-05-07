@@ -35,9 +35,9 @@ import os.path
 import shutil
 
 import project.mingw
-from project.os import on_cygwin, on_linux, on_windows
+from project.os import on_windows
 from project.platform import Platform
-from project.utils import temp_file
+from project.utils import full_exe_name, temp_file
 
 
 class MSVCVersion(Enum):
@@ -338,33 +338,6 @@ class MSVC(Toolset):
         return args
 
 
-def _full_exe_name(exe):
-    if on_linux():
-        # There's no PATHEXT on Linux.
-        return exe
-    # b2 on Windows/Cygwin doesn't like it when the executable name doesn't
-    # include the extension.
-    dir_path = os.path.dirname(exe) or None
-    path = shutil.which(exe, path=dir_path)
-    if not path:
-        raise RuntimeError(f"executable '{exe}' could not be found")
-    if on_cygwin():
-        # On Cygwin, shutil.which('gcc') == '/usr/bin/gcc' and shutil.which('gcc.exe')
-        # == '/usr/bin/gcc.exe'; we want the latter version.  shutil.which('clang++')
-        # == '/usr/bin/clang++' is fine though, since it _is_ the complete path
-        # (clang++ is a symlink).
-        if os.path.exists(path) and os.path.exists(path + '.exe'):
-            path += '.exe'
-    if dir_path:
-        # If it was found in a specific directory, include the directory in the
-        # result.  shutil.which returns the executable name prefixed with the
-        # path argument.
-        return path
-    # If it was found in PATH, just return the basename (which includes the
-    # extension).
-    return os.path.basename(path)
-
-
 class BoostCustom(Toolset):
     COMPILER_VERSION = 'custom'
 
@@ -375,7 +348,7 @@ class BoostCustom(Toolset):
         version = BoostCustom.COMPILER_VERSION
         self.version = version
         path = path or ''
-        path = path and _full_exe_name(path)
+        path = path and full_exe_name(path)
         self.path = path
         build_options = build_options or []
         self.build_options = build_options
