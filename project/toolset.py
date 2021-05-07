@@ -150,7 +150,7 @@ class ToolsetType(Enum):
 
     def help(self):
         if self is ToolsetType.AUTO:
-            return "Most commonly means 'gcc' on Linux and 'msvc' on Windows."
+            return "Means 'gcc' on Linux and 'msvc' on Windows."
         if self is ToolsetType.MSVC:
             return 'Use cl.exe.'
         if self is ToolsetType.VISUAL_STUDIO:
@@ -237,9 +237,12 @@ class ToolsetVersion:
 
 '''
         max_name = max((len(str(hint)) for hint in ToolsetType.all()))
+        max_help = max((len(hint.help()) for hint in ToolsetType.all()))
         for hint in ToolsetType.all():
+            help = hint.help()
             name_padding = ' ' * (max_name - len(str(hint)))
-            s += f'| {hint}{name_padding} | {hint.help()}\n'
+            help_padding = ' ' * (max_help - len(str(help)))
+            s += f'| {hint}{name_padding} | {hint.help()}{help_padding} |\n'
         return s
 
     @staticmethod
