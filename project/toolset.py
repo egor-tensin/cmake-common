@@ -53,6 +53,21 @@ class MSVCVersion(Enum):
     def __str__(self):
         return str(self.value)
 
+    def help(self):
+        if self is MSVCVersion.VS2010:
+            return 'Visual Studio 2010'
+        if self is MSVCVersion.VS2012:
+            return 'Visual Studio 2012'
+        if self is MSVCVersion.VS2013:
+            return 'Visual Studio 2013'
+        if self is MSVCVersion.VS2015:
+            return 'Visual Studio 2015'
+        if self is MSVCVersion.VS2017:
+            return 'Visual Studio 2017'
+        if self is MSVCVersion.VS2019:
+            return 'Visual Studio 2019'
+        raise NotImplementedError(f'unsupported MSVC version: {self}')
+
     @staticmethod
     def parse(s):
         try:
@@ -106,6 +121,21 @@ class VisualStudioVersion(Enum):
     def __str__(self):
         return str(self.value)
 
+    def help(self):
+        if self is VisualStudioVersion.VS2010:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2010}'"
+        if self is VisualStudioVersion.VS2012:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2012}'"
+        if self is VisualStudioVersion.VS2013:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2013}'"
+        if self is VisualStudioVersion.VS2015:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2015}'"
+        if self is VisualStudioVersion.VS2017:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2017}'"
+        if self is VisualStudioVersion.VS2019:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2019}'"
+        raise NotImplementedError(f'unsupported Visual Studio version: {self}')
+
     @staticmethod
     def parse(s):
         try:
@@ -150,19 +180,19 @@ class ToolsetType(Enum):
 
     def help(self):
         if self is ToolsetType.AUTO:
-            return "Means 'gcc' on Linux and 'msvc' on Windows."
+            return "Means 'gcc' on Linux and 'msvc' on Windows"
         if self is ToolsetType.MSVC:
-            return 'Use cl.exe.'
+            return 'Use cl.exe'
         if self is ToolsetType.VISUAL_STUDIO:
-            return "Visual Studio; same as 'msvc'."
+            return "Visual Studio; same as 'msvc'"
         if self is ToolsetType.GCC:
-            return 'Use gcc/g++.'
+            return 'Use gcc/g++'
         if self is ToolsetType.MINGW:
-            return 'Use gcc/g++ with the PLATFORM-w64-mingw32 prefix.'
+            return 'Use gcc/g++ with the PLATFORM-w64-mingw32 prefix'
         if self is ToolsetType.CLANG:
-            return 'Use clang/clang++.'
+            return 'Use clang/clang++'
         if self is ToolsetType.CLANG_CL:
-            return 'Use clang-cl.exe.'
+            return 'Use clang-cl.exe'
         raise NotImplementedError(f'unsupported toolset: {self}')
 
     @staticmethod
@@ -235,12 +265,9 @@ class ToolsetVersion:
 
 '''
         max_name = max((len(str(hint)) for hint in ToolsetType.all()))
-        max_help = max((len(hint.help()) for hint in ToolsetType.all()))
         for hint in ToolsetType.all():
-            help = hint.help()
             name_padding = ' ' * (max_name - len(str(hint)))
-            help_padding = ' ' * (max_help - len(str(help)))
-            s += f'| {hint}{name_padding} | {hint.help()}{help_padding} |\n'
+            s += f'  * {hint}{name_padding} \t{hint.help()}\n'
         return s
 
     @staticmethod
@@ -249,9 +276,12 @@ class ToolsetVersion:
 a list of all supported toolset versions:
 
 '''
+        max_name = max((len(str(hint) + str(version)) for hint in ToolsetType.all_versioned() for version in hint.all_versions()))
         for hint in ToolsetType.all_versioned():
             for version in hint.all_versions():
-                s += f'  * {hint}{version}\n'
+                name = f'{hint}{version}'
+                name_padding = ' ' * (max_name - len(name))
+                s += f'  * {name}{name_padding} \t{version.help()}\n'
         return s
 
     @staticmethod
