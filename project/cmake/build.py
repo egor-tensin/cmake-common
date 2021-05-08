@@ -74,6 +74,7 @@ class GenerationPhase:
         result += toolset.cmake_args(self.build_dir, self.platform)
         result += self.configuration.cmake_args()
         result += self._cmake_boost_args()
+        result += self._cmake_extra_args()
         result += self.cmake_args
         # Important! -H must come as the last parameter, older CMake versions
         # don't like it when it's not.
@@ -90,6 +91,10 @@ class GenerationPhase:
             '-D', f'BOOST_ROOT={root}',
             '-D', f'BOOST_LIBRARYDIR={librarydir}',
         ]
+
+    @staticmethod
+    def _cmake_extra_args():
+        return ['-D', 'CMAKE_EXPORT_COMPILE_COMMANDS=ON']
 
     def _cmake_dir_args(self):
         args = []
