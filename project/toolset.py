@@ -491,7 +491,7 @@ class CMakeCustom(Toolset):
         config_path = self._cmake_write_config(build_dir, contents)
 
         return super().cmake_args(build_dir, platform) + [
-            '-D', f'CMAKE_TOOLCHAIN_FILE={config_path}',
+            f'-DCMAKE_TOOLCHAIN_FILE={config_path}',
         ]
 
 

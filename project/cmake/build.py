@@ -88,18 +88,18 @@ class GenerationPhase:
         librarydir = self.platform.boost_librarydir(self.configuration)
         librarydir = os.path.join(self.boost_dir, librarydir)
         return [
-            '-D', f'BOOST_ROOT={root}',
-            '-D', f'BOOST_LIBRARYDIR={librarydir}',
+            f'-DBOOST_ROOT={root}',
+            f'-DBOOST_LIBRARYDIR={librarydir}',
         ]
 
     @staticmethod
     def _cmake_extra_args():
-        return ['-D', 'CMAKE_EXPORT_COMPILE_COMMANDS=ON']
+        return ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
 
     def _cmake_dir_args(self):
         args = []
         if self.install_dir is not None:
-            args += ['-D', f'CMAKE_INSTALL_PREFIX={self.install_dir}']
+            args += [f'-DCMAKE_INSTALL_PREFIX={self.install_dir}']
         # Important! -H must come as the last parameter, older CMake versions
         # don't like it when it's not.
         args += [

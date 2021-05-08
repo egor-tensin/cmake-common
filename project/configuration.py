@@ -54,7 +54,7 @@ class Configuration(Enum):
         return str(self)
 
     def cmake_build_type(self):
-        return ['-D', f'CMAKE_BUILD_TYPE={self.build_type()}']
+        return [f'-DCMAKE_BUILD_TYPE={self.build_type()}']
 
     def cmake_args(self):
         args = []
