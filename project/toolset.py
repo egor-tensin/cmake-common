@@ -206,8 +206,6 @@ class ToolsetType(Enum):
 
 
 class ToolsetVersion:
-    _VERSION_SEP = '-'
-
     def __init__(self, hint, version):
         self.hint = hint
         self.version = version
@@ -215,7 +213,7 @@ class ToolsetVersion:
     def __str__(self):
         if self.version is None:
             return str(self.hint)
-        return f'{self.hint}{ToolsetVersion._VERSION_SEP}{self.version}'
+        return f'{self.hint}{self.version}'
 
     @staticmethod
     def default():
@@ -247,13 +245,13 @@ class ToolsetVersion:
 
     @staticmethod
     def help_versioned_toolsets():
-        s = '''Some toolsets support specifying a version using the [-VERSION] suffix.  This
-is a list of all supported toolset versions:
+        s = '''Some toolsets support specifying a version using the VERSION suffix.  This is
+a list of all supported toolset versions:
 
 '''
         for hint in ToolsetType.all_versioned():
             for version in hint.all_versions():
-                s += f'  * {hint}{ToolsetVersion._VERSION_SEP}{version}\n'
+                s += f'  * {hint}{version}\n'
         return s
 
     @staticmethod
@@ -262,8 +260,8 @@ is a list of all supported toolset versions:
             return ToolsetVersion(ToolsetType(s), None)
         except ValueError:
             pass
-        for hint in ToolsetType.all_versioned():
-            prefix = f'{hint}{ToolsetVersion._VERSION_SEP}'
+        for hint in sorted(ToolsetType.all_versioned(), key=str, reverse=True):
+            prefix = f'{hint}'
             if s.startswith(prefix):
                 return ToolsetVersion(hint, hint.parse_version(s[len(prefix):]))
         raise argparse.ArgumentTypeError(f'invalid toolset: {s}')

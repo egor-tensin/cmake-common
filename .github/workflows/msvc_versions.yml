@@ -13,21 +13,21 @@ jobs:
     strategy:
       matrix:
         toolset:
-          - msvc-140
-          - msvc-141
-          - msvc-142
-          - vs-2015
-          - vs-2017
-          - vs-2019
+          - msvc140
+          - msvc141
+          - msvc142
+          - vs2015
+          - vs2017
+          - vs2019
 
         include:
           # Runner image.
-          - {toolset: msvc-140, os: windows-2016}
-          - {toolset: msvc-141, os: windows-2016}
-          - {toolset: msvc-142, os: windows-2019}
-          - {toolset: vs-2015, os: windows-2016}
-          - {toolset: vs-2017, os: windows-2016}
-          - {toolset: vs-2019, os: windows-2019}
+          - {toolset: msvc140, os: windows-2016}
+          - {toolset: msvc141, os: windows-2016}
+          - {toolset: msvc142, os: windows-2019}
+          - {toolset: vs2015, os: windows-2016}
+          - {toolset: vs2017, os: windows-2016}
+          - {toolset: vs2019, os: windows-2019}
 
           # Boost version.
           - boost-version: 1.72.0
