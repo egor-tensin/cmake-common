@@ -44,6 +44,10 @@ def cd(path):
         os.chdir(cwd)
 
 
+def normalize_path(entry):
+    return os.path.abspath(entry)
+
+
 def run(cmd_line):
     logging.debug('Running executable: %s', cmd_line)
     try:
@@ -108,36 +112,54 @@ def git_root_dir():
     return root_dir[:-1]
 
 
-def list_all_files():
+def list_git_files():
     cmd_line = ['git', 'ls-tree', '-r', '-z', '--name-only', 'HEAD']
     repo_files = run(cmd_line).stdout
     repo_files = repo_files.split('\0')
     return repo_files
 
 
-CPP_FILE_EXTENSIONS = {'.c', '.h', '.cc', '.hh', '.cpp', '.hpp', '.cxx', '.hxx', '.cp', '.c++'}
+def list_all_files():
+    return (normalize_path(path) for path in list_git_files())
+
+
+def excluded(path, exclude):
+    for entry in exclude:
+        if entry == os.path.commonpath((path, entry)):
+            return True
+    return False
+
+
+def filter_files(paths, exclude):
+    if not exclude:
+        return paths
+    return (path for path in paths if not excluded(path, exclude))
+
+
+CPP_FILE_EXTENSIONS = set(('.c', '.h', '.cc', '.hh', '.cpp', '.hpp', '.cxx', '.hxx', '.cp', '.c++'))
 
 
 def list_cpp_files():
     for path in list_all_files():
-        ext = os.path.splitext(path)[1]
+        ext = os.path.splitext(path)[1].lower()
         if ext in CPP_FILE_EXTENSIONS:
             yield path
 
 
-def process_cpp_files(args):
-    clang_format = ClangFormat(args.clang_format, args.style)
+DEFAULT_VERSION = 'clang-format'
+DEFAULT_STYLE = 'file'
+
+
+def process_cpp_files(version=DEFAULT_VERSION, style=DEFAULT_STYLE,
+                      in_place=False, exclude=None):
+    clang_format = ClangFormat(version, style)
     with cd(git_root_dir()):
-        cpp_files = list_cpp_files()
-        if args.in_place:
+        cpp_files = filter_files(list_cpp_files(), exclude)
+        if in_place:
             clang_format.format_in_place(cpp_files)
         else:
             if not clang_format.show_diff(cpp_files):
                 sys.exit(1)
-
-
-DEFAULT_CLANG_FORMAT = 'clang-format'
-DEFAULT_STYLE = 'file'
 
 
 def parse_args(argv=None):
@@ -148,12 +170,15 @@ def parse_args(argv=None):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument('-b', '--clang-format', default=DEFAULT_CLANG_FORMAT,
+    parser.add_argument('-b', '--clang-format', dest='version',
+                        default=DEFAULT_VERSION,
                         help='clang-format executable file path')
     parser.add_argument('-s', '--style', default=DEFAULT_STYLE,
                         help='clang-format -style parameter argument')
     parser.add_argument('-i', '--in-place', action='store_true',
                         help='edit the files in-place')
+    parser.add_argument('-e', '--exclude', nargs='*', type=normalize_path,
+                        help='files or directories to exclude')
 
     return parser.parse_args(argv)
 
@@ -161,7 +186,7 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     with setup_logging():
-        process_cpp_files(args)
+        process_cpp_files(**vars(args))
 
 
 if __name__ == '__main__':
