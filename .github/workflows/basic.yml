@@ -18,14 +18,14 @@ jobs:
       - name: Run clang-format
         run: ./tools/project-clang-format.py --clang-format clang-format-10
 
-  basic:
+  os:
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-2016, windows-2019]
         include:
           - boost-version: 1.72.0
     runs-on: '${{ matrix.os }}'
-    name: 'Build: ${{ matrix.os }}'
+    name: 'Image: ${{ matrix.os }}'
     defaults:
       run:
         shell: pwsh
@@ -50,9 +50,44 @@ jobs:
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
 
+  python-versions:
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        include:
+          - os: ubuntu-20.04
+          - boost-version: 1.72.0
+    runs-on: '${{ matrix.os }}'
+    name: 'Python ${{ matrix.python-version }}'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '${{ matrix.python-version }}'
+      - name: Cache Boost
+        uses: actions/cache@v2
+        with:
+          path: boost_*.tar.gz
+          key: 'boost_${{ matrix.boost-version }}'
+      - name: Build Boost
+        run: |
+          python -m project.boost.download --cache . '${{ matrix.boost-version }}' boost
+          python -m project.boost.build -- boost --with-filesystem
+      - name: Build example project
+        run: |
+          $src_dir = Join-Path examples boost
+          python -m project.cmake.build --boost boost --install install -- $src_dir
+      - name: Run example project
+        run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
+
   publish:
     # TODO: figure out how to add a dependency on the *toolsets workflows.
-    needs: [lint, basic]
+    needs: [lint, os, python-versions]
     runs-on: ubuntu-20.04
     name: Publish
     steps:
