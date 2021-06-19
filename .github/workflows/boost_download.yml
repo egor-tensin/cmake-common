@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         boost-version: [1.58.0, 1.72.0]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: 'Download: ${{ matrix.boost-version }}'
     defaults:
       run:

@@ -12,13 +12,13 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019]
+        os: [ubuntu-latest, windows-latest]
         toolset: [gcc, clang, msvc]
         configuration: [Debug, Release]
         exclude:
-          - {os: ubuntu-20.04, toolset: msvc}
-          - {os: windows-2019, toolset: gcc}
-          - {os: windows-2019, toolset: clang}
+          - {os: ubuntu-latest, toolset: msvc}
+          - {os: windows-latest, toolset: gcc}
+          - {os: windows-latest, toolset: clang}
     runs-on: '${{ matrix.os }}'
     name: '${{ matrix.os }} / ${{ matrix.toolset }} / ${{ matrix.configuration }}'
     defaults:

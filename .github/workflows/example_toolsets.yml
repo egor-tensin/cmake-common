@@ -15,13 +15,13 @@ jobs:
         example: [simple, static, dynamic]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
         cygwin: [0, 1]
-        os: [ubuntu-18.04, windows-2016, windows-2019]
+        os: [ubuntu-latest, windows-2016, windows-2019]
 
         include:
           # Prettier run names.
           - {os: windows-2019, name: Windows 2019}
           - {os: windows-2016, name: Windows 2016}
-          - {os: ubuntu-18.04, name: Ubuntu}
+          - {os: ubuntu-latest, name: Ubuntu}
           - {cygwin: 1, name: Cygwin}
           # Target platform.
           - {example: simple, platform: x64}
@@ -52,9 +52,9 @@ jobs:
                 symbols: [baz]
         exclude:
           # Ubuntu: no MSVC/clang-cl/Cygwin.
-          - {os: ubuntu-18.04, toolset: msvc}
-          - {os: ubuntu-18.04, toolset: clang-cl}
-          - {os: ubuntu-18.04, cygwin: 1}
+          - {os: ubuntu-latest, toolset: msvc}
+          - {os: ubuntu-latest, toolset: clang-cl}
+          - {os: ubuntu-latest, cygwin: 1}
           # Cygwin: no MSVC/clang-cl.
           - {cygwin: 1, toolset: msvc}
           - {cygwin: 1, toolset: clang-cl}

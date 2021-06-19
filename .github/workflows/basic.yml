@@ -10,18 +10,18 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Linting
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Run clang-format
-        run: ./tools/project-clang-format.py --clang-format clang-format-10
+        run: ./tools/project-clang-format.py
 
   os:
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2016, windows-2019]
+        os: [ubuntu-18.04, ubuntu-20.04, windows-2016, windows-2019]
         include:
           - boost-version: 1.72.0
     runs-on: '${{ matrix.os }}'
@@ -55,7 +55,7 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9, 3.x]
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
           - boost-version: 1.72.0
     runs-on: '${{ matrix.os }}'
     name: 'Python ${{ matrix.python-version }}'
@@ -88,7 +88,7 @@ jobs:
   publish:
     # TODO: figure out how to add a dependency on the *toolsets workflows.
     needs: [lint, os, python-versions]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Publish
     steps:
       - name: Checkout
