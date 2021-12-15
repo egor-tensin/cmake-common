@@ -15,10 +15,11 @@ jobs:
         boost-version: [1.58.0, 1.65.0, 1.72.0]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
         cygwin: [0, 1]
-        os: [ubuntu-latest, windows-2016, windows-2019]
+        os: [ubuntu-latest, windows-2016, windows-2019, windows-2022]
 
         include:
           # Prettier run names.
+          - {os: windows-2022, name: Windows 2022}
           - {os: windows-2019, name: Windows 2019}
           - {os: windows-2016, name: Windows 2016}
           - {os: ubuntu-latest, name: Ubuntu}
@@ -44,6 +45,10 @@ jobs:
           # On Linux/Cygwin, everything should be fine though.
           - toolset: clang
             boost-version: 1.58.0
+            os: windows-2022
+            libraries: filesystem program_options regex system
+          - toolset: clang
+            boost-version: 1.58.0
             os: windows-2019
             libraries: filesystem program_options regex system
           - toolset: clang
@@ -58,7 +63,8 @@ jobs:
           # Cygwin: no MSVC/clang-cl.
           - {cygwin: 1, toolset: msvc}
           - {cygwin: 1, toolset: clang-cl}
-          # Cygwin is the same on Windows Server 2016 & 2019.
+          # Cygwin is the same on different Windows versions.
+          - {os: windows-2019, cygwin: 1}
           - {os: windows-2016, cygwin: 1}
           # clang-cl is only supported by Boost.Build since 1.69 (see the
           # boost_clang_windows.yml workflow).

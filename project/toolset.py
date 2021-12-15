@@ -49,6 +49,7 @@ class MSVCVersion(Enum):
     VS2015 = '140'
     VS2017 = '141'
     VS2019 = '142'
+    VS2022 = '143'
 
     def __str__(self):
         return str(self.value)
@@ -66,6 +67,8 @@ class MSVCVersion(Enum):
             return 'Visual Studio 2017'
         if self is MSVCVersion.VS2019:
             return 'Visual Studio 2019'
+        if self is MSVCVersion.VS2022:
+            return 'Visual Studio 2022'
         raise NotImplementedError(f'unsupported MSVC version: {self}')
 
     @staticmethod
@@ -95,6 +98,8 @@ class MSVCVersion(Enum):
             return VisualStudioVersion.VS2017
         if MSVCVersion.VS2019:
             return VisualStudioVersion.VS2019
+        if MSVCVersion.VS2022:
+            return VisualStudioVersion.VS2022
         raise NotImplementedError(f'unsupported MSVC version: {self}')
 
     def to_boost_msvc_version(self):
@@ -117,6 +122,7 @@ class VisualStudioVersion(Enum):
     VS2015 = '2015'
     VS2017 = '2017'
     VS2019 = '2019'
+    VS2022 = '2022'
 
     def __str__(self):
         return str(self.value)
@@ -134,6 +140,8 @@ class VisualStudioVersion(Enum):
             return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2017}'"
         if self is VisualStudioVersion.VS2019:
             return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2019}'"
+        if self is VisualStudioVersion.VS2022:
+            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2022}'"
         raise NotImplementedError(f'unsupported Visual Studio version: {self}')
 
     @staticmethod
@@ -160,6 +168,8 @@ class VisualStudioVersion(Enum):
             return MSVCVersion.VS2017
         if self is VisualStudioVersion.VS2019:
             return MSVCVersion.VS2019
+        if self is VisualStudioVersion.VS2022:
+            return MSVCVersion.VS2022
         raise NotImplementedError(f'unsupported Visual Studio version: {self}')
 
     def to_visual_studio_version(self):

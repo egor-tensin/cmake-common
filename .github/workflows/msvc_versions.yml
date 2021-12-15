@@ -16,21 +16,25 @@ jobs:
           - msvc140
           - msvc141
           - msvc142
+          - msvc143
           - vs2015
           - vs2017
           - vs2019
+          - vs2022
 
         include:
           # Runner image.
           - {toolset: msvc140, os: windows-2016}
           - {toolset: msvc141, os: windows-2016}
           - {toolset: msvc142, os: windows-2019}
+          - {toolset: msvc143, os: windows-2022}
           - {toolset: vs2015, os: windows-2016}
           - {toolset: vs2017, os: windows-2016}
           - {toolset: vs2019, os: windows-2019}
+          - {toolset: vs2022, os: windows-2022}
 
           # Boost version.
-          - boost-version: 1.72.0
+          - boost-version: 1.78.0
           # Some Boost libraries commonly used by me.
           - libraries: filesystem program_options regex system test
 
