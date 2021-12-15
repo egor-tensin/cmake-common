@@ -8,7 +8,9 @@ runs:
         echo 'bootstrap.log'
         echo '----------------------------------------------------------------'
         $path = Join-Path $env:BOOST_DIR 'bootstrap.log'
-        cat $path
+        if (Test-Path $path -Type Leaf) {
+            cat $path
+        }
       shell: pwsh
     - run: |
         echo ''
