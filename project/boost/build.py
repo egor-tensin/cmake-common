@@ -101,7 +101,7 @@ class BuildParameters:
                     logging.warning("Cannot link the runtime statically to a dynamic library, going to link dynamically")
                     runtime_link = Linkage.SHARED
                 elif on_linux_like():
-                    logging.warning("Cannot link to the GNU C Library (which is assumed) statically, going to link dynamically")
+                    logging.warning("Cannot link to the GNU C Library or BSD libc (which are assumed) statically, going to link dynamically")
                     runtime_link = Linkage.SHARED
             yield link, runtime_link
 

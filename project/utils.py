@@ -13,7 +13,7 @@ import sys
 import tempfile
 import time
 
-from project.os import on_cygwin, on_linux
+import project.os
 
 
 def normalize_path(s):
@@ -25,7 +25,7 @@ def mkdir_parent(path):
 
 
 def full_exe_name(exe):
-    if on_linux():
+    if not project.os.on_windows_like():
         # There's no PATHEXT on Linux.
         return exe
     # b2 on Windows/Cygwin doesn't like it when the executable name doesn't
@@ -34,7 +34,7 @@ def full_exe_name(exe):
     path = shutil.which(exe, path=dir_path)
     if not path:
         raise RuntimeError(f"executable '{exe}' could not be found")
-    if on_cygwin():
+    if project.os.on_cygwin():
         # On Cygwin, shutil.which('gcc') == '/usr/bin/gcc' and shutil.which('gcc.exe')
         # == '/usr/bin/gcc.exe'; we want the latter version.  shutil.which('clang++')
         # == '/usr/bin/clang++' is fine though, since it _is_ the complete path
