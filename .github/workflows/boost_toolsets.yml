@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        boost-version: [1.58.0, 1.65.0, 1.72.0]
+        boost-version: [1.58.0, 1.65.0, 1.72.0, 1.78.0]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
         cygwin: [0, 1]
         os: [ubuntu-latest, windows-2016, windows-2019, windows-2022]
@@ -28,10 +28,12 @@ jobs:
           - {boost-version: 1.58.0, platform: x64}
           - {boost-version: 1.65.0, platform: x86}
           - {boost-version: 1.72.0, platform: x64}
+          - {boost-version: 1.78.0, platform: x86}
           # Configuration.
           - {boost-version: 1.58.0, configuration: Debug}
           - {boost-version: 1.65.0, configuration: MinSizeRel}
           - {boost-version: 1.72.0, configuration: Release}
+          - {boost-version: 1.78.0, configuration: RelWithDebInfo}
 
           # Some Boost libraries commonly used by me.
           - libraries: filesystem program_options regex system test
@@ -99,12 +101,30 @@ jobs:
     #        undefined reference to `__chkstk_ms'
     #
     #    error when building with Clang.
+    #
+    # 3) VS 2022 isn't supported by older Boost versions.  It just doesn't
+    #    work, the errors are numerous.
+    #
+    # 4) clang-cl on windows-2016 fails to build the latest Boost.  The error
+    #    is
+    #
+    #        LINK : fatal error LNK1171: unable to load mspdbcore.dll (error code: 193)
+    #
+    #    No idea what's up with that.
     continue-on-error: ${{
             (matrix.cygwin == '1' && matrix.boost-version == '1.58.0'
                 && (matrix.toolset == 'auto'
                     || matrix.toolset == 'gcc'
                     || matrix.toolset == 'mingw'))
             || (matrix.cygwin == '1' && matrix.platform == 'x86')
+            || (matrix.os == 'windows-2022'
+                && (matrix.toolset == 'auto'
+                    || matrix.toolset == 'clang-cl'
+                    || matrix.toolset == 'msvc')
+                && matrix.boost-version < '1.78.0')
+            || (matrix.os == 'windows-2016'
+                && matrix.toolset == 'clang-cl'
+                && matrix.boost-version == '1.78.0')
         }}
 
     defaults:
