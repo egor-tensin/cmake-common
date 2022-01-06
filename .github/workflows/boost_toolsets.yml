@@ -14,7 +14,6 @@ jobs:
       matrix:
         boost-version: [1.58.0, 1.65.0, 1.72.0, 1.78.0]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
-        cygwin: [0, 1]
         os: [ubuntu-latest, windows-2016, windows-2019, windows-2022]
 
         include:
@@ -23,7 +22,6 @@ jobs:
           - {os: windows-2019, name: Windows 2019}
           - {os: windows-2016, name: Windows 2016}
           - {os: ubuntu-latest, name: Ubuntu}
-          - {cygwin: 1, name: Cygwin}
           # Target platform.
           - {boost-version: 1.58.0, platform: x64}
           - {boost-version: 1.65.0, platform: x86}
@@ -44,7 +42,7 @@ jobs:
           #
           # This was fixed for 1.61 in this commit:
           # https://github.com/boostorg/test/commit/c94ef6982e2ebe77f9376579547c228f0d62e45f.
-          # On Linux/Cygwin, everything should be fine though.
+          # On Linux, everything should be fine though.
           - toolset: clang
             boost-version: 1.58.0
             os: windows-2022
@@ -58,16 +56,9 @@ jobs:
             os: windows-2016
             libraries: filesystem program_options regex system
         exclude:
-          # Ubuntu: no MSVC/clang-cl/Cygwin.
+          # Ubuntu: no MSVC/clang-cl.
           - {os: ubuntu-latest, toolset: msvc}
           - {os: ubuntu-latest, toolset: clang-cl}
-          - {os: ubuntu-latest, cygwin: 1}
-          # Cygwin: no MSVC/clang-cl.
-          - {cygwin: 1, toolset: msvc}
-          - {cygwin: 1, toolset: clang-cl}
-          # Cygwin is the same on different Windows versions.
-          - {os: windows-2019, cygwin: 1}
-          - {os: windows-2016, cygwin: 1}
           # clang-cl is only supported by Boost.Build since 1.69 (see the
           # boost_clang_windows.yml workflow).
           - {toolset: clang-cl, boost-version: 1.58.0}
@@ -77,47 +68,17 @@ jobs:
 
     name: '${{ matrix.boost-version }} / ${{ matrix.toolset }} / ${{ matrix.name }}'
 
-    # 1) I have no idea why, but GCC 10.2 fails to build Boost.Filesystem with
-    #    the following errors:
-    #
-    #        libs\filesystem\src\path.cpp:36:11: fatal error: windows_file_codecvt.hpp: No such file or directory
-    #           36 | # include "windows_file_codecvt.hpp"
-    #              |           ^~~~~~~~~~~~~~~~~~~~~~~~~~
-    #        compilation terminated.
-    #        libs\filesystem\src\windows_file_codecvt.cpp:25:10: fatal error: windows_file_codecvt.hpp: No such file or directory
-    #           25 | #include "windows_file_codecvt.hpp"
-    #              |          ^~~~~~~~~~~~~~~~~~~~~~~~~~
-    #        compilation terminated.
-    #
-    #    This seems to be a compiler bug, since the file is _definitely_ there,
-    #    and Clang 8.0.1 builds it successfully.  This only applies to Boost
-    #    versions up to and including 1.60.0 for some reason.  I can easily
-    #    reproduce this locally.  TODO: remove when GCC on Cygwin is treated
-    #    with a bugfix to this?
-    #
-    # 2) 32-bit Cygwin fucking sucks.  In many ways actually, but the real
-    #    reason was the incomprehensible
-    #
-    #        undefined reference to `__chkstk_ms'
-    #
-    #    error when building with Clang.
-    #
-    # 3) VS 2022 isn't supported by older Boost versions.  It just doesn't
+    # 1) VS 2022 isn't supported by older Boost versions.  It just doesn't
     #    work, the errors are numerous.
     #
-    # 4) clang-cl on windows-2016 fails to build the latest Boost.  The error
+    # 2) clang-cl on windows-2016 fails to build the latest Boost.  The error
     #    is
     #
     #        LINK : fatal error LNK1171: unable to load mspdbcore.dll (error code: 193)
     #
     #    No idea what's up with that.
     continue-on-error: ${{
-            (matrix.cygwin == '1' && matrix.boost-version == '1.58.0'
-                && (matrix.toolset == 'auto'
-                    || matrix.toolset == 'gcc'
-                    || matrix.toolset == 'mingw'))
-            || (matrix.cygwin == '1' && matrix.platform == 'x86')
-            || (matrix.os == 'windows-2022'
+            (matrix.os == 'windows-2022'
                 && (matrix.toolset == 'auto'
                     || matrix.toolset == 'clang-cl'
                     || matrix.toolset == 'msvc')
@@ -149,32 +110,20 @@ jobs:
         uses: ./.github/actions/common-variables
         with:
           toolset: '${{ matrix.toolset }}'
-          cygwin: '${{ matrix.cygwin }}'
 
       - name: Set up Python
         uses: actions/setup-python@v2
-        if: '!env.CI_HOST_CYGWIN'
-
-      - name: Install Cygwin
-        uses: egor-tensin/setup-cygwin@v3
-        with:
-          platform: '${{ matrix.platform }}'
-          packages: cmake make python3
-          hardlinks: 1
-        if: env.CI_HOST_CYGWIN
 
       - name: Install GCC
         uses: egor-tensin/setup-gcc@v1
         with:
-          cygwin: '${{ matrix.cygwin }}'
           platform: '${{ matrix.platform }}'
           hardlinks: 1
-        if: env.CI_HOST_CYGWIN || (env.CI_HOST_LINUX && (matrix.toolset == 'auto' || matrix.toolset == 'gcc'))
+        if: env.CI_HOST_LINUX && (matrix.toolset == 'auto' || matrix.toolset == 'gcc')
 
       - name: Install Clang
         uses: egor-tensin/setup-clang@v1
         with:
-          cygwin: '${{ matrix.cygwin }}'
           platform: '${{ matrix.platform }}'
           hardlinks: 1
         if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
@@ -182,7 +131,6 @@ jobs:
       - name: Install MinGW
         uses: egor-tensin/setup-mingw@v2
         with:
-          cygwin: '${{ matrix.cygwin }}'
           platform: '${{ matrix.platform }}'
           hardlinks: 1
         # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
