@@ -32,7 +32,8 @@ jobs:
           - {boost-version: 1.78.0, configuration: Release}
 
           # Some Boost libraries commonly used by me.
-          - libraries: filesystem program_options regex system test
+          - libraries: filesystem program_options regex system
+
           # On Windows, clang fails to build Boost.Test prior to version 1.61
           # with the following error:
           #
@@ -41,18 +42,7 @@ jobs:
           # This was fixed for 1.61 in this commit:
           # https://github.com/boostorg/test/commit/c94ef6982e2ebe77f9376579547c228f0d62e45f.
           # On Linux, everything should be fine though.
-          - toolset: clang
-            boost-version: 1.58.0
-            os: windows-2022
-            libraries: filesystem program_options regex system
-          - toolset: clang
-            boost-version: 1.58.0
-            os: windows-2019
-            libraries: filesystem program_options regex system
-          - toolset: clang
-            boost-version: 1.58.0
-            os: windows-2016
-            libraries: filesystem program_options regex system
+          #- libraries: filesystem program_options regex system test
         exclude:
           # Ubuntu: no MSVC/clang-cl.
           - {os: ubuntu-latest, toolset: msvc}
