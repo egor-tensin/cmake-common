@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        boost-version: [1.58.0, 1.65.0, 1.72.0, 1.78.0]
+        boost-version: [1.58.0, 1.68.0, 1.78.0]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
         os: [ubuntu-latest, windows-2016, windows-2019, windows-2022]
 
@@ -24,14 +24,12 @@ jobs:
           - {os: ubuntu-latest, name: Ubuntu}
           # Target platform.
           - {boost-version: 1.58.0, platform: x64}
-          - {boost-version: 1.65.0, platform: x86}
-          - {boost-version: 1.72.0, platform: x64}
-          - {boost-version: 1.78.0, platform: x86}
+          - {boost-version: 1.68.0, platform: x86}
+          - {boost-version: 1.78.0, platform: x64}
           # Configuration.
           - {boost-version: 1.58.0, configuration: Debug}
-          - {boost-version: 1.65.0, configuration: MinSizeRel}
-          - {boost-version: 1.72.0, configuration: Release}
-          - {boost-version: 1.78.0, configuration: RelWithDebInfo}
+          - {boost-version: 1.68.0, configuration: MinSizeRel}
+          - {boost-version: 1.78.0, configuration: Release}
 
           # Some Boost libraries commonly used by me.
           - libraries: filesystem program_options regex system test
@@ -62,7 +60,7 @@ jobs:
           # clang-cl is only supported by Boost.Build since 1.69 (see the
           # boost_clang_windows.yml workflow).
           - {toolset: clang-cl, boost-version: 1.58.0}
-          - {toolset: clang-cl, boost-version: 1.65.0}
+          - {toolset: clang-cl, boost-version: 1.68.0}
 
     runs-on: '${{ matrix.os }}'
 
