@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Check that project-clang-format.py works (and the C/C++ files are formatted).
   lint:
     runs-on: ubuntu-latest
     name: Linting
@@ -18,6 +19,7 @@ jobs:
       - name: Run clang-format
         run: ./tools/project-clang-format.py
 
+  # Check that the most basic use-case works on different OSs.
   os:
     strategy:
       matrix:
@@ -50,6 +52,7 @@ jobs:
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
 
+  # Check that the most basic use-case works w/ different Python versions.
   python-versions:
     strategy:
       matrix:
@@ -85,6 +88,7 @@ jobs:
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
 
+  # Build a Python package and upload to PyPI.
   publish:
     # TODO: figure out how to add a dependency on the *toolsets workflows.
     needs: [lint, os, python-versions]
