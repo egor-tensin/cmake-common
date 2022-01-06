@@ -53,6 +53,14 @@ jobs:
           # Ubuntu: no MSVC/clang-cl.
           - {os: ubuntu-latest, toolset: msvc}
           - {os: ubuntu-latest, toolset: clang-cl}
+          # Optimization: MinGW-w64 should be the same on different Windows
+          # versions.  Clang on the other hand relies on the Microsoft linker
+          # (at least it did at some point), so it makes sense to test it
+          # against different Visual Studio versions.
+          - {os: windows-2016, toolset: gcc}
+          - {os: windows-2019, toolset: gcc}
+          - {os: windows-2016, toolset: mingw}
+          - {os: windows-2019, toolset: mingw}
 
     runs-on: '${{ matrix.os }}'
 
