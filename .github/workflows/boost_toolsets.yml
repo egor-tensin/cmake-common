@@ -106,21 +106,18 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           platform: '${{ matrix.platform }}'
-          hardlinks: 1
         if: env.CI_HOST_LINUX && (matrix.toolset == 'auto' || matrix.toolset == 'gcc')
 
       - name: Install Clang
         uses: egor-tensin/setup-clang@v1
         with:
           platform: '${{ matrix.platform }}'
-          hardlinks: 1
         if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
 
       - name: Install MinGW
         uses: egor-tensin/setup-mingw@v2
         with:
           platform: '${{ matrix.platform }}'
-          hardlinks: 1
         # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
         if: env.CI_MINGW || (matrix.toolset == 'clang' && env.CI_HOST_WINDOWS)
 
