@@ -15,7 +15,7 @@ jobs:
     name: Linting
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Run clang-format
         run: ./tools/project-clang-format.py
 
@@ -33,11 +33,13 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
       - name: Cache Boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: boost_*.tar.gz
           key: 'boost_${{ matrix.boost-version }}'
@@ -67,13 +69,13 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '${{ matrix.python-version }}'
       - name: Cache Boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: boost_*.tar.gz
           key: 'boost_${{ matrix.boost-version }}'
@@ -96,9 +98,11 @@ jobs:
     name: Publish
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
       - name: Verify package can be installed
         run: python3 -m pip install .
       - name: Install package builder
@@ -106,7 +110,7 @@ jobs:
       - name: Build package
         run: python3 -m build
       - name: Publish as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist

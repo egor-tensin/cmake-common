@@ -31,16 +31,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache Boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: '${{ runner.workspace }}/boost/boost_*.tar.gz'
           key: 'boost_${{ matrix.boost-version }}'
 
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v2
+        uses: egor-tensin/cleanup-path@v3
         if: runner.os == 'Windows'
 
       - name: Set common variables
@@ -49,7 +49,9 @@ jobs:
           toolset: '${{ matrix.toolset }}'
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
       - name: Install Clang
         uses: egor-tensin/setup-clang@v1

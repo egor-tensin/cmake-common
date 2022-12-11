@@ -32,11 +32,13 @@ jobs:
       BOOST_VERSION: 1.72.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
       - name: Cache Boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: '${{ github.workspace }}/examples/build/boost_*.tar.gz'
           key: 'boost_${{ env.BOOST_VERSION }}'
