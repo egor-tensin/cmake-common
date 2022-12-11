@@ -14,13 +14,12 @@ jobs:
       matrix:
         example: [simple, static, dynamic]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
-        os: [ubuntu-latest, windows-2016, windows-2019, windows-2022]
+        os: [ubuntu-latest, windows-2019, windows-2022]
 
         include:
           # Prettier run names.
           - {os: windows-2022, name: Windows 2022}
           - {os: windows-2019, name: Windows 2019}
-          - {os: windows-2016, name: Windows 2016}
           - {os: ubuntu-latest, name: Ubuntu}
           # Target platform.
           - {example: simple, platform: x64}
@@ -57,9 +56,7 @@ jobs:
           # versions.  Clang on the other hand relies on the Microsoft linker
           # (at least it did at some point), so it makes sense to test it
           # against different Visual Studio versions.
-          - {os: windows-2016, toolset: gcc}
           - {os: windows-2019, toolset: gcc}
-          - {os: windows-2016, toolset: mingw}
           - {os: windows-2019, toolset: mingw}
 
     runs-on: '${{ matrix.os }}'
