@@ -60,7 +60,9 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9, 3.x]
         include:
-          - os: ubuntu-latest
+          # Unpin when this is fixed:
+          # https://github.com/actions/setup-python/issues/544
+          - os: ubuntu-20.04
           - boost-version: 1.78.0
     runs-on: '${{ matrix.os }}'
     name: 'Python ${{ matrix.python-version }}'
