@@ -27,7 +27,7 @@ jobs:
       TRAVIS_BUILD_DIR: '${{ github.workspace }}/examples/boost'
       PLATFORM: x64
       CONFIGURATION: '${{ matrix.configuration }}'
-      BOOST_VERSION: 1.72.0
+      BOOST_VERSION: 1.81.0
     steps:
       - name: Checkout
         uses: actions/checkout@v3
