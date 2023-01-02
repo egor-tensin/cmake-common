@@ -121,7 +121,12 @@ runs:
 
             $windows_required = @('KERNEL32.dll')
             if ($env:CI_MINGW) {
-                $windows_required += 'msvcrt.dll'
+                if ($env:CI_HOST_WINDOWS) {
+                    # This is only true for windows-2022 images.
+                    $windows_required += 'ucrtbase.dll'
+                } else {
+                    $windows_required += 'msvcrt.dll'
+                }
             }
             # Linking libstdc++ statically on Cygwin is broken, see the
             # cygwin_static_libstdc++.yml workflow.
