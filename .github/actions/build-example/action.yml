@@ -31,7 +31,7 @@ runs:
         $src_dir = Resolve-Path '${{ inputs.src-dir }}'
         $project_name = Split-Path $src_dir -Leaf
         $install_dir = Join-Path (Split-Path $env:GITHUB_WORKSPACE) "install_$project_name"
-        echo "::set-output name=path::$install_dir"
+        echo "path=$install_dir" >> $env:GITHUB_OUTPUT
       shell: pwsh
     - run: |
         $python = 'python'
