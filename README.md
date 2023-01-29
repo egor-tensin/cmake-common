@@ -5,7 +5,7 @@ cmake-common
 [![Boost (toolsets)](https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml/badge.svg)](https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml)
 [![Examples (toolsets)](https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml/badge.svg)](https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml)
 
-Various utilities to help develop C++/CMake projects.
+Utilities to help develop C++/CMake projects.
 
 Installation
 ------------
