@@ -106,11 +106,11 @@ jobs:
         with:
           python-version: '3.x'
       - name: Verify package can be installed
-        run: python3 -m pip install .
+        run: pip install -q .
       - name: Install package builder
-        run: python3 -m pip install --upgrade build
+        run: pip install -q --upgrade build
       - name: Build package
-        run: python3 -m build
+        run: python -m build
       - name: Publish as artifact
         uses: actions/upload-artifact@v3
         with:
