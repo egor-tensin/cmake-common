@@ -10,6 +10,7 @@ import sys
 from project.ci.dirs import Dirs
 from project.cmake.build import BuildParameters, build
 from project.utils import setup_logging
+import project.version
 
 
 def _parse_args(argv=None):
@@ -19,6 +20,8 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=Dirs.get_cmake_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    project.version.add_to_arg_parser(parser)
 
     # The hint parameter is basically a workaround for when this is run on a
     # CI, _but_ testing another CI is desired.  This shouldn't be used in a

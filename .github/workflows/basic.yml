@@ -72,6 +72,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -81,14 +83,21 @@ jobs:
         with:
           path: boost_*.tar.gz
           key: 'boost_${{ matrix.boost-version }}'
+      - name: 'Install package & dependencies'
+        run: pip install -q -e .
+      - name: Check that scripts are runnable
+        run: |
+          boost-download --version
+          boost-build --version
+          cmake-build --version
       - name: Build Boost
         run: |
-          python -m project.boost.download --cache . '${{ matrix.boost-version }}' boost
-          python -m project.boost.build -- boost --with-filesystem
+          boost-download --cache . '${{ matrix.boost-version }}' boost
+          boost-build -- boost --with-filesystem
       - name: Build example project
         run: |
           $src_dir = Join-Path examples boost
-          python -m project.cmake.build --boost boost --install install -- $src_dir
+          cmake-build --boost boost --install install -- $src_dir
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
 
@@ -101,6 +110,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

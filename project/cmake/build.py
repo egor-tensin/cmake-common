@@ -30,6 +30,7 @@ from project.configuration import Configuration
 from project.platform import Platform
 from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
+import project.version
 
 
 DEFAULT_PLATFORM = Platform.AUTO
@@ -210,6 +211,8 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    project.version.add_to_arg_parser(parser)
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=normalize_path,

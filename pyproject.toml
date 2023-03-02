@@ -1,15 +1,19 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cmake_common"
 description = "Utilities to help develop C++/CMake projects"
 license = {text = "MIT"}
-version = "3.4.1"
+dynamic = ["version"]
 authors = [{name = "Egor Tensin", email = "Egor.Tensin@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.6"
+
+dependencies = [
+    'importlib-metadata ~= 4.0 ; python_version < "3.8"',
+]
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -38,3 +42,5 @@ script-files = [
 
 [tool.setuptools.data-files]
 "share/cmake" = ["common.cmake"]
+
+[tool.setuptools_scm]

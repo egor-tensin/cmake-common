@@ -11,6 +11,7 @@ from project.boost.download import Download, download
 from project.ci.dirs import Dirs
 from project.linkage import Linkage
 from project.utils import setup_logging
+import project.version
 
 
 def _parse_args(argv=None):
@@ -20,6 +21,8 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=Dirs.get_boost_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    project.version.add_to_arg_parser(parser)
 
     parser.add_argument('--link', metavar='LINKAGE',
                         nargs='*', type=Linkage.parse,

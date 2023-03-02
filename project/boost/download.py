@@ -27,6 +27,7 @@ import urllib.request
 from project.boost.archive import Archive, PermanentStorage, TemporaryStorage
 from project.boost.version import Version
 from project.utils import normalize_path, mkdir_parent, retry, setup_logging
+import project.version
 
 
 class Download:
@@ -126,6 +127,8 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    project.version.add_to_arg_parser(parser)
 
     parser.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
                         type=normalize_path,

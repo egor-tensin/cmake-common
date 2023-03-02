@@ -37,6 +37,7 @@ from project.os import on_linux_like
 from project.platform import Platform
 from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, setup_logging
+import project.version
 
 
 DEFAULT_PLATFORMS = (Platform.AUTO,)
@@ -149,6 +150,8 @@ def _parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    project.version.add_to_arg_parser(parser)
 
     platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
