@@ -142,6 +142,15 @@ I use this in all of my C++/CMake projects, e.g. [aes-tools] and [math-server].
 [aes-tools]: https://github.com/egor-tensin/aes-tools
 [math-server]: https://github.com/egor-tensin/math-server
 
+Development
+-----------
+
+Make a git tag:
+
+    git tag "v$( python -m setuptools_scm --strip-dev )"
+
+You can then review that the tag is fine and push w/ `git push --tags`.
+
 License
 -------
 
