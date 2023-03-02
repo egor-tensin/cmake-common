@@ -2,6 +2,8 @@ name: Boost (download)
 
 on:
   push:
+    paths:
+      - 'project/**'
   pull_request:
   schedule:
     # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
