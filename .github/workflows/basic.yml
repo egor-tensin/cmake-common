@@ -58,7 +58,7 @@ jobs:
   python-versions:
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.x]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
         include:
           # Unpin when this is fixed:
           # https://github.com/actions/setup-python/issues/544
