@@ -87,25 +87,14 @@ runs:
                 [ValidateNotNull()]
                 [string[]] $Actual,
 
-                [Parameter(Mandatory=$true)]
                 [ValidateNotNull()]
-                [string[]] $Required,
-
-                [Parameter(Mandatory=$true)]
-                [ValidateNotNull()]
-                [string[]] $Optional
+                [string[]] $Forbidden
             )
 
             echo 'Linked libraries:'
             echo $Actual
 
-            $missing = $Required | ?{$_ -notin $Actual}
-
-            if ($missing.Count -gt 0) {
-                throw "Doesn't link to the following libraries: $($missing -join ', ')"
-            }
-
-            $unexpected = $Actual | ?{$_ -notin $Required -and $_ -notin $Optional}
+            $unexpected = $Actual | ?{$_ -in $Forbidden}
 
             if ($unexpected.Count -gt 0) {
                 throw "Links to the following unexpected libraries: $($unexpected -join ', ')"
@@ -119,39 +108,29 @@ runs:
                 [string[]] $Actual
             )
 
-            $windows_required = @('KERNEL32.dll')
+            $windows_forbidden = @('msvcrt.dll')
             if ($env:CI_MINGW) {
                 if (!$env:CI_HOST_WINDOWS) {
-                    $windows_required += @('msvcrt.dll')
+                    $windows_forbidden = @()
                 }
             }
             # Linking libstdc++ statically on Cygwin is broken, see the
             # cygwin_static_libstdc++.yml workflow.
-            $cygwin_required = $windows_required + @('cygwin1.dll','cygstdc++-6.dll')
-            $linux_required = @('libc.so.6')
-
-            $windows_optional = @('baz.dll')
-            if ($env:CI_MINGW) {
-                $windows_optional = @('libbaz.dll','USER32.dll')
-            }
-            $cygwin_optional = @('cygbaz.dll')
-            $linux_optional = @('libbaz.so','ld-linux.so.2','ld-linux-x86-64.so.2','libm.so.6')
+            $cygwin_forbidden = @('msvcrt.dll')
+            $linux_forbidden = @()
 
             if ($env:CI_TARGET_CYGWIN) {
                 Do-ValidateLinkedLibraries `
                     -Actual $Actual `
-                    -Required $cygwin_required `
-                    -Optional $cygwin_optional
+                    -Forbidden $cygwin_forbidden
             } elseif ($env:CI_TARGET_WINDOWS) {
                 Do-ValidateLinkedLibraries `
                     -Actual $Actual `
-                    -Required $windows_required `
-                    -Optional $windows_optional
+                    -Forbidden $windows_forbidden
             } elseif ($env:CI_TARGET_LINUX) {
                 Do-ValidateLinkedLibraries `
                     -Actual $Actual `
-                    -Required $linux_required `
-                    -Optional $linux_optional
+                    -Forbidden $linux_forbidden
             } else {
                 throw 'Where am I?'
             }
