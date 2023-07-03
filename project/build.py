@@ -5,12 +5,13 @@
 
 R'''Build a CMake project.
 
-This script is used basically to invoke the CMake executable in a
-cross-platform way (provided the platform has Python 3, of course).  The
-motivation was to merge my Travis and AppVeyor build scripts (largely similar,
-but written in bash and PowerShell, respectively).
+This script works nicely with boost-build from this package - it will use the
+correct --stagedir directory automatically.
 
-A simple usage example:
+Also, it facilitates building with different toolsets/for different platforms
+with the help from the --toolset and --platform parameters.
+
+Usage example:
 
     $ project-build --configuration Release --install path/to/somewhere -- examples/simple build/
     ...

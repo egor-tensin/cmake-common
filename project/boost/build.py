@@ -5,8 +5,11 @@
 
 R'''Build Boost.
 
-This script builds the Boost libraries.  Its main utility is setting the
-correct --stagedir parameter value to avoid name clashes.
+The main utility of this script is setting the correct --stagedir parameter
+value to avoid name clashes.
+
+It also facilitates building with different toolsets/for different platforms
+with the help from the --toolset and --platform parameters.
 
 Usage example:
 

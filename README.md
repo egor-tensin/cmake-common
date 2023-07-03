@@ -7,6 +7,15 @@ cmake-common
 
 Utilities to help develop C++/CMake projects.
 
+Description
+-----------
+
+This main goal of this project is to make it easier to build (potentially,
+cross-compile) Boost and CMake projects using different toolsets.
+It does so providing a set of command-line utilities that allow users to
+download/build Boost & use it in a CMake project in a consistent way &mdash; no
+matter the compiler or the target platform.
+
 Installation
 ------------
 
@@ -95,10 +104,10 @@ in CMakeLists.txt.
 This file aids in quick-and-dirty development by
 
 * linking everything (including the runtime) statically by default,
-* setting some useful compilation options (enables warnings, defines useful
+* setting some useful compilation options (enables warnings, defines common
 Windows-specific macros, strips debug symbols in release builds, etc.).
 
-Everything is optional (use the `CC_*` CMake options to opt out).
+Everything is enabled by default (use the `CC_*` CMake options to opt out).
 
 Tools
 -----

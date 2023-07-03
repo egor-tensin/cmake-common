@@ -6,7 +6,8 @@
 R'''Download & bootstrap Boost.
 
 This script downloads and unpacks a Boost distribution archive.  Its main
-utility is that it's supposed to be cross-platform.
+utility is that it's cross-platform & supports different Boost versions out of
+the box.
 
 Usage examples:
 
