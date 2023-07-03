@@ -78,7 +78,7 @@ Pass the `--help` flag to view detailed usage information.
 
 Build (and optionally, install) a CMake project.
 
-    $ cmake-build --configuration Release --install path/to/somewhere --boost path/to/boost -- examples/simple
+    $ cmake-build --configuration Release --install path/to/somewhere --boost path/to/boost -- examples/simple build/
     ...
 
     $ ./path/to/somewhere/bin/foo

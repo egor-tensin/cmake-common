@@ -12,7 +12,7 @@ but written in bash and PowerShell, respectively).
 
 A simple usage example:
 
-    $ cmake-build --configuration Release --install path/to/somewhere -- examples/simple
+    $ cmake-build --configuration Release --install path/to/somewhere -- examples/simple build/
     ...
 
     $ ./path/to/somewhere/bin/foo
@@ -136,13 +136,14 @@ class BuildPhase:
 
 
 class BuildParameters:
-    def __init__(self, src_dir, build_dir=None, install_dir=None,
+    BUILD_DIR_TMP_PLACEHOLDER = 'TMP'
+
+    def __init__(self, src_dir, build_dir, install_dir=None,
                  platform=None, configuration=None, boost_dir=None,
                  toolset_version=None, cmake_args=None):
 
         src_dir = normalize_path(src_dir)
-        if build_dir is not None:
-            build_dir = normalize_path(build_dir)
+        build_dir = self.normalize_build_dir(build_dir)
         if install_dir is not None:
             install_dir = normalize_path(install_dir)
         platform = platform or DEFAULT_PLATFORM
@@ -167,9 +168,15 @@ class BuildParameters:
         args.pop('help_toolsets', None)
         return BuildParameters(**args)
 
+    @staticmethod
+    def normalize_build_dir(build_dir):
+        if build_dir == BuildParameters.BUILD_DIR_TMP_PLACEHOLDER:
+            return build_dir
+        return normalize_path(build_dir)
+
     @contextmanager
     def create_build_dir(self):
-        if self.build_dir is not None:
+        if self.build_dir != BuildParameters.BUILD_DIR_TMP_PLACEHOLDER:
             logging.info('Build directory: %s', self.build_dir)
             mkdir_parent(self.build_dir)
             yield self.build_dir
@@ -214,9 +221,6 @@ def _parse_args(argv=None):
 
     project.version.add_to_arg_parser(parser)
 
-    parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=normalize_path,
-                        help='build directory (temporary directory unless specified)')
     parser.add_argument('--install', metavar='DIR', dest='install_dir',
                         type=normalize_path,
                         help='install directory')
@@ -241,11 +245,11 @@ def _parse_args(argv=None):
     parser.add_argument('--help-toolsets', action='store_true',
                         help='show detailed info about supported toolsets')
 
-    parser.add_argument('src_dir', metavar='DIR',
-                        type=normalize_path,
+    parser.add_argument('src_dir', type=normalize_path,
                         help='source directory')
-    parser.add_argument('cmake_args', metavar='CMAKE_ARG',
-                        nargs='*', default=[],
+    parser.add_argument('build_dir', type=BuildParameters.normalize_build_dir,
+                        help=f"build directory ('{BuildParameters.BUILD_DIR_TMP_PLACEHOLDER}' to use a temporary directory)")
+    parser.add_argument('cmake_args', nargs='*', default=[],
                         help='additional CMake arguments, to be passed verbatim')
 
     return parser.parse_args(argv)

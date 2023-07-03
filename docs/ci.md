@@ -44,7 +44,8 @@ for configuration in Debug Release; do
         --build "$TRAVIS_BUILD_DIR/../build/cmake"     \
         --install "$TRAVIS_BUILD_DIR/../build/install" \
         --                                             \
-        "$TRAVIS_BUILD_DIR"
+        "$TRAVIS_BUILD_DIR"                            \
+        TMP
 done
 ```
 

@@ -63,7 +63,7 @@ runs:
             $args += '--boost',$boost_dir
         }
 
-        $args += '--',$src_dir
+        $args += '--',$src_dir,'TMP'
         $env:VERBOSE = 1
         & $python -m project.cmake.build $args
       shell: pwsh
