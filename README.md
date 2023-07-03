@@ -26,8 +26,6 @@ Installation
   | boost-download | `python3 -m project.boost.download`
   | boost-build    | `python3 -m project.boost.build`
   | project-build  | `python3 -m project.build`
-  | ci-boost       | `python3 -m project.ci.boost`
-  | ci-build       | `python3 -m project.ci.build`
 
 Toolsets
 --------
@@ -101,27 +99,6 @@ This file aids in quick-and-dirty development by
 Windows-specific macros, strips debug symbols in release builds, etc.).
 
 Everything is optional (use the `CC_*` CMake options to opt out).
-
-### CI
-
-Utility scripts `ci-boost` and `ci-build` allow building Boost and CMake
-projects on multiple CI systems.
-They work by calling the generic scripts from above, auto-filling some
-parameters from environment variables.
-
-|                   | Travis                               | AppVeyor                                   | GitHub Actions
-| ----------------- | ------------------------------------ | ------------------------------------------ | --------------
-| `--toolset`       | `$TOOLSET`                           | `%TOOLSET%`                                | `$TOOLSET`
-| `--platform`      | `$PLATFORM`                          | `%PLATFORM%`                               | `$PLATFORM`
-| `--configuration` | `$CONFIGURATION`                     | `%CONFIGURATION%`                          | `$CONFIGURATION`
-| Boost version     | `$BOOST_VERSION`                     | `%BOOST_VERSION%`                          | `$BOOST_VERSION`
-| Boost path        | `$TRAVIS_BUILD_DIR/../build/boost`   | `%APPVEYOR_BUILD_FOLDER%\..\build\boost`   | `$GITHUB_WORKSPACE/../build/boost`
-| Build path        | `$TRAVIS_BUILD_DIR/../build/cmake`   | `%APPVEYOR_BUILD_FOLDER%\..\build\cmake`   | `$GITHUB_WORKSPACE/../build/cmake`
-| Install path      | `$TRAVIS_BUILD_DIR/../build/install` | `%APPVEYOR_BUILD_FOLDER%\..\build\install` | `$GITHUB_WORKSPACE/../build/install`
-
-
-For an example of how to integrate `ci-boost` and `ci-build` into a CI
-workflow, see [docs/ci.md](docs/ci.md).
 
 Tools
 -----
