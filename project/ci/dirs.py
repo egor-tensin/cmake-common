@@ -108,7 +108,7 @@ The supported CI systems are: {Dirs.join_ci_names()}.
     def get_cmake_help():
         return f'''Build a CMake project during a CI run.
 
-This is similar to running project.cmake.build, but auto-fills some parameters
+This is similar to running project.build, but auto-fills some parameters
 from environment variables.
 
 The supported CI systems are: {Dirs.join_ci_names()}.

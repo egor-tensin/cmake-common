@@ -32,7 +32,7 @@ boost-build = "project.boost.build:_main"
 boost-download = "project.boost.download:_main"
 ci-boost = "project.ci.boost:main"
 ci-cmake = "project.ci.cmake:main"
-cmake-build = "project.cmake.build:main"
+project-build = "project.build:main"
 
 [tool.setuptools]
 script-files = [

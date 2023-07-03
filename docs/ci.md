@@ -1,6 +1,6 @@
 `ci-boost` and `ci-cmake` are thin wrappers around `boost-download`/`boost-build`
-and `cmake-build` accordingly.  They work by reading environment variables and
-passing their values as command line parameters to the more generic scripts.
+and `project-build` accordingly.  They work by reading environment variables
+and passing their values as command line parameters to the more generic scripts.
 This facilitates matrix-building the project without too much fuss.
 
 For example, the following Travis workflow:
@@ -37,7 +37,7 @@ boost-build                            \
     --with-filesystem
 
 for configuration in Debug Release; do
-    cmake-build                                        \
+    project-build                                      \
         --platform x64                                 \
         --configuration "$configuration"               \
         --boost "$TRAVIS_BUILD_DIR/../build/boost"     \

@@ -65,5 +65,5 @@ runs:
 
         $args += '--',$src_dir,'TMP'
         $env:VERBOSE = 1
-        & $python -m project.cmake.build $args
+        & $python -m project.build $args
       shell: pwsh

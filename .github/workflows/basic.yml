@@ -53,7 +53,7 @@ jobs:
       - name: Build example project
         run: |
           $src_dir = Join-Path examples boost
-          python -m project.cmake.build --boost boost/ --install install/ -- $src_dir build/
+          python -m project.build --boost boost/ --install install/ -- $src_dir build/
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
 
@@ -90,7 +90,7 @@ jobs:
         run: |
           boost-download --version
           boost-build --version
-          cmake-build --version
+          project-build --version
       - name: Build Boost
         run: |
           boost-download --cache . '${{ matrix.boost-version }}' boost/
@@ -98,7 +98,7 @@ jobs:
       - name: Build example project
         run: |
           $src_dir = Join-Path examples boost
-          cmake-build --boost boost/ --install install/ -- $src_dir build/
+          project-build --boost boost/ --install install/ -- $src_dir build/
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
 

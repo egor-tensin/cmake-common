@@ -8,7 +8,7 @@ import os.path
 import sys
 
 from project.ci.dirs import Dirs
-from project.cmake.build import BuildParameters, build
+from project.build import BuildParameters, build
 from project.utils import setup_logging
 import project.version
 

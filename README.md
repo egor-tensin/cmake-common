@@ -25,7 +25,7 @@ Installation
   | -------------- | ------
   | boost-download | `python3 -m project.boost.download`
   | boost-build    | `python3 -m project.boost.build`
-  | cmake-build    | `python3 -m project.cmake.build`
+  | project-build  | `python3 -m project.build`
   | ci-boost       | `python3 -m project.ci.boost`
   | ci-cmake       | `python3 -m project.ci.cmake`
 
@@ -54,7 +54,7 @@ All of those are verified continuously by the [Boost (toolsets)] and [Examples
 (toolsets)] workflows.
 
 For a complete list of possible `--toolset` parameter values, pass the
-`--help-toolsets` flag to either `boost-build` or `cmake-build`.
+`--help-toolsets` flag to either `boost-build` or `project-build`.
 
 [Boost (toolsets)]: https://github.com/egor-tensin/cmake-common/actions/workflows/boost_toolsets.yml
 [Examples (toolsets)]: https://github.com/egor-tensin/cmake-common/actions/workflows/example_toolsets.yml
@@ -78,7 +78,7 @@ Pass the `--help` flag to view detailed usage information.
 
 Build (and optionally, install) a CMake project.
 
-    $ cmake-build --configuration Release --install path/to/somewhere --boost path/to/boost -- examples/simple build/
+    $ project-build --configuration Release --install path/to/somewhere --boost path/to/boost -- examples/simple build/
     ...
 
     $ ./path/to/somewhere/bin/foo
