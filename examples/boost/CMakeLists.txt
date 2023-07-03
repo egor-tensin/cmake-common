@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5) # for Boost::* imported targets
+cmake_minimum_required(VERSION 3.12)
 
 project(example_boost)
 
