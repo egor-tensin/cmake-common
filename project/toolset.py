@@ -308,9 +308,8 @@ a list of all supported toolset versions:
 
 
 class Toolset(abc.ABC):
-    @staticmethod
     @contextmanager
-    def b2_args():
+    def b2_args(self):
         # Write the config file, etc.
         yield []
 
