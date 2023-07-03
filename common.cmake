@@ -10,7 +10,7 @@
 # Add this to the top-level CMakeLists.txt (unless a higher version has already
 # been specified):
 #
-#     cmake_minimum_required(VERSION 3.12)
+#     cmake_minimum_required(VERSION 3.8)
 
 # Without this policy set, this line:
 #
@@ -54,7 +54,7 @@ if(parent_dir)
 endif()
 
 if(NOT DEFINED CC_CXX_STANDARD)
-    set(CC_CXX_STANDARD "20" CACHE STRING "C++ standard version")
+    set(CC_CXX_STANDARD "17" CACHE STRING "C++ standard version")
 endif()
 if(NOT DEFINED CC_COMMON_OPTIONS)
     option(CC_COMMON_OPTIONS "Set common compiler options" "${default_value}")
