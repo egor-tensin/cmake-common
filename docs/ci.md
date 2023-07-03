@@ -1,4 +1,4 @@
-`ci-boost` and `ci-cmake` are thin wrappers around `boost-download`/`boost-build`
+`ci-boost` and `ci-build` are thin wrappers around `boost-download`/`boost-build`
 and `project-build` accordingly.  They work by reading environment variables
 and passing their values as command line parameters to the more generic scripts.
 This facilitates matrix-building the project without too much fuss.
@@ -18,7 +18,7 @@ env:
     - CONFIGURATION=Release PLATFORM=x64
 
 before_script: ci-boost -- --with-filesystem
-script: ci-cmake --install
+script: ci-build --install
 ```
 
 is roughly equivalent to running

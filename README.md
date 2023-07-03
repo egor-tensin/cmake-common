@@ -27,7 +27,7 @@ Installation
   | boost-build    | `python3 -m project.boost.build`
   | project-build  | `python3 -m project.build`
   | ci-boost       | `python3 -m project.ci.boost`
-  | ci-cmake       | `python3 -m project.ci.cmake`
+  | ci-build       | `python3 -m project.ci.build`
 
 Toolsets
 --------
@@ -104,7 +104,7 @@ Everything is optional (use the `CC_*` CMake options to opt out).
 
 ### CI
 
-Utility scripts `ci-boost` and `ci-cmake` allow building Boost and CMake
+Utility scripts `ci-boost` and `ci-build` allow building Boost and CMake
 projects on multiple CI systems.
 They work by calling the generic scripts from above, auto-filling some
 parameters from environment variables.
@@ -120,7 +120,7 @@ parameters from environment variables.
 | Install path      | `$TRAVIS_BUILD_DIR/../build/install` | `%APPVEYOR_BUILD_FOLDER%\..\build\install` | `$GITHUB_WORKSPACE/../build/install`
 
 
-For an example of how to integrate `ci-boost` and `ci-cmake` into a CI
+For an example of how to integrate `ci-boost` and `ci-build` into a CI
 workflow, see [docs/ci.md](docs/ci.md).
 
 Tools

@@ -48,6 +48,6 @@ jobs:
       - name: Build Boost
         run: python -m project.ci.boost --hint AppVeyor -- --with-filesystem
       - name: Build example project
-        run: python -m project.ci.cmake --hint AppVeyor --install
+        run: python -m project.ci.build --hint AppVeyor --install
       - name: Run example project
         run: ./.ci/run_foo.ps1 (Join-Path $env:APPVEYOR_BUILD_FOLDER .. build install bin foo)

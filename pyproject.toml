@@ -31,7 +31,7 @@ classifiers = [
 boost-build = "project.boost.build:_main"
 boost-download = "project.boost.download:_main"
 ci-boost = "project.ci.boost:main"
-ci-cmake = "project.ci.cmake:main"
+ci-build = "project.ci.build:main"
 project-build = "project.build:main"
 
 [tool.setuptools]
