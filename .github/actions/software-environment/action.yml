@@ -27,7 +27,7 @@ runs:
             param(
                 [Parameter(Mandatory=$true)]
                 [string] $name,
-                [Parameter(Mandatory=$true)]
+                [Parameter()]
                 [string] $exe
             )
 
@@ -35,6 +35,11 @@ runs:
             echo '------------------------------------------------------------'
             echo $name
             echo '------------------------------------------------------------'
+
+            if (!$exe) {
+                $exe = $name
+            }
+
             $full_path = Get-Command $exe -ErrorAction SilentlyContinue
             if ($full_path) {
                 $full_path = $full_path.Path
@@ -52,12 +57,13 @@ runs:
         }
 
         Print-Info 'python' $python
-        Print-Info 'cmake' 'cmake'
-        Print-Info 'make' 'make'
-        Print-Info 'mingw32-make' 'mingw32-make'
-        Print-Info 'g++' 'g++'
-        Print-Info 'clang++' 'clang++'
-        Print-Info 'clang-cl' 'clang-cl'
-        Print-Info 'i686-w64-mingw32-g++' 'i686-w64-mingw32-g++'
-        Print-Info 'x86_64-w64-mingw32-g++' 'x86_64-w64-mingw32-g++'
+        Print-Info 'cmake'
+        Print-Info 'make'
+        Print-Info 'mingw32-make'
+        Print-Info 'g++'
+        Print-Info 'clang++'
+        Print-Info 'clang-cl'
+        Print-Info 'i686-w64-mingw32-g++'
+        Print-Info 'x86_64-w64-mingw32-g++'
+        Print-Info 'objdump'
       shell: pwsh
