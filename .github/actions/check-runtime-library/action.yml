@@ -62,6 +62,22 @@ runs:
             }
         }
 
+        function Get-Objdump {
+            $objdump = Get-Command 'objdump' -ErrorAction SilentlyContinue
+            if ($objdump) {
+                return $objdump.Path
+            }
+            $objdump = 'C:\ProgramData\chocolatey\bin\objdump.exe'
+            if (Test-Path $objdump -Type Leaf) {
+                return $objdump
+            }
+            $objdump = 'C:\mingw64\bin\objdump.exe'
+            if (Test-Path $objdump -Type Leaf) {
+                return $objdump
+            }
+            return 'objdump'
+        }
+
         function Get-LinkedLibraries {
             param(
                 [Parameter(Mandatory=$true)]
@@ -70,7 +86,7 @@ runs:
 
             $objdump = 'objdump'
             if ($env:CI_HOST_WINDOWS) {
-                $objdump = 'C:\ProgramData\chocolatey\bin\objdump.exe'
+                $objdump = Get-Objdump
             }
 
             if ($env:CI_TARGET_PE) {
