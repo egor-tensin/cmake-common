@@ -85,7 +85,7 @@ class Download:
             return None
 
     def _try_urls(self):
-        urls = self.version.get_download_urls()
+        urls = [self.version.get_download_url()]
         for url in urls:
             reply = self._try_url(url)
             if self.no_retry:

@@ -63,15 +63,5 @@ class Version:
     def archive_name(self):
         return f'{self.dir_name}{self.archive_ext}'
 
-    def _get_jfrog_url(self):
-        return f'https://boostorg.jfrog.io/artifactory/main/release/{self}/source/{self.archive_name}'
-
-    def _get_sourceforge_url(self):
-        return f'https://sourceforge.net/projects/boost/files/boost/{self}/{self.archive_name}/download'
-
-    def get_download_urls(self):
-        if self._impl < _Version(1, 63, 0):
-            # For versions older than 1.63.0, SourceForge is the only option:
-            return [self._get_sourceforge_url()]
-        # Otherwise, jfrog.io is preferred (the official website links to it).
-        return [self._get_jfrog_url(), self._get_sourceforge_url()]
+    def get_download_url(self):
+        return f'https://archives.boost.io/release/{self}/source/{self.archive_name}'
