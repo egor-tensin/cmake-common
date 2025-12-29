@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        boost-version: [1.58.0, 1.68.0, 1.78.0]
+        boost-version: [1.58.0, 1.68.0, 1.78.0, 1.88.0]
     runs-on: ubuntu-latest
     name: 'Download: ${{ matrix.boost-version }}'
     defaults:
@@ -22,9 +22,9 @@ jobs:
         shell: pwsh
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - name: Download Boost
