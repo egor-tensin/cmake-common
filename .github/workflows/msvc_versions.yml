@@ -16,17 +16,13 @@ jobs:
     strategy:
       matrix:
         toolset:
-          - msvc142
           - msvc143
-          - vs2019
           - vs2022
 
         include:
           # Runner image.
-          - {toolset: msvc142, os: windows-2019}
           - {toolset: msvc143, os: windows-2022}
-          - {toolset: vs2019, os: windows-2019}
-          - {toolset: vs2022, os: windows-2022}
+          - {toolset: vs2022, os: windows-2025}
 
           # Boost version.
           - boost-version: 1.78.0
@@ -47,16 +43,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Cache Boost
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '${{ runner.workspace }}/boost/boost_*.tar.gz'
           key: 'boost_${{ matrix.boost-version }}'
 
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v3
+        uses: egor-tensin/cleanup-path@v4
         if: runner.os == 'Windows'
 
       - name: Set common variables
@@ -65,7 +61,7 @@ jobs:
           toolset: '${{ matrix.toolset }}'
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
