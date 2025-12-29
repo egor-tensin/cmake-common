@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # Copyright (c) 2020 Egor Tensin <Egor.Tensin@gmail.com>
 # This file is part of the "cmake-common" project.

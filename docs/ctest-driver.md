@@ -6,8 +6,8 @@ PASS_REGULAR_EXPRESSION feature:
 
 `ctest-driver.py` tries to fix them.
 
-    $ python3 path/to/tools/ctest-driver.py run --pass-regex OK --fail-regex Fail -- path/to/executable arg1 arg2
+    $ python path/to/tools/ctest-driver.py run --pass-regex OK --fail-regex Fail -- path/to/executable arg1 arg2
 
 In addition, it's a cross-platform `grep`:
 
-    $ python3 path/to/tools/ctest-driver.py grep --pass-regex OK --fail-regex Fail -- path/to/logfile.log
+    $ python path/to/tools/ctest-driver.py grep --pass-regex OK --fail-regex Fail -- path/to/logfile.log

@@ -32,9 +32,9 @@ Installation
 
   | Script         | Module
   | -------------- | ------
-  | boost-download | `python3 -m project.boost.download`
-  | boost-build    | `python3 -m project.boost.build`
-  | project-build  | `python3 -m project.build`
+  | boost-download | `python -m project.boost.download`
+  | boost-build    | `python -m project.boost.build`
+  | project-build  | `python -m project.build`
 
 Toolsets
 --------
