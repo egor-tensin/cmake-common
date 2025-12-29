@@ -69,7 +69,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v3
+        uses: egor-tensin/cleanup-path@v4
         if: runner.os == 'Windows'
 
       - name: Set common variables
@@ -83,19 +83,19 @@ jobs:
           python-version: '3.x'
 
       - name: Install GCC
-        uses: egor-tensin/setup-gcc@v1
+        uses: egor-tensin/setup-gcc@v2
         with:
           platform: '${{ matrix.platform }}'
         if: env.CI_HOST_LINUX && (matrix.toolset == 'auto' || matrix.toolset == 'gcc')
 
       - name: Install Clang
-        uses: egor-tensin/setup-clang@v1
+        uses: egor-tensin/setup-clang@v2
         with:
           platform: '${{ matrix.platform }}'
         if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
 
       - name: Install MinGW
-        uses: egor-tensin/setup-mingw@v2
+        uses: egor-tensin/setup-mingw@master
         with:
           platform: '${{ matrix.platform }}'
         # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
