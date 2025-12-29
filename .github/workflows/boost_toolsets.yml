@@ -15,36 +15,27 @@ jobs:
   build:
     strategy:
       matrix:
-        boost-version: [1.58.0, 1.68.0, 1.78.0]
+        boost-version: [1.72.0, 1.80.0, 1.88.0]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
-        os: [ubuntu-latest, windows-2019, windows-2022]
+        os: [ubuntu-latest, windows-2022, windows-2025]
 
         include:
           # Prettier run names.
           - {os: windows-2022, name: Windows 2022}
-          - {os: windows-2019, name: Windows 2019}
+          - {os: windows-2025, name: Windows 2025}
           - {os: ubuntu-latest, name: Ubuntu}
           # Target platform.
-          - {boost-version: 1.58.0, platform: x64}
-          - {boost-version: 1.68.0, platform: x86}
-          - {boost-version: 1.78.0, platform: x64}
+          - {boost-version: 1.72.0, platform: x86}
+          - {boost-version: 1.80.0, platform: x64}
+          - {boost-version: 1.88.0, platform: x86}
           # Configuration.
-          - {boost-version: 1.58.0, configuration: Debug}
-          - {boost-version: 1.68.0, configuration: MinSizeRel}
-          - {boost-version: 1.78.0, configuration: Release}
+          - {boost-version: 1.72.0, configuration: Debug}
+          - {boost-version: 1.80.0, configuration: Release}
+          - {boost-version: 1.88.0, configuration: RelWithDebInfo}
 
           # Some Boost libraries commonly used by me.
           - libraries: filesystem program_options regex system
 
-          # On Windows, clang fails to build Boost.Test prior to version 1.61
-          # with the following error:
-          #
-          #     .\boost/test/impl/execution_monitor.ipp:1134:20: error: cannot compile this 'this' captured by SEH yet
-          #
-          # This was fixed for 1.61 in this commit:
-          # https://github.com/boostorg/test/commit/c94ef6982e2ebe77f9376579547c228f0d62e45f.
-          # On Linux, everything should be fine though.
-          #- libraries: filesystem program_options regex system test
         exclude:
           # Ubuntu: no MSVC/clang-cl.
           - {os: ubuntu-latest, toolset: msvc}
@@ -53,12 +44,8 @@ jobs:
           # versions.  Clang on the other hand relies on the Microsoft linker
           # (at least it did at some point), so it makes sense to test it
           # against different Visual Studio versions.
-          - {os: windows-2019, toolset: gcc}
-          - {os: windows-2019, toolset: mingw}
-          # clang-cl is only supported by Boost.Build since 1.69 (see the
-          # boost_clang_windows.yml workflow).
-          - {toolset: clang-cl, boost-version: 1.58.0}
-          - {toolset: clang-cl, boost-version: 1.68.0}
+          - {os: windows-2022, toolset: gcc}
+          - {os: windows-2022, toolset: mingw}
 
     runs-on: '${{ matrix.os }}'
 
@@ -67,11 +54,13 @@ jobs:
     # 1) VS 2022 isn't supported by older Boost versions.  It just doesn't
     #    work, the errors are numerous.
     continue-on-error: ${{
-            (matrix.os == 'windows-2022'
+            (
+                (matrix.os == 'windows-2022' || matrix.os == 'windows-2025')
                 && (matrix.toolset == 'auto'
                     || matrix.toolset == 'clang-cl'
                     || matrix.toolset == 'msvc')
-                && matrix.boost-version < '1.78.0')
+                && matrix.boost-version < '1.80.0'
+            )
         }}
 
     defaults:
@@ -80,16 +69,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Cache Boost
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '${{ runner.workspace }}/boost/boost_*.tar.gz'
           key: 'boost_${{ matrix.boost-version }}'
 
       - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v3
+        uses: egor-tensin/cleanup-path@v4
         if: runner.os == 'Windows'
 
       - name: Set common variables
@@ -98,24 +87,24 @@ jobs:
           toolset: '${{ matrix.toolset }}'
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
       - name: Install GCC
-        uses: egor-tensin/setup-gcc@v1
+        uses: egor-tensin/setup-gcc@v2
         with:
           platform: '${{ matrix.platform }}'
         if: env.CI_HOST_LINUX && (matrix.toolset == 'auto' || matrix.toolset == 'gcc')
 
       - name: Install Clang
-        uses: egor-tensin/setup-clang@v1
+        uses: egor-tensin/setup-clang@v2
         with:
           platform: '${{ matrix.platform }}'
         if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
 
       - name: Install MinGW
-        uses: egor-tensin/setup-mingw@v2
+        uses: egor-tensin/setup-mingw@master
         with:
           platform: '${{ matrix.platform }}'
         # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
