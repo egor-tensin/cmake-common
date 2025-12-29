@@ -95,7 +95,7 @@ jobs:
         if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
 
       - name: Install MinGW
-        uses: egor-tensin/setup-mingw@master
+        uses: egor-tensin/setup-mingw@v3
         with:
           platform: '${{ matrix.platform }}'
         # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
