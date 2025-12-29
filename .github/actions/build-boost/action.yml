@@ -36,11 +36,6 @@ runs:
             Remove-Variable libraries
         }
 
-        if ($env:CI_HOST_CYGWIN) {
-            $python = 'python3'
-            $boost_dir = cygpath.exe -ua $boost_dir
-        }
-
         & $python `
             -m project.boost.build `
             --toolset '${{ inputs.toolset }}' `

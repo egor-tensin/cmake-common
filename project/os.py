@@ -10,7 +10,6 @@ import platform
 class OS(Enum):
     WINDOWS = 'Windows'
     LINUX = 'Linux'
-    CYGWIN = 'Cygwin'
     MACOS = 'macOS'
 
     def __str__(self):
@@ -25,8 +24,6 @@ class OS(Enum):
             return OS.LINUX
         if system == 'Darwin':
             return OS.MACOS
-        if system.startswith('CYGWIN_NT'):
-            return OS.CYGWIN
         raise NotImplementedError(f'unsupported OS: {system}')
 
 
@@ -36,7 +33,7 @@ def on_windows():
 
 def on_windows_like():
     os = OS.current()
-    return os is OS.WINDOWS or os is OS.CYGWIN
+    return os is OS.WINDOWS
 
 
 def on_linux():
@@ -45,8 +42,4 @@ def on_linux():
 
 def on_linux_like():
     os = OS.current()
-    return os is OS.LINUX or os is OS.CYGWIN or os is OS.MACOS
-
-
-def on_cygwin():
-    return OS.current() is OS.CYGWIN
+    return os is OS.LINUX or os is OS.MACOS

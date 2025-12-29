@@ -210,9 +210,6 @@ function(_cc_static_runtime_gcc target)
     #target_link_libraries("${target}" PRIVATE -static)
 
     set(flags -static-libstdc++ -static-libgcc)
-    if(CYGWIN)
-        set(flags -static-libgcc)
-    endif()
 
     if(CMAKE_VERSION VERSION_LESS "3.13")
         _cc_join(flags_str " " ${flags})

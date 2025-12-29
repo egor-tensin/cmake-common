@@ -32,9 +32,7 @@ runs:
 
         $exists_plain = Test-Path $path -Type Leaf
         $exists_exe = Test-Path "${path}.exe" -Type Leaf
-        $exists = if ($env:CI_HOST_CYGWIN) {
-            $exists_plain -or $exists_exe
-        } elseif ($env:CI_HOST_WINDOWS) {
+        $exists = if ($env:CI_HOST_WINDOWS) {
             $exists_exe
         } else {
             $exists_plain

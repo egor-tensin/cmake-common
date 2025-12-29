@@ -26,9 +26,7 @@ runs:
         function Print-Info {
             param(
                 [Parameter(Mandatory=$true)]
-                [string] $name,
-                [Parameter()]
-                [string] $exe
+                [string] $name
             )
 
             echo ''
@@ -36,11 +34,7 @@ runs:
             echo $name
             echo '------------------------------------------------------------'
 
-            if (!$exe) {
-                $exe = $name
-            }
-
-            $full_path = Get-Command $exe -ErrorAction SilentlyContinue
+            $full_path = Get-Command $name -ErrorAction SilentlyContinue
             if ($full_path) {
                 $full_path = $full_path.Path
                 echo "Location: $full_path"
@@ -51,12 +45,7 @@ runs:
             }
         }
 
-        $python = 'python'
-        if ($env:CI_HOST_CYGWIN) {
-            $python = 'python3'
-        }
-
-        Print-Info 'python' $python
+        Print-Info 'python'
         Print-Info 'cmake'
         Print-Info 'make'
         Print-Info 'mingw32-make'

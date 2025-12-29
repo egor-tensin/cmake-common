@@ -130,16 +130,9 @@ runs:
                     $windows_forbidden = @()
                 }
             }
-            # Linking libstdc++ statically on Cygwin is broken, see the
-            # cygwin_static_libstdc++.yml workflow.
-            $cygwin_forbidden = @('msvcrt.dll')
             $linux_forbidden = @()
 
-            if ($env:CI_TARGET_CYGWIN) {
-                Do-ValidateLinkedLibraries `
-                    -Actual $Actual `
-                    -Forbidden $cygwin_forbidden
-            } elseif ($env:CI_TARGET_WINDOWS) {
+            if ($env:CI_TARGET_WINDOWS) {
                 Do-ValidateLinkedLibraries `
                     -Actual $Actual `
                     -Forbidden $windows_forbidden

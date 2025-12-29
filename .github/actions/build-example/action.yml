@@ -42,15 +42,6 @@ runs:
         $install_dir = '${{ steps.install-dir.outputs.path }}'
         $boost_dir = '${{ inputs.boost-dir }}'
 
-        if ($env:CI_HOST_CYGWIN) {
-            $python = 'python3'
-            $src_dir = cygpath.exe -ua $src_dir
-            $install_dir = cygpath.exe -ua $install_dir
-            if ($boost_dir) {
-                $boost_dir = cygpath.exe -ua $boost_dir
-            }
-        }
-
         $args = @(
             '--install',
             $install_dir,

@@ -14,9 +14,6 @@ limited to:
 | Windows  | make [1]     | Clang [2] |
 |          |              | MinGW-w64 |
 |          | msbuild      | MSVC      |
-| Cygwin   | make         | Clang     |
-|          |              | GCC       |
-|          |              | MinGW-w64 |
 
 1. Both GNU make and MinGW mingw32-make.
 2. clang-cl is supported by Boost 1.69.0 or higher only.
@@ -472,7 +469,7 @@ class CMakeCustom(Toolset):
             if shutil.which('mingw32-make'):
                 return 'MinGW Makefiles'
             return 'Unix Makefiles'
-        # On Linux/Cygwin, make all the way:
+        # On Linux, make all the way:
         return 'Unix Makefiles'
 
     @staticmethod
