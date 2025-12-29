@@ -17,12 +17,12 @@ jobs:
       matrix:
         example: [simple, static, dynamic]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
-        os: [ubuntu-latest, windows-2019, windows-2022]
+        os: [ubuntu-latest, windows-2022, windows-2025]
 
         include:
           # Prettier run names.
           - {os: windows-2022, name: Windows 2022}
-          - {os: windows-2019, name: Windows 2019}
+          - {os: windows-2025, name: Windows 2025}
           - {os: ubuntu-latest, name: Ubuntu}
           # Target platform.
           - {example: simple, platform: x64}
@@ -55,12 +55,6 @@ jobs:
           # Ubuntu: no MSVC/clang-cl.
           - {os: ubuntu-latest, toolset: msvc}
           - {os: ubuntu-latest, toolset: clang-cl}
-          # Optimization: MinGW-w64 should be the same on different Windows
-          # versions.  Clang on the other hand relies on the Microsoft linker
-          # (at least it did at some point), so it makes sense to test it
-          # against different Visual Studio versions.
-          - {os: windows-2019, toolset: gcc}
-          - {os: windows-2019, toolset: mingw}
 
     runs-on: '${{ matrix.os }}'
 
@@ -72,7 +66,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v3
@@ -84,7 +78,7 @@ jobs:
           toolset: '${{ matrix.toolset }}'
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
