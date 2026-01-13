@@ -48,7 +48,7 @@ def full_exe_name(exe):
 def setup_logging():
     logging.basicConfig(
         format='%(asctime)s | %(levelname)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        datefmt='%Y-%m-%d %H:%M:%S%z',
         level=logging.INFO,
         # Log to stdout, because that's where subprocess's output goes (so that
         # they don't get interleaved).
