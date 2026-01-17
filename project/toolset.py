@@ -39,7 +39,6 @@ from project.utils import full_exe_name, temp_file
 class MSVCVersion(Enum):
     # It's the MSVC "toolset" version, or whatever.
     # Source: https://cmake.org/cmake/help/latest/variable/MSVC_TOOLSET_VERSION.html
-
     VS2010 = '100'
     VS2012 = '110'
     VS2013 = '120'
@@ -48,27 +47,14 @@ class MSVCVersion(Enum):
     VS2019 = '142'
     VS2022 = '143'
     VS2026 = '145'
+    # ^^^ Update the mappings below.
 
     def __str__(self):
         return str(self.value)
 
     def help(self):
-        if self is MSVCVersion.VS2010:
-            return 'Visual Studio 2010'
-        if self is MSVCVersion.VS2012:
-            return 'Visual Studio 2012'
-        if self is MSVCVersion.VS2013:
-            return 'Visual Studio 2013'
-        if self is MSVCVersion.VS2015:
-            return 'Visual Studio 2015'
-        if self is MSVCVersion.VS2017:
-            return 'Visual Studio 2017'
-        if self is MSVCVersion.VS2019:
-            return 'Visual Studio 2019'
-        if self is MSVCVersion.VS2022:
-            return 'Visual Studio 2022'
-        if self is MSVCVersion.VS2026:
-            return 'Visual Studio 2026'
+        if self in _msvc_to_vs_version:
+            return f'Visual Studio {_msvc_to_vs_version[self]}'
         raise NotImplementedError(f'unsupported MSVC version: {self}')
 
     @staticmethod
@@ -86,22 +72,8 @@ class MSVCVersion(Enum):
         return self
 
     def to_visual_studio_version(self):
-        if MSVCVersion.VS2010:
-            return VisualStudioVersion.VS2010
-        if MSVCVersion.VS2012:
-            return VisualStudioVersion.VS2012
-        if MSVCVersion.VS2013:
-            return VisualStudioVersion.VS2013
-        if MSVCVersion.VS2015:
-            return VisualStudioVersion.VS2015
-        if MSVCVersion.VS2017:
-            return VisualStudioVersion.VS2017
-        if MSVCVersion.VS2019:
-            return VisualStudioVersion.VS2019
-        if MSVCVersion.VS2022:
-            return VisualStudioVersion.VS2022
-        if MSVCVersion.VS2026:
-            return VisualStudioVersion.VS2026
+        if self in _msvc_to_vs_version:
+            return _msvc_to_vs_version[self]
         raise NotImplementedError(f'unsupported MSVC version: {self}')
 
     def to_boost_msvc_version(self):
@@ -126,27 +98,14 @@ class VisualStudioVersion(Enum):
     VS2019 = '2019'
     VS2022 = '2022'
     VS2026 = '2026'
+    # ^^^ Update the mappings below.
 
     def __str__(self):
         return str(self.value)
 
     def help(self):
-        if self is VisualStudioVersion.VS2010:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2010}'"
-        if self is VisualStudioVersion.VS2012:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2012}'"
-        if self is VisualStudioVersion.VS2013:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2013}'"
-        if self is VisualStudioVersion.VS2015:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2015}'"
-        if self is VisualStudioVersion.VS2017:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2017}'"
-        if self is VisualStudioVersion.VS2019:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2019}'"
-        if self is VisualStudioVersion.VS2022:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2022}'"
-        if self is VisualStudioVersion.VS2026:
-            return f"Same as '{ToolsetType.MSVC}{MSVCVersion.VS2026}'"
+        if self in _vs_to_msvc_version:
+            return f"Same as '{ToolsetType.MSVC}{_vs_to_msvc_version[self]}'"
         raise NotImplementedError(f'unsupported Visual Studio version: {self}')
 
     @staticmethod
@@ -161,26 +120,27 @@ class VisualStudioVersion(Enum):
         return tuple(VisualStudioVersion)
 
     def to_msvc_version(self):
-        if self is VisualStudioVersion.VS2010:
-            return MSVCVersion.VS2010
-        if self is VisualStudioVersion.VS2012:
-            return MSVCVersion.VS2012
-        if self is VisualStudioVersion.VS2013:
-            return MSVCVersion.VS2013
-        if self is VisualStudioVersion.VS2015:
-            return MSVCVersion.VS2015
-        if self is VisualStudioVersion.VS2017:
-            return MSVCVersion.VS2017
-        if self is VisualStudioVersion.VS2019:
-            return MSVCVersion.VS2019
-        if self is VisualStudioVersion.VS2022:
-            return MSVCVersion.VS2022
-        if self is VisualStudioVersion.VS2026:
-            return MSVCVersion.VS2026
+        if self in _vs_to_msvc_version:
+            return _vs_to_msvc_version[self]
         raise NotImplementedError(f'unsupported Visual Studio version: {self}')
 
     def to_visual_studio_version(self):
         return self
+
+
+_msvc_to_vs_version = {
+    MSVCVersion.VS2010: VisualStudioVersion.VS2010,
+    MSVCVersion.VS2012: VisualStudioVersion.VS2012,
+    MSVCVersion.VS2013: VisualStudioVersion.VS2013,
+    MSVCVersion.VS2015: VisualStudioVersion.VS2015,
+    MSVCVersion.VS2017: VisualStudioVersion.VS2017,
+    MSVCVersion.VS2019: VisualStudioVersion.VS2019,
+    MSVCVersion.VS2022: VisualStudioVersion.VS2022,
+    MSVCVersion.VS2026: VisualStudioVersion.VS2026,
+}
+_vs_to_msvc_version = {
+    v: k for k, v in _msvc_to_vs_version.items()
+}
 
 
 class ToolsetType(Enum):
