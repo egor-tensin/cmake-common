@@ -27,8 +27,8 @@ runs:
         $libraries = '${{ inputs.libraries }}'
         $libraries = $libraries.Split(' ')
 
-        $stagedir = Join-Path 'stage' '${{ inputs.platform }}' '${{ inputs.configuration }}'
-        $librarydir = Join-Path $boost_dir $stagedir 'lib'
+        $installdir = Join-Path 'root' '${{ inputs.platform }}' '${{ inputs.configuration }}'
+        $librarydir = Join-Path $boost_dir $installdir 'lib'
 
         function Get-FileStubs {
             param(

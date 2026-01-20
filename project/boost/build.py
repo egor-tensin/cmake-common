@@ -134,6 +134,7 @@ class BuildParameters:
             result += link.b2_args()
             result += runtime_link.b2_args('runtime-link')
             result += self.b2_args
+            result += ['install']
             yield result
 
 

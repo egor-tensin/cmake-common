@@ -75,6 +75,14 @@ class Platform(Enum):
             return 64
         raise NotImplementedError(f'unsupported platform: {self}')
 
+    def installdir(self, configuration):
+        if self is Platform.AUTO:
+            if on_windows():
+                # On Windows, use the host architecture.
+                return Platform.windows_native().installdir(configuration)
+            # On Linux, the libraries are stored in stage/auto/CONFIGURATION/lib.
+        return os.path.join('root', str(self), str(configuration))
+
     def stagedir(self, configuration):
         '''Path to the built libraries inside the Boost build directory.'''
         if self is Platform.AUTO:
@@ -83,6 +91,10 @@ class Platform(Enum):
                 return Platform.windows_native().stagedir(configuration)
             # On Linux, the libraries are stored in stage/auto/CONFIGURATION/lib.
         return os.path.join('stage', str(self), str(configuration))
+
+    def boost_installdir(self, configuration):
+        '''Same as above, but for CMake.'''
+        return self.installdir(configuration)
 
     def boost_librarydir(self, configuration):
         '''Same as above, but for CMake; adds /lib/ at the end.'''
@@ -95,13 +107,16 @@ class Platform(Enum):
             return []
         return [f'address-model={self.address_model()}']
 
+    def b2_installdir(self, configuration):
+        return [f'--prefix={self.installdir(configuration)}']
+
     def b2_stagedir(self, configuration):
         return [f'--stagedir={self.stagedir(configuration)}']
 
     def b2_args(self, configuration):
         args = []
         args += self.b2_address_model()
-        args += self.b2_stagedir(configuration)
+        args += self.b2_installdir(configuration)
         return args
 
     def cmake_toolset_file(self):

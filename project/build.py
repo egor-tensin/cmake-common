@@ -87,11 +87,9 @@ class GenerationPhase:
         if self.boost_dir is None:
             return []
         root = self.boost_dir
-        librarydir = self.platform.boost_librarydir(self.configuration)
-        librarydir = os.path.join(self.boost_dir, librarydir)
+        root = os.path.join(root, self.platform.boost_installdir(self.configuration))
         return [
             f'-DBOOST_ROOT={root}',
-            f'-DBOOST_LIBRARYDIR={librarydir}',
         ]
 
     @staticmethod
