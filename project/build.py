@@ -69,8 +69,6 @@ class GenerationPhase:
         result += self._cmake_boost_args()
         result += self._cmake_extra_args()
         result += self.cmake_args
-        # Important! -H must come as the last parameter, older CMake versions
-        # don't like it when it's not.
         result += self._cmake_dir_args()
         return result
 
