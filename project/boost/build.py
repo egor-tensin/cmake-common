@@ -5,8 +5,8 @@
 
 R'''Build Boost.
 
-The main utility of this script is setting the correct --stagedir parameter
-value to avoid name clashes.
+The main utility of this script is setting the correct --prefix parameter value
+to avoid name clashes.
 
 It also facilitates building with different toolsets/for different platforms
 with the help from the --toolset and --platform parameters.
@@ -159,8 +159,8 @@ def _parse_args(argv=None):
 
     platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
-    # These are used to put the built libraries into proper stage/
-    # subdirectories (to avoid name clashes).
+    # These are used to put the built libraries into proper installation
+    # directory subdirectories (to avoid name clashes).
     parser.add_argument('--platform', metavar='PLATFORM', dest='platforms',
                         nargs='*', type=Platform.parse, default=[],
                         help=f'target platform ({platform_options})')

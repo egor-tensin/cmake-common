@@ -5,8 +5,8 @@
 
 R'''Build a CMake project.
 
-This script works nicely with boost-build from this package - it will use the
-correct --stagedir directory automatically.
+This script works nicely with boost-build from this package - it will set the
+correct BOOST_ROOT value automatically.
 
 Also, it facilitates building with different toolsets/for different platforms
 with the help from the --toolset and --platform parameters.

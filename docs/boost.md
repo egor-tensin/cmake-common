@@ -1,6 +1,11 @@
 Library naming
 --------------
 
+**TODO: since switching to calling `b2 install` (instead of `b2 stage`), this
+might no longer be relevant, this should be checked on Windows.  I.e. does
+Windows still has this insane naming scheme, even when calling `install`
+instead of `stage`?**
+
 The way Boost names library files by default is insane.  It's absolutely not
 compatible between OSs, compilers, Boost versions, etc.  On Linux, for example,
 it would create stage/lib/libboost_filesystem.a, while on Windows it would

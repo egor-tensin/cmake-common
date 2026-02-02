@@ -34,7 +34,7 @@ class Configuration(Enum):
 
         AFAIK, Boost only supports debug/release, MinSizeRel and RelWithDebInfo
         are hence mapped to "release".  The libraries will still reside in
-        stage/PLATFORM/CONFIGURATION/lib, if CONFIGURATION is
+        root/PLATFORM/CONFIGURATION/lib, if CONFIGURATION is
         MinSizeRel/RelWithDebInfo.
         '''
         if self in (Configuration.MINSIZEREL, Configuration.RELWITHDEBINFO):

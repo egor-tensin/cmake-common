@@ -76,29 +76,17 @@ class Platform(Enum):
         raise NotImplementedError(f'unsupported platform: {self}')
 
     def installdir(self, configuration):
+        '''Path to the installation directory inside the Boost build directory.'''
         if self is Platform.AUTO:
             if on_windows():
                 # On Windows, use the host architecture.
                 return Platform.windows_native().installdir(configuration)
-            # On Linux, the libraries are stored in stage/auto/CONFIGURATION/lib.
+            # On Linux, the libraries are stored in root/auto/CONFIGURATION/lib.
         return os.path.join('root', str(self), str(configuration))
-
-    def stagedir(self, configuration):
-        '''Path to the built libraries inside the Boost build directory.'''
-        if self is Platform.AUTO:
-            if on_windows():
-                # On Windows, use the host architecture.
-                return Platform.windows_native().stagedir(configuration)
-            # On Linux, the libraries are stored in stage/auto/CONFIGURATION/lib.
-        return os.path.join('stage', str(self), str(configuration))
 
     def boost_installdir(self, configuration):
         '''Same as above, but for CMake.'''
         return self.installdir(configuration)
-
-    def boost_librarydir(self, configuration):
-        '''Same as above, but for CMake; adds /lib/ at the end.'''
-        return os.path.join(self.stagedir(configuration), 'lib')
 
     def b2_address_model(self):
         if self is Platform.AUTO and not on_windows():
@@ -109,9 +97,6 @@ class Platform(Enum):
 
     def b2_installdir(self, configuration):
         return [f'--prefix={self.installdir(configuration)}']
-
-    def b2_stagedir(self, configuration):
-        return [f'--stagedir={self.stagedir(configuration)}']
 
     def b2_args(self, configuration):
         args = []
