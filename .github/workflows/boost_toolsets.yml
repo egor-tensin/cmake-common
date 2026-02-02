@@ -155,8 +155,6 @@ jobs:
           toolset: '${{ matrix.toolset }}'
           platform: '${{ matrix.platform }}'
           configuration: '${{ matrix.configuration }}'
-          # Older Boosts don't like the newer standards (auto_ptr, etc.)
-          cmake-args: -D CC_CXX_STANDARD=14
 
       - name: Verify runtime library linkage
         uses: ./.github/actions/check-runtime-library

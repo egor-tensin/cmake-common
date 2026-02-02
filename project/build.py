@@ -135,14 +135,13 @@ class BuildPhase:
 
 
 class BuildParameters:
-    BUILD_DIR_TMP_PLACEHOLDER = 'TMP'
-
     def __init__(self, src_dir, build_dir, install_dir=None,
                  platform=None, configuration=None, boost_dir=None,
                  toolset_version=None, cmake_args=None):
 
         src_dir = normalize_path(src_dir)
-        build_dir = self.normalize_build_dir(build_dir)
+        if build_dir is not None:
+            build_dir = normalize_path(build_dir)
         if install_dir is not None:
             install_dir = normalize_path(install_dir)
         platform = platform or DEFAULT_PLATFORM
@@ -167,15 +166,9 @@ class BuildParameters:
         args.pop('help_toolsets', None)
         return BuildParameters(**args)
 
-    @staticmethod
-    def normalize_build_dir(build_dir):
-        if build_dir == BuildParameters.BUILD_DIR_TMP_PLACEHOLDER:
-            return build_dir
-        return normalize_path(build_dir)
-
     @contextmanager
     def create_build_dir(self):
-        if self.build_dir != BuildParameters.BUILD_DIR_TMP_PLACEHOLDER:
+        if self.build_dir is not None:
             logging.info('Build directory: %s', self.build_dir)
             mkdir_parent(self.build_dir)
             yield self.build_dir
@@ -187,7 +180,6 @@ class BuildParameters:
                 yield build_dir
             finally:
                 logging.info('Removing build directory: %s', build_dir)
-            return
 
 
 def build(params):
@@ -244,12 +236,14 @@ def _parse_args(argv=None):
     parser.add_argument('--help-toolsets', action='store_true',
                         help='show detailed info about supported toolsets')
 
+    parser.add_argument('--cmake-arg', metavar='ARG', dest='cmake_args',
+                        action='extend', nargs='*',
+                        help='additional CMake arguments, to be passed verbatim')
+
     parser.add_argument('src_dir', type=normalize_path,
                         help='source directory')
-    parser.add_argument('build_dir', type=BuildParameters.normalize_build_dir,
-                        help=f"build directory ('{BuildParameters.BUILD_DIR_TMP_PLACEHOLDER}' to use a temporary directory)")
-    parser.add_argument('cmake_args', nargs='*', default=[],
-                        help='additional CMake arguments, to be passed verbatim')
+    parser.add_argument('build_dir', type=normalize_path, nargs='?',
+                        help=f"build directory (a temporary directory if omitted)")
 
     return parser.parse_args(argv)
 

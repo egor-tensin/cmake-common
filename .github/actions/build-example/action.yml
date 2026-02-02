@@ -19,9 +19,6 @@ inputs:
     description: Configuration to build
     required: false
     default: Debug
-  cmake-args:
-    description: Additional CMake arguments
-    required: false
 outputs:
   install-dir:
     description: Installation directory
@@ -57,7 +54,7 @@ runs:
             $args += '--boost',$boost_dir
         }
 
-        $args += '--',$src_dir,'TMP'
+        $args += '--',$src_dir
         $env:VERBOSE = 1
-        & $python -m project.build $args ${{ inputs.cmake-args }}
+        & $python -m project.build $args
       shell: pwsh
