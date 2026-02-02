@@ -53,23 +53,14 @@ def run_cmake(cmake_args):
 class GenerationPhase:
     def __init__(self, src_dir, build_dir, install_dir=None, platform=None,
                  configuration=None, boost_dir=None, cmake_args=None):
-        src_dir = normalize_path(src_dir)
-        build_dir = normalize_path(build_dir)
-        if install_dir is not None:
-            install_dir = normalize_path(install_dir)
-        platform = platform or DEFAULT_PLATFORM
-        configuration = configuration or DEFAULT_CONFIGURATION
-        if boost_dir is not None:
-            boost_dir = normalize_path(boost_dir)
-        cmake_args = cmake_args or []
 
-        self.src_dir = src_dir
-        self.build_dir = build_dir
-        self.install_dir = install_dir
-        self.platform = platform
-        self.configuration = configuration
-        self.boost_dir = boost_dir
-        self.cmake_args = cmake_args
+        self.src_dir = normalize_path(src_dir)
+        self.build_dir = normalize_path(build_dir)
+        self.install_dir = normalize_path(install_dir) if install_dir else None
+        self.platform = platform or DEFAULT_PLATFORM
+        self.configuration = configuration or DEFAULT_CONFIGURATION
+        self.boost_dir = normalize_path(boost_dir) if boost_dir else None
+        self.cmake_args = cmake_args or []
 
     def _cmake_args(self, toolset):
         result = []
@@ -114,13 +105,9 @@ class GenerationPhase:
 
 class BuildPhase:
     def __init__(self, build_dir, install_dir=None, configuration=None):
-
-        build_dir = normalize_path(build_dir)
-        configuration = configuration or DEFAULT_CONFIGURATION
-
-        self.build_dir = build_dir
+        self.build_dir = normalize_path(build_dir)
         self.install_dir = install_dir
-        self.configuration = configuration
+        self.configuration = configuration or DEFAULT_CONFIGURATION
 
     def _cmake_args(self, toolset):
         result = ['--build', self.build_dir]
@@ -139,26 +126,14 @@ class BuildParameters:
                  platform=None, configuration=None, boost_dir=None,
                  toolset_version=None, cmake_args=None):
 
-        src_dir = normalize_path(src_dir)
-        if build_dir is not None:
-            build_dir = normalize_path(build_dir)
-        if install_dir is not None:
-            install_dir = normalize_path(install_dir)
-        platform = platform or DEFAULT_PLATFORM
-        configuration = configuration or DEFAULT_CONFIGURATION
-        if boost_dir is not None:
-            boost_dir = normalize_path(boost_dir)
-        toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
-        cmake_args = cmake_args or []
-
-        self.src_dir = src_dir
-        self.build_dir = build_dir
-        self.install_dir = install_dir
-        self.platform = platform
-        self.configuration = configuration
-        self.boost_dir = boost_dir
-        self.toolset_version = toolset_version
-        self.cmake_args = cmake_args
+        self.src_dir = normalize_path(src_dir)
+        self.build_dir = normalize_path(build_dir) if build_dir else None
+        self.install_dir = normalize_path(install_dir) if install_dir else None
+        self.platform = platform or DEFAULT_PLATFORM
+        self.configuration = configuration or DEFAULT_CONFIGURATION
+        self.boost_dir = normalize_path(boost_dir) if boost_dir else None
+        self.toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
+        self.cmake_args = cmake_args or []
 
     @staticmethod
     def from_args(args):
