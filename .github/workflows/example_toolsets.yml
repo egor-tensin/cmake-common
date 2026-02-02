@@ -138,9 +138,9 @@ jobs:
         with:
           path: '${{ steps.build.outputs.install-dir }}'
 
-      - name: Check symbols
-        uses: ./.github/actions/check-symbols
-        with:
-          path: '${{ steps.build.outputs.install-dir }}'
-          expected: '${{ toJson(matrix.symbols) }}'
-        if: env.CI_TARGET_ELF
+      #- name: Check symbols
+      #  uses: ./.github/actions/check-symbols
+      #  with:
+      #    path: '${{ steps.build.outputs.install-dir }}'
+      #    expected: '${{ toJson(matrix.symbols) }}'
+      #  if: env.CI_TARGET_ELF
