@@ -5,7 +5,6 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'README.md'
-  pull_request:
   schedule:
     # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
     - cron: '30 5 * * 6'
@@ -130,7 +129,7 @@ jobs:
           path: dist
           if-no-files-found: error
       - name: Publish to PyPI
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
