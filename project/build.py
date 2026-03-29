@@ -28,6 +28,7 @@ import sys
 import tempfile
 
 from project.configuration import Configuration
+from project.linkage import Linkage
 from project.platform import Platform
 from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
@@ -51,15 +52,19 @@ def run_cmake(cmake_args):
 
 
 class GenerationPhase:
-    def __init__(self, src_dir, build_dir, install_dir=None, platform=None,
-                 configuration=None, boost_dir=None, cmake_args=None):
+    def __init__(self, src_dir, build_dir, platform=None, configuration=None,
+                 boost_dir=None, link=None, runtime_link=None,
+                 install_dir=None, cmake_args=None):
 
         self.src_dir = normalize_path(src_dir)
         self.build_dir = normalize_path(build_dir)
-        self.install_dir = normalize_path(install_dir) if install_dir else None
         self.platform = platform or DEFAULT_PLATFORM
         self.configuration = configuration or DEFAULT_CONFIGURATION
         self.boost_dir = normalize_path(boost_dir) if boost_dir else None
+        link = link or Linkage.default_link()
+        runtime_link = runtime_link or Linkage.default_runtime_link()
+        self.link, self.runtime_link = Linkage.validate_linkage(link, runtime_link)
+        self.install_dir = normalize_path(install_dir) if install_dir else None
         self.cmake_args = cmake_args or []
 
     def _cmake_args(self, toolset):
@@ -68,6 +73,7 @@ class GenerationPhase:
         result += self.configuration.cmake_args()
         result += self._cmake_boost_args()
         result += self._cmake_extra_args()
+        result += self.runtime_link.cmake_args_runtime_link()
         result += self.cmake_args
         result += self._cmake_dir_args()
         return result
@@ -77,9 +83,11 @@ class GenerationPhase:
             return []
         root = self.boost_dir
         root = os.path.join(root, self.platform.boost_installdir(self.configuration))
-        return [
+        args = [
             f'-DBOOST_ROOT={root}',
         ]
+        args += self.link.cmake_args_link()
+        return args
 
     @staticmethod
     def _cmake_extra_args():
@@ -120,9 +128,9 @@ class BuildPhase:
 
 
 class BuildParameters:
-    def __init__(self, src_dir, build_dir, install_dir=None,
-                 platform=None, configuration=None, boost_dir=None,
-                 toolset_version=None, cmake_args=None):
+    def __init__(self, src_dir, build_dir, install_dir=None, platform=None,
+                 configuration=None, boost_dir=None, link=None,
+                 runtime_link=None, toolset_version=None, cmake_args=None):
 
         self.src_dir = normalize_path(src_dir)
         self.build_dir = normalize_path(build_dir) if build_dir else None
@@ -130,6 +138,8 @@ class BuildParameters:
         self.platform = platform or DEFAULT_PLATFORM
         self.configuration = configuration or DEFAULT_CONFIGURATION
         self.boost_dir = normalize_path(boost_dir) if boost_dir else None
+        self.link = link or Linkage.default_link()
+        self.runtime_link = runtime_link or Linkage.default_runtime_link()
         self.toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
         self.cmake_args = cmake_args or []
 
@@ -160,10 +170,12 @@ def build(params):
         toolset = Toolset.make(params.toolset_version, params.platform)
 
         gen_phase = GenerationPhase(params.src_dir, build_dir,
-                                    install_dir=params.install_dir,
                                     platform=params.platform,
                                     configuration=params.configuration,
                                     boost_dir=params.boost_dir,
+                                    link=params.link,
+                                    runtime_link=params.runtime_link,
+                                    install_dir=params.install_dir,
                                     cmake_args=params.cmake_args)
         gen_phase.run(toolset)
         build_phase = BuildPhase(build_dir, install_dir=params.install_dir,
@@ -183,11 +195,14 @@ def _parse_args(argv=None):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument('--help-toolsets', action='store_true',
+                        help='show detailed info about supported toolsets')
+
     project.version.add_to_arg_parser(parser)
 
-    parser.add_argument('--install', metavar='DIR', dest='install_dir',
-                        type=normalize_path,
-                        help='install directory')
+    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
+                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
+                        help=f'toolset to use ({ToolsetVersion.usage()})')
 
     platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
@@ -203,11 +218,17 @@ def _parse_args(argv=None):
                         type=normalize_path,
                         help='set Boost directory path')
 
-    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
-                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
-                        help=f'toolset to use ({ToolsetVersion.usage()})')
-    parser.add_argument('--help-toolsets', action='store_true',
-                        help='show detailed info about supported toolsets')
+    linkage_options = '/'.join(map(str, Linkage.all()))
+    parser.add_argument('--link', metavar='LINKAGE',
+                        type=Linkage.parse, default=Linkage.default_link(),
+                        help=f'how Boost libraries are linked ({linkage_options})')
+    parser.add_argument('--runtime-link', metavar='LINKAGE',
+                        type=Linkage.parse, default=Linkage.default_runtime_link(),
+                        help=f'which runtime to link to ({linkage_options})')
+
+    parser.add_argument('--install', metavar='DIR', dest='install_dir',
+                        type=normalize_path,
+                        help='install directory')
 
     parser.add_argument('--cmake-arg', metavar='ARG', dest='cmake_args',
                         action='extend', nargs='*',

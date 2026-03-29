@@ -36,7 +36,6 @@ import tempfile
 from project.boost.directory import BoostDir
 from project.configuration import Configuration
 from project.linkage import Linkage
-from project.os import on_linux_like
 from project.platform import Platform
 from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, setup_logging
@@ -45,10 +44,6 @@ import project.version
 
 DEFAULT_PLATFORMS = (Platform.AUTO,)
 DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
-# For my development, I link everything statically (to be able to pull the
-# binaries from a CI, etc. and run them everywhere):
-DEFAULT_LINK = (Linkage.STATIC,)
-DEFAULT_RUNTIME_LINK = Linkage.STATIC
 DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
 B2_QUIET = ['warnings=off', '-d0']
 B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
@@ -65,8 +60,8 @@ class BuildParameters:
             build_dir = normalize_path(build_dir)
         platforms = platforms or DEFAULT_PLATFORMS
         configurations = configurations or DEFAULT_CONFIGURATIONS
-        link = link or DEFAULT_LINK
-        runtime_link = runtime_link or DEFAULT_RUNTIME_LINK
+        link = link or Linkage.default_link()
+        runtime_link = runtime_link or Linkage.default_runtime_link()
         toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
         verbosity = B2_VERBOSE if verbose else B2_QUIET
         if b2_args:
@@ -94,21 +89,8 @@ class BuildParameters:
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
                 for configuration in self.configurations:
-                    for link, runtime_link in self._enum_linkage_options():
-                        with self._b2_args(build_dir, platform, configuration, link, runtime_link) as args:
-                            yield args
-
-    def _enum_linkage_options(self):
-        for link in self.link:
-            runtime_link = self.runtime_link
-            if runtime_link is Linkage.STATIC:
-                if link is Linkage.SHARED:
-                    logging.warning("Cannot link the runtime statically to a dynamic library, going to link dynamically")
-                    runtime_link = Linkage.SHARED
-                elif on_linux_like():
-                    logging.warning("Cannot link to the GNU C Library or BSD libc (which are assumed) statically, going to link dynamically")
-                    runtime_link = Linkage.SHARED
-            yield link, runtime_link
+                    with self._b2_args(build_dir, platform, configuration) as args:
+                        yield args
 
     @contextmanager
     def _create_build_dir(self):
@@ -126,15 +108,16 @@ class BuildParameters:
             return
 
     @contextmanager
-    def _b2_args(self, build_dir, platform, configuration, link, runtime_link):
+    def _b2_args(self, build_dir, platform, configuration):
         toolset = Toolset.make(self.toolset_version, platform)
+        link, runtime_link = Linkage.validate_linkage(self.link, self.runtime_link)
         with toolset.b2_args() as result:
             result.append(f'--build-dir={build_dir}')
             result.append('--layout=system')
             result += platform.b2_args(configuration)
             result += configuration.b2_args()
-            result += link.b2_args()
-            result += runtime_link.b2_args('runtime-link')
+            result += link.b2_args_link()
+            result += runtime_link.b2_args_runtime_link()
             result += self.b2_args
             if self.libraries:
                 result += [f'--with-{lib}' for lib in self.libraries]
@@ -159,7 +142,17 @@ def _parse_args(argv=None):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument('--help-toolsets', action='store_true',
+                        help='show detailed info about supported toolsets')
+
     project.version.add_to_arg_parser(parser)
+
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbose b2 invocation (quiet by default)')
+
+    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
+                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
+                        help=f'toolset to use ({ToolsetVersion.usage()})')
 
     platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
@@ -177,23 +170,17 @@ def _parse_args(argv=None):
     # different: static & dynamic libs are built on Linux, but only static libs
     # are built on Windows by default.
     parser.add_argument('--link', metavar='LINKAGE',
-                        nargs='*', type=Linkage.parse, default=[],
+                        type=Linkage.parse, default=Linkage.default_link(),
                         help=f'how the libraries are linked ({linkage_options})')
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
     parser.add_argument('--runtime-link', metavar='LINKAGE',
-                        type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
+                        type=Linkage.parse, default=Linkage.default_runtime_link(),
                         help=f'how the libraries link to the runtime ({linkage_options})')
 
     parser.add_argument('--build', metavar='DIR', dest='build_dir',
                         type=normalize_path,
                         help='Boost build directory (temporary directory unless specified)')
-
-    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
-                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
-                        help=f'toolset to use ({ToolsetVersion.usage()})')
-    parser.add_argument('--help-toolsets', action='store_true',
-                        help='show detailed info about supported toolsets')
 
     parser.add_argument('--b2-arg', metavar='ARG', dest='b2_args',
                         action='extend', nargs='*',
@@ -205,9 +192,6 @@ def _parse_args(argv=None):
     parser.add_argument('libraries', metavar='LIBRARIES',
                         action='extend', nargs='*',
                         help='libraries to build (all libraries by default)')
-
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='verbose b2 invocation (quiet by default)')
 
     return parser.parse_args(argv)
 

@@ -5,6 +5,9 @@
 
 import argparse
 from enum import Enum
+import logging
+
+from project.os import on_linux_like
 
 
 class Linkage(Enum):
@@ -25,5 +28,42 @@ class Linkage(Enum):
         except ValueError as e:
             raise argparse.ArgumentTypeError(f'invalid linkage: {s}') from e
 
-    def b2_args(self, name='link'):
-        return [f'{name}={self}']
+    # For my development, I link everything statically (to be able to pull the
+    # binaries from a CI, etc. and run them everywhere):
+    @staticmethod
+    def default_link():
+        return Linkage.STATIC
+
+    @staticmethod
+    def default_runtime_link():
+        return Linkage.STATIC
+
+    @staticmethod
+    def validate_linkage(link, runtime_link):
+        if runtime_link is Linkage.STATIC:
+            if link is Linkage.SHARED:
+                logging.warning("Cannot link the runtime statically to a dynamic library, going to link dynamically")
+                runtime_link = Linkage.SHARED
+            elif on_linux_like():
+                logging.warning("Cannot link to the GNU C Library or BSD libc (which are assumed) statically, going to link dynamically")
+                runtime_link = Linkage.SHARED
+        return link, runtime_link
+
+    def b2_args_link(self):
+        return [f'link={self}']
+
+    def b2_args_runtime_link(self):
+        return [f'runtime-link={self}']
+
+    def cmake_args_link(self):
+        if self is Linkage.STATIC:
+            return ['-DBoost_USE_STATIC_LIBS=ON']
+        return []
+
+    def cmake_args_runtime_link(self):
+        if self is Linkage.STATIC:
+            return [
+                '-DBoost_USE_STATIC_RUNTIME=ON',
+                '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>',
+            ]
+        return []
