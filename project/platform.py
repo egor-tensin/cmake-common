@@ -81,8 +81,8 @@ class Platform(Enum):
             if on_windows():
                 # On Windows, use the host architecture.
                 return Platform.windows_native().installdir(configuration)
-            # On Linux, the libraries are stored in root/auto/CONFIGURATION/lib.
-        return os.path.join('root', str(self), str(configuration))
+            # On Linux, the libraries are stored in install_dir/auto/CONFIGURATION/lib.
+        return os.path.join('install_dir', str(self), str(configuration))
 
     def boost_installdir(self, configuration):
         '''Same as above, but for CMake.'''
