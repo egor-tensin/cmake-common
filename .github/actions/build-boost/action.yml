@@ -31,7 +31,7 @@ runs:
         }
 
         $libraries = '${{ inputs.libraries }}'
-        $libraries = $libraries.Split(' ') | %{ "--with-$_" }
+        $libraries = $libraries.Split(' ')
         if (-not $libraries) {
             Remove-Variable libraries
         }

@@ -48,7 +48,7 @@ jobs:
       - name: Build Boost
         run: |
           python -m project.boost.download --cache . '${{ matrix.boost-version }}' boost/
-          python -m project.boost.build -- boost/ --with-filesystem
+          python -m project.boost.build boost/ filesystem
       - name: Build example project
         run: |
           $src_dir = Join-Path examples boost
@@ -93,7 +93,7 @@ jobs:
       - name: Build Boost
         run: |
           boost-download --cache . '${{ matrix.boost-version }}' boost/
-          boost-build -- boost/ --with-filesystem
+          boost-build boost/ filesystem
       - name: Build example project
         run: |
           $src_dir = Join-Path examples boost

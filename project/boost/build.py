@@ -13,7 +13,7 @@ with the help from the --toolset and --platform parameters.
 
 Usage example:
 
-    $ boost-build -- boost_1_71_0/ --with-filesystem --with-program_options
+    $ boost-build boost_1_71_0/ filesystem program_options
     ...
 
 Consult the output of `boost-build --help` for more details.
@@ -55,11 +55,12 @@ B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
 
 
 class BuildParameters:
-    def __init__(self, boost_dir, build_dir=None, platforms=None,
+    def __init__(self, boost_dir, libraries, build_dir=None, platforms=None,
                  configurations=None, link=None, runtime_link=None,
                  toolset_version=None, verbose=False, b2_args=None):
 
         boost_dir = normalize_path(boost_dir)
+        libraries = libraries or []
         if build_dir is not None:
             build_dir = normalize_path(build_dir)
         platforms = platforms or DEFAULT_PLATFORMS
@@ -74,6 +75,7 @@ class BuildParameters:
             b2_args = verbosity
 
         self.boost_dir = boost_dir
+        self.libraries = libraries
         self.build_dir = build_dir
         self.platforms = platforms
         self.configurations = configurations
@@ -91,10 +93,9 @@ class BuildParameters:
     def enum_b2_args(self):
         with self._create_build_dir() as build_dir:
             for platform in self.platforms:
-                toolset = Toolset.make(self.toolset_version, platform)
                 for configuration in self.configurations:
                     for link, runtime_link in self._enum_linkage_options():
-                        with self._b2_args(build_dir, toolset, platform, configuration, link, runtime_link) as args:
+                        with self._b2_args(build_dir, platform, configuration, link, runtime_link) as args:
                             yield args
 
     def _enum_linkage_options(self):
@@ -125,7 +126,8 @@ class BuildParameters:
             return
 
     @contextmanager
-    def _b2_args(self, build_dir, toolset, platform, configuration, link, runtime_link):
+    def _b2_args(self, build_dir, platform, configuration, link, runtime_link):
+        toolset = Toolset.make(self.toolset_version, platform)
         with toolset.b2_args() as result:
             result.append(f'--build-dir={build_dir}')
             result.append('--layout=system')
@@ -134,6 +136,8 @@ class BuildParameters:
             result += link.b2_args()
             result += runtime_link.b2_args('runtime-link')
             result += self.b2_args
+            if self.libraries:
+                result += [f'--with-{lib}' for lib in self.libraries]
             result += ['install']
             yield result
 
@@ -181,24 +185,29 @@ def _parse_args(argv=None):
                         type=Linkage.parse, default=DEFAULT_RUNTIME_LINK,
                         help=f'how the libraries link to the runtime ({linkage_options})')
 
+    parser.add_argument('--build', metavar='DIR', dest='build_dir',
+                        type=normalize_path,
+                        help='Boost build directory (temporary directory unless specified)')
+
     parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
                         type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
                         help=f'toolset to use ({ToolsetVersion.usage()})')
     parser.add_argument('--help-toolsets', action='store_true',
                         help='show detailed info about supported toolsets')
 
-    parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=normalize_path,
-                        help='Boost build directory (temporary directory unless specified)')
-    parser.add_argument('boost_dir', metavar='DIR',
+    parser.add_argument('--b2-arg', metavar='ARG', dest='b2_args',
+                        action='extend', nargs='*',
+                        help='additional b2 arguments, to be passed verbatim')
+
+    parser.add_argument('boost_dir', metavar='BOOST_DIR',
                         type=normalize_path,
                         help='root Boost directory')
+    parser.add_argument('libraries', metavar='LIBRARIES',
+                        action='extend', nargs='*',
+                        help='libraries to build (all libraries by default)')
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='verbose b2 invocation (quiet by default)')
-    parser.add_argument('b2_args', metavar='B2_ARG',
-                        nargs='*', default=[],
-                        help='additional b2 arguments, to be passed verbatim')
 
     return parser.parse_args(argv)
 

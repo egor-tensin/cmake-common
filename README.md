@@ -73,7 +73,7 @@ Download & build the Boost libraries in a cross-platform way.
     $ boost-download 1.72.0
     ...
 
-    $ boost-build -- boost_1_72_0/ --with-filesystem --with-program_options
+    $ boost-build boost_1_72_0/ filesystem program_options
     ...
 
 Pass the `--help` flag to view detailed usage information.
