@@ -79,8 +79,8 @@ class MSVCVersion(Enum):
     def to_boost_msvc_version(self):
         try:
             numeric = int(self.value)
-        except ValueError:
-            raise RuntimeError(f'what? MSVC versions are supposed to be integers: {self.value}')
+        except ValueError as e:
+            raise RuntimeError(f'what? MSVC versions are supposed to be integers: {self.value}') from e
         numeric = Decimal(numeric) / 10
         numeric = numeric.quantize(Decimal('1.0'))
         return str(numeric)

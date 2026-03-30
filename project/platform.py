@@ -36,7 +36,7 @@ class Platform(Enum):
 
     @staticmethod
     def all():
-        return Platform.X86, Platform.X64,
+        return Platform.X86, Platform.X64
 
     @staticmethod
     def parse(s):

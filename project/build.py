@@ -237,7 +237,7 @@ def _parse_args(argv=None):
     parser.add_argument('src_dir', type=normalize_path,
                         help='source directory')
     parser.add_argument('build_dir', type=normalize_path, nargs='?',
-                        help=f"build directory (a temporary directory if omitted)")
+                        help='build directory (a temporary directory if omitted)')
 
     return parser.parse_args(argv)
 

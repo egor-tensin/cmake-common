@@ -101,7 +101,6 @@ class Download:
         reply = self._try_urls()
         with self.storage.write_archive(self.version, reply) as path:
             yield path
-            return
 
     @contextmanager
     def download_if_necessary(self):
