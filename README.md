@@ -90,22 +90,6 @@ Build (and optionally, install) a CMake project.
 
 Pass the `--help` flag to view detailed usage information.
 
-### common.cmake
-
-Use in a project by putting
-
-    include(path/to/common.cmake)
-
-in CMakeLists.txt.
-
-This file aids in quick-and-dirty development by
-
-* linking everything (including the runtime) statically by default,
-* setting some useful compilation options (enables warnings, defines common
-Windows-specific macros, strips debug symbols in release builds, etc.).
-
-Everything is enabled by default (use the `CC_*` CMake options to opt out).
-
 Tools
 -----
 

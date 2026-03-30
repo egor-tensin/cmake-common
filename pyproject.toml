@@ -38,7 +38,4 @@ script-files = [
     "tools/project-clang-format.py",
 ]
 
-[tool.setuptools.data-files]
-"share/cmake" = ["common.cmake"]
-
 [tool.setuptools_scm]
