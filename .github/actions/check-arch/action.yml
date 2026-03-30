@@ -12,9 +12,9 @@ runs:
   steps:
     - run: |
         $script_path = if ($env:CI_TARGET_PE) {
-            Join-Path $env:GITHUB_WORKSPACE '.ci' 'verify_arch.ps1'
+            Join-Path $env:GITHUB_WORKSPACE 'test' 'scripts' 'verify_arch.ps1'
         } else {
-            Join-Path $env:GITHUB_WORKSPACE '.ci' 'verify_arch.sh'
+            Join-Path $env:GITHUB_WORKSPACE 'test' 'scripts' 'verify_arch.sh'
         }
 
         $exe_path = (Join-Path '${{ inputs.path }}' 'bin' 'foo') + $env:CI_EXE_EXT

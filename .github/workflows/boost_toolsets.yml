@@ -3,7 +3,7 @@ name: Boost (toolsets)
 on:
   push:
     paths:
-      - 'examples/**'
+      - 'test/**'
       - 'project/**'
   schedule:
     # Weekly, at 5:30 AM on Saturday (somewhat randomly chosen).
@@ -149,7 +149,7 @@ jobs:
         id: build_example
         uses: ./.github/actions/build-example
         with:
-          src-dir: examples/boost
+          src-dir: test/examples/boost
           boost-dir: '${{ env.BOOST_DIR }}'
           toolset: '${{ matrix.toolset }}'
           platform: '${{ matrix.platform }}'

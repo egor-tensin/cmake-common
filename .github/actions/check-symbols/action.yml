@@ -16,7 +16,7 @@ runs:
         $lib_dir = Join-Path $install_dir 'lib'
 
         $script_path = if ($env:CI_TARGET_ELF) {
-            Join-Path $env:GITHUB_WORKSPACE '.ci' 'verify_symbols.sh'
+            Join-Path $env:GITHUB_WORKSPACE 'test' 'scripts' 'verify_symbols.sh'
         } else {
             throw "Verifying symbols for PE executables is not implemented"
         }

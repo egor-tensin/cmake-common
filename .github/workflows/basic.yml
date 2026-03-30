@@ -51,10 +51,9 @@ jobs:
           python -m project.boost.build boost/ filesystem
       - name: Build example project
         run: |
-          $src_dir = Join-Path examples boost
-          python -m project.build --boost boost/ --install install/ -- $src_dir build/
+          python -m project.build --boost boost/ --install install/ -- test/examples/boost/ build/
       - name: Run example project
-        run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
+        run: ./test/examples/boost/run.ps1 ./install/bin/foo
 
   # Check that the most basic use-case works w/ different Python versions.
   python-versions:
@@ -96,10 +95,9 @@ jobs:
           boost-build boost/ filesystem
       - name: Build example project
         run: |
-          $src_dir = Join-Path examples boost
-          project-build --boost boost/ --install install/ -- $src_dir build/
+          project-build --boost boost/ --install install/ -- test/examples/boost/ build/
       - name: Run example project
-        run: ./.ci/run_foo.ps1 (Join-Path (Get-Location).Path install bin foo)
+        run: ./test/examples/boost/run.ps1 ./install/bin/foo
 
   # Build a Python package and upload to PyPI.
   publish:
