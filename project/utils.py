@@ -108,12 +108,6 @@ def temp_file(**kwargs):
         yield path
 
 
-def env(name):
-    if name not in os.environ:
-        raise RuntimeError(f'undefined environment variable: {name}')
-    return os.environ[name]
-
-
 def retry(exc_type, timeout=5, tries=3, backoff=2):
     def wrapper(func):
         @functools.wraps(func)

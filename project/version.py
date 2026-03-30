@@ -6,7 +6,7 @@ except ImportError:
 
 try:
     __version__ = metadata.version('cmake_common')
-except Exception:
+except:
     __version__ = 'unknown'
 
 
