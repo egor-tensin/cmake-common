@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        example: [simple, static, dynamic]
+        example: [simple]
         toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
         os: [ubuntu-latest, windows-2022, windows-2025]
 
@@ -24,25 +24,31 @@ jobs:
           - {os: windows-2025, name: Windows 2025}
           - {os: ubuntu-latest, name: Ubuntu}
           # Target platform.
-          - {example: simple, platform: x64}
-          - {example: static, platform: x86}
-          - {example: dynamic, platform: x64}
+          - {os: windows-2022, platform: x86}
+          - {os: windows-2025, platform: x64}
+          - {os: ubuntu-latest, platform: x64}
           # Configuration.
-          - {example: simple, configuration: Release}
-          - {example: static, configuration: Debug}
-          - {example: dynamic, configuration: RelWithDebInfo}
+          - {os: windows-2022, configuration: Release}
+          - {os: windows-2025, configuration: Debug}
+          - {os: ubuntu-latest, configuration: RelWithDebInfo}
           # Expected symbols.
-          - example: simple
+          - os: windows-2022
             symbols:
               - target: foo
                 type: exe
                 symbols: []
-          - example: static
+              - target: baz
+                type: dll
+                symbols: [baz]
+          - os: windows-2025
             symbols:
               - target: foo
                 type: exe
-                symbols: [main, bar]
-          - example: dynamic
+                symbols: [main]
+              - target: baz
+                type: dll
+                symbols: [baz]
+          - os: ubuntu-latest
             symbols:
               - target: foo
                 type: exe
@@ -57,7 +63,7 @@ jobs:
 
     runs-on: '${{ matrix.os }}'
 
-    name: '${{ matrix.example }} / ${{ matrix.toolset }} / ${{ matrix.name }}'
+    name: '${{ matrix.toolset }} / ${{ matrix.name }}'
 
     defaults:
       run:

@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.15)
 
 project(example_simple)
 
-add_executable(foo foo.cpp)
+add_library(baz SHARED baz.cpp)
+target_include_directories(baz PUBLIC .)
 
-install(TARGETS foo RUNTIME DESTINATION bin)
+add_executable(foo foo.cpp)
+target_link_libraries(foo PRIVATE baz)
+
+install(TARGETS foo baz RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
