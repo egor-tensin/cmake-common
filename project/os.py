@@ -18,13 +18,14 @@ class OS(Enum):
     @staticmethod
     def current():
         system = platform.system()
-        if system == 'Windows':
-            return OS.WINDOWS
-        if system == 'Linux':
-            return OS.LINUX
-        if system == 'Darwin':
-            return OS.MACOS
-        raise NotImplementedError(f'unsupported OS: {system}')
+        mapping = {
+            'Windows': OS.WINDOWS,
+            'Linux': OS.LINUX,
+            'Darwin': OS.MACOS,
+        }
+        if system not in mapping:
+            raise NotImplementedError(f'unsupported OS: {system}')
+        return mapping[system]
 
 
 def on_windows():
