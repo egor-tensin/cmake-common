@@ -34,7 +34,6 @@ from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, mkdir_parent, run, setup_logging
 import project.version
 
-
 DEFAULT_PLATFORM = Platform.AUTO
 DEFAULT_CONFIGURATION = Configuration.DEBUG
 DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
@@ -52,9 +51,18 @@ def run_cmake(cmake_args):
 
 
 class GenerationPhase:
-    def __init__(self, src_dir, build_dir, platform=None, configuration=None,
-                 boost_dir=None, link=None, runtime_link=None,
-                 install_dir=None, cmake_args=None):
+    def __init__(
+        self,
+        src_dir,
+        build_dir,
+        platform=None,
+        configuration=None,
+        boost_dir=None,
+        link=None,
+        runtime_link=None,
+        install_dir=None,
+        cmake_args=None,
+    ):
 
         self.src_dir = normalize_path(src_dir)
         self.build_dir = normalize_path(build_dir)
@@ -99,10 +107,7 @@ class GenerationPhase:
             args += [f'-DCMAKE_INSTALL_PREFIX={self.install_dir}']
         # Important! -H must come as the last parameter, older CMake versions
         # don't like it when it's not.
-        args += [
-            f'-B{self.build_dir}',
-            f'-H{self.src_dir}'
-        ]
+        args += [f'-B{self.build_dir}', f'-H{self.src_dir}']
         return args
 
     def run(self, toolset):
@@ -128,9 +133,19 @@ class BuildPhase:
 
 
 class BuildParameters:
-    def __init__(self, src_dir, build_dir, install_dir=None, platform=None,
-                 configuration=None, boost_dir=None, link=None,
-                 runtime_link=None, toolset_version=None, cmake_args=None):
+    def __init__(
+        self,
+        src_dir,
+        build_dir,
+        install_dir=None,
+        platform=None,
+        configuration=None,
+        boost_dir=None,
+        link=None,
+        runtime_link=None,
+        toolset_version=None,
+        cmake_args=None,
+    ):
 
         self.src_dir = normalize_path(src_dir)
         self.build_dir = normalize_path(build_dir) if build_dir else None
@@ -157,7 +172,9 @@ class BuildParameters:
             yield self.build_dir
             return
 
-        with tempfile.TemporaryDirectory(dir=os.path.dirname(self.src_dir)) as build_dir:
+        with tempfile.TemporaryDirectory(
+            dir=os.path.dirname(self.src_dir)
+        ) as build_dir:
             logging.info('Build directory: %s', build_dir)
             try:
                 yield build_dir
@@ -169,17 +186,23 @@ def build(params):
     with params.create_build_dir() as build_dir:
         toolset = Toolset.make(params.toolset_version, params.platform)
 
-        gen_phase = GenerationPhase(params.src_dir, build_dir,
-                                    platform=params.platform,
-                                    configuration=params.configuration,
-                                    boost_dir=params.boost_dir,
-                                    link=params.link,
-                                    runtime_link=params.runtime_link,
-                                    install_dir=params.install_dir,
-                                    cmake_args=params.cmake_args)
+        gen_phase = GenerationPhase(
+            params.src_dir,
+            build_dir,
+            platform=params.platform,
+            configuration=params.configuration,
+            boost_dir=params.boost_dir,
+            link=params.link,
+            runtime_link=params.runtime_link,
+            install_dir=params.install_dir,
+            cmake_args=params.cmake_args,
+        )
         gen_phase.run(toolset)
-        build_phase = BuildPhase(build_dir, install_dir=params.install_dir,
-                                 configuration=params.configuration)
+        build_phase = BuildPhase(
+            build_dir,
+            install_dir=params.install_dir,
+            configuration=params.configuration,
+        )
         build_phase.run(toolset)
 
 
@@ -192,52 +215,91 @@ def _parse_args(argv=None):
         sys.exit(0)
 
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
 
-    parser.add_argument('--help-toolsets', action='store_true',
-                        help='show detailed info about supported toolsets')
+    parser.add_argument(
+        '--help-toolsets',
+        action='store_true',
+        help='show detailed info about supported toolsets',
+    )
 
     project.version.add_to_arg_parser(parser)
 
-    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
-                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
-                        help=f'toolset to use ({ToolsetVersion.usage()})')
+    parser.add_argument(
+        '--toolset',
+        metavar='TOOLSET',
+        dest='toolset_version',
+        type=ToolsetVersion.parse,
+        default=DEFAULT_TOOLSET_VERSION,
+        help=f'toolset to use ({ToolsetVersion.usage()})',
+    )
 
     platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
 
-    parser.add_argument('--platform', metavar='PLATFORM',
-                        type=Platform.parse,
-                        help=f'target platform ({platform_options})')
-    parser.add_argument('--configuration', metavar='CONFIG',
-                        type=Configuration.parse, default=DEFAULT_CONFIGURATION,
-                        help=f'build configuration ({configuration_options})')
+    parser.add_argument(
+        '--platform',
+        metavar='PLATFORM',
+        type=Platform.parse,
+        help=f'target platform ({platform_options})',
+    )
+    parser.add_argument(
+        '--configuration',
+        metavar='CONFIG',
+        type=Configuration.parse,
+        default=DEFAULT_CONFIGURATION,
+        help=f'build configuration ({configuration_options})',
+    )
 
-    parser.add_argument('--boost', metavar='DIR', dest='boost_dir',
-                        type=normalize_path,
-                        help='set Boost directory path')
+    parser.add_argument(
+        '--boost',
+        metavar='DIR',
+        dest='boost_dir',
+        type=normalize_path,
+        help='set Boost directory path',
+    )
 
     linkage_options = '/'.join(map(str, Linkage.all()))
-    parser.add_argument('--link', metavar='LINKAGE',
-                        type=Linkage.parse, default=Linkage.default_link(),
-                        help=f'how Boost libraries are linked ({linkage_options})')
-    parser.add_argument('--runtime-link', metavar='LINKAGE',
-                        type=Linkage.parse, default=Linkage.default_runtime_link(),
-                        help=f'which runtime to link to ({linkage_options})')
+    parser.add_argument(
+        '--link',
+        metavar='LINKAGE',
+        type=Linkage.parse,
+        default=Linkage.default_link(),
+        help=f'how Boost libraries are linked ({linkage_options})',
+    )
+    parser.add_argument(
+        '--runtime-link',
+        metavar='LINKAGE',
+        type=Linkage.parse,
+        default=Linkage.default_runtime_link(),
+        help=f'which runtime to link to ({linkage_options})',
+    )
 
-    parser.add_argument('--install', metavar='DIR', dest='install_dir',
-                        type=normalize_path,
-                        help='install directory')
+    parser.add_argument(
+        '--install',
+        metavar='DIR',
+        dest='install_dir',
+        type=normalize_path,
+        help='install directory',
+    )
 
-    parser.add_argument('--cmake-arg', metavar='ARG', dest='cmake_args',
-                        action='extend', nargs='*',
-                        help='additional CMake arguments, to be passed verbatim')
+    parser.add_argument(
+        '--cmake-arg',
+        metavar='ARG',
+        dest='cmake_args',
+        action='extend',
+        nargs='*',
+        help='additional CMake arguments, to be passed verbatim',
+    )
 
-    parser.add_argument('src_dir', type=normalize_path,
-                        help='source directory')
-    parser.add_argument('build_dir', type=normalize_path, nargs='?',
-                        help='build directory (a temporary directory if omitted)')
+    parser.add_argument('src_dir', type=normalize_path, help='source directory')
+    parser.add_argument(
+        'build_dir',
+        type=normalize_path,
+        nargs='?',
+        help='build directory (a temporary directory if omitted)',
+    )
 
     return parser.parse_args(argv)
 

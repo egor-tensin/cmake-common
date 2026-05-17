@@ -52,7 +52,8 @@ def setup_logging():
         level=logging.INFO,
         # Log to stdout, because that's where subprocess's output goes (so that
         # they don't get interleaved).
-        stream=sys.stdout)
+        stream=sys.stdout,
+    )
     try:
         yield
     except Exception as e:
@@ -126,5 +127,7 @@ def retry(exc_type, timeout=5, tries=3, backoff=2):
                         current_timeout *= backoff
                         continue
                     raise
+
         return func2
+
     return wrapper

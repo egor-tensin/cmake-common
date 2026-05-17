@@ -8,7 +8,6 @@ from functools import total_ordering
 import os.path
 import re
 
-
 _Version = namedtuple('_Version', ['major', 'minor', 'patch'])
 
 

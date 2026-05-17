@@ -22,7 +22,6 @@ import re
 import subprocess
 import sys
 
-
 SCRIPT_NAME = os.path.basename(__file__)
 
 
@@ -41,9 +40,13 @@ def read_file(path):
 
 def run(cmd_line):
     try:
-        result = subprocess.run(cmd_line, check=True, universal_newlines=True,
-                                stderr=subprocess.STDOUT,
-                                stdout=subprocess.PIPE)
+        result = subprocess.run(
+            cmd_line,
+            check=True,
+            universal_newlines=True,
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+        )
         assert result.returncode == 0
         return result.stdout
     except subprocess.CalledProcessError as e:
@@ -53,8 +56,9 @@ def run(cmd_line):
 
 def run_new_window(cmd_line):
     try:
-        result = subprocess.run(cmd_line, check=True,
-                                creationflags=subprocess.CREATE_NEW_CONSOLE)
+        result = subprocess.run(
+            cmd_line, check=True, creationflags=subprocess.CREATE_NEW_CONSOLE
+        )
         assert result.returncode == 0
         return None
     except subprocess.CalledProcessError as e:
@@ -77,8 +81,10 @@ def match_pass_regexes(output, regexes):
     if not regexes:
         return
     if not match_all(output, regexes):
-        err("Couldn't match test program's output against all of the"\
-            " regular expressions:")
+        err(
+            "Couldn't match test program's output against all of the"
+            " regular expressions:"
+        )
         for regex in regexes:
             err(f'\t{regex}')
         sys.exit(1)
@@ -88,8 +94,7 @@ def match_fail_regexes(output, regexes):
     if not regexes:
         return
     if match_any(output, regexes):
-        err("Matched test program's output against some of the regular"\
-            " expressions:")
+        err("Matched test program's output against some of the regular" " expressions:")
         for regex in regexes:
             err(f'\t{regex}')
         sys.exit(1)
@@ -120,34 +125,67 @@ def parse_args(argv=None):
         argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
 
     subparsers = parser.add_subparsers(dest='command')
 
-    parser_run = subparsers.add_parser('run', help='run an executable and check its output')
-    parser_run.add_argument('-p', '--pass-regex', nargs='*',
-                            dest='pass_regexes', metavar='REGEX',
-                            help='pass if all of these regexes match')
-    parser_run.add_argument('-f', '--fail-regex', nargs='*',
-                            dest='fail_regexes', metavar='REGEX',
-                            help='fail if any of these regexes matches')
-    parser_run.add_argument('-n', '--new-window', action='store_true',
-                            help='launch child process in a new console window')
-    parser_run.add_argument('exe_path', metavar='PATH',
-                            help='path to the test executable')
+    parser_run = subparsers.add_parser(
+        'run', help='run an executable and check its output'
+    )
+    parser_run.add_argument(
+        '-p',
+        '--pass-regex',
+        nargs='*',
+        dest='pass_regexes',
+        metavar='REGEX',
+        help='pass if all of these regexes match',
+    )
+    parser_run.add_argument(
+        '-f',
+        '--fail-regex',
+        nargs='*',
+        dest='fail_regexes',
+        metavar='REGEX',
+        help='fail if any of these regexes matches',
+    )
+    parser_run.add_argument(
+        '-n',
+        '--new-window',
+        action='store_true',
+        help='launch child process in a new console window',
+    )
+    parser_run.add_argument(
+        'exe_path', metavar='PATH', help='path to the test executable'
+    )
     # nargs='*' here would discard additional '--'s.
-    parser_run.add_argument('exe_args', metavar='ARG', nargs=argparse.REMAINDER,
-                            help='test executable arguments')
+    parser_run.add_argument(
+        'exe_args',
+        metavar='ARG',
+        nargs=argparse.REMAINDER,
+        help='test executable arguments',
+    )
     parser_run.set_defaults(func=run_actual_test_driver)
 
-    parser_grep = subparsers.add_parser('grep', help='check file contents for matching patterns')
-    parser_grep.add_argument('-p', '--pass-regex', nargs='*',
-                             dest='pass_regexes', metavar='REGEX',
-                             help='pass if all of these regexes match')
-    parser_grep.add_argument('-f', '--fail-regex', nargs='*',
-                             dest='fail_regexes', metavar='REGEX',
-                             help='fail if any of these regexes matches')
+    parser_grep = subparsers.add_parser(
+        'grep', help='check file contents for matching patterns'
+    )
+    parser_grep.add_argument(
+        '-p',
+        '--pass-regex',
+        nargs='*',
+        dest='pass_regexes',
+        metavar='REGEX',
+        help='pass if all of these regexes match',
+    )
+    parser_grep.add_argument(
+        '-f',
+        '--fail-regex',
+        nargs='*',
+        dest='fail_regexes',
+        metavar='REGEX',
+        help='fail if any of these regexes matches',
+    )
     parser_grep.add_argument('path', metavar='PATH', help='text file path')
     parser_grep.set_defaults(func=grep_file)
 

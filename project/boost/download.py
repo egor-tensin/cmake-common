@@ -32,8 +32,9 @@ import project.version
 
 
 class Download:
-    def __init__(self, version, unpack_dir=None, cache_dir=None,
-                 dest_path=None, no_retry=False):
+    def __init__(
+        self, version, unpack_dir=None, cache_dir=None, dest_path=None, no_retry=False
+    ):
         if unpack_dir is None:
             if cache_dir is None:
                 unpack_dir = '.'
@@ -125,25 +126,39 @@ def _parse_args(argv=None):
         argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
 
     project.version.add_to_arg_parser(parser)
 
-    parser.add_argument('--unpack', metavar='DIR', dest='unpack_dir',
-                        type=normalize_path,
-                        help='directory to unpack the archive to')
-    parser.add_argument('--cache', metavar='DIR', dest='cache_dir',
-                        type=normalize_path,
-                        help='download directory (temporary file unless specified)')
-    parser.add_argument('--no-retry', action='store_true',
-                        help=argparse.SUPPRESS)
-    parser.add_argument('version', metavar='VERSION',
-                        type=Version.from_string,
-                        help='Boost version (in the MAJOR.MINOR.PATCH format)')
-    parser.add_argument('dest_path', metavar='DIR', nargs='?',
-                        type=normalize_path,
-                        help='rename the boost directory to DIR')
+    parser.add_argument(
+        '--unpack',
+        metavar='DIR',
+        dest='unpack_dir',
+        type=normalize_path,
+        help='directory to unpack the archive to',
+    )
+    parser.add_argument(
+        '--cache',
+        metavar='DIR',
+        dest='cache_dir',
+        type=normalize_path,
+        help='download directory (temporary file unless specified)',
+    )
+    parser.add_argument('--no-retry', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument(
+        'version',
+        metavar='VERSION',
+        type=Version.from_string,
+        help='Boost version (in the MAJOR.MINOR.PATCH format)',
+    )
+    parser.add_argument(
+        'dest_path',
+        metavar='DIR',
+        nargs='?',
+        type=normalize_path,
+        help='rename the boost directory to DIR',
+    )
 
     return parser.parse_args(argv)
 

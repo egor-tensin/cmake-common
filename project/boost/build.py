@@ -41,18 +41,30 @@ from project.toolset import Toolset, ToolsetVersion
 from project.utils import normalize_path, setup_logging
 import project.version
 
-
 DEFAULT_PLATFORMS = (Platform.AUTO,)
-DEFAULT_CONFIGURATIONS = (Configuration.DEBUG, Configuration.RELEASE,)
+DEFAULT_CONFIGURATIONS = (
+    Configuration.DEBUG,
+    Configuration.RELEASE,
+)
 DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
 B2_QUIET = ['warnings=off', '-d0']
 B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
 
 
 class BuildParameters:
-    def __init__(self, boost_dir, libraries, build_dir=None, platforms=None,
-                 configurations=None, link=None, runtime_link=None,
-                 toolset_version=None, verbose=False, b2_args=None):
+    def __init__(
+        self,
+        boost_dir,
+        libraries,
+        build_dir=None,
+        platforms=None,
+        configurations=None,
+        link=None,
+        runtime_link=None,
+        toolset_version=None,
+        verbose=False,
+        b2_args=None,
+    ):
 
         boost_dir = normalize_path(boost_dir)
         libraries = libraries or []
@@ -99,7 +111,9 @@ class BuildParameters:
             yield self.build_dir
             return
 
-        with tempfile.TemporaryDirectory(dir=os.path.dirname(self.boost_dir)) as build_dir:
+        with tempfile.TemporaryDirectory(
+            dir=os.path.dirname(self.boost_dir)
+        ) as build_dir:
             logging.info('Build directory: %s', build_dir)
             try:
                 yield build_dir
@@ -139,59 +153,107 @@ def _parse_args(argv=None):
         sys.exit(0)
 
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
 
-    parser.add_argument('--help-toolsets', action='store_true',
-                        help='show detailed info about supported toolsets')
+    parser.add_argument(
+        '--help-toolsets',
+        action='store_true',
+        help='show detailed info about supported toolsets',
+    )
 
     project.version.add_to_arg_parser(parser)
 
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='verbose b2 invocation (quiet by default)')
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='store_true',
+        help='verbose b2 invocation (quiet by default)',
+    )
 
-    parser.add_argument('--toolset', metavar='TOOLSET', dest='toolset_version',
-                        type=ToolsetVersion.parse, default=DEFAULT_TOOLSET_VERSION,
-                        help=f'toolset to use ({ToolsetVersion.usage()})')
+    parser.add_argument(
+        '--toolset',
+        metavar='TOOLSET',
+        dest='toolset_version',
+        type=ToolsetVersion.parse,
+        default=DEFAULT_TOOLSET_VERSION,
+        help=f'toolset to use ({ToolsetVersion.usage()})',
+    )
 
     platform_options = '/'.join(map(str, Platform.all()))
     configuration_options = '/'.join(map(str, Configuration.all()))
     # These are used to put the built libraries into proper installation
     # directory subdirectories (to avoid name clashes).
-    parser.add_argument('--platform', metavar='PLATFORM', dest='platforms',
-                        nargs='*', type=Platform.parse, default=[],
-                        help=f'target platform ({platform_options})')
-    parser.add_argument('--configuration', metavar='CONFIGURATION', dest='configurations',
-                        nargs='*', type=Configuration.parse, default=[],
-                        help=f'target configuration ({configuration_options})')
+    parser.add_argument(
+        '--platform',
+        metavar='PLATFORM',
+        dest='platforms',
+        nargs='*',
+        type=Platform.parse,
+        default=[],
+        help=f'target platform ({platform_options})',
+    )
+    parser.add_argument(
+        '--configuration',
+        metavar='CONFIGURATION',
+        dest='configurations',
+        nargs='*',
+        type=Configuration.parse,
+        default=[],
+        help=f'target configuration ({configuration_options})',
+    )
 
     linkage_options = '/'.join(map(str, Linkage.all()))
     # This is needed because the default behaviour on Linux and Windows is
     # different: static & dynamic libs are built on Linux, but only static libs
     # are built on Windows by default.
-    parser.add_argument('--link', metavar='LINKAGE',
-                        type=Linkage.parse, default=Linkage.default_link(),
-                        help=f'how the libraries are linked ({linkage_options})')
+    parser.add_argument(
+        '--link',
+        metavar='LINKAGE',
+        type=Linkage.parse,
+        default=Linkage.default_link(),
+        help=f'how the libraries are linked ({linkage_options})',
+    )
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
-    parser.add_argument('--runtime-link', metavar='LINKAGE',
-                        type=Linkage.parse, default=Linkage.default_runtime_link(),
-                        help=f'how the libraries link to the runtime ({linkage_options})')
+    parser.add_argument(
+        '--runtime-link',
+        metavar='LINKAGE',
+        type=Linkage.parse,
+        default=Linkage.default_runtime_link(),
+        help=f'how the libraries link to the runtime ({linkage_options})',
+    )
 
-    parser.add_argument('--build', metavar='DIR', dest='build_dir',
-                        type=normalize_path,
-                        help='Boost build directory (temporary directory unless specified)')
+    parser.add_argument(
+        '--build',
+        metavar='DIR',
+        dest='build_dir',
+        type=normalize_path,
+        help='Boost build directory (temporary directory unless specified)',
+    )
 
-    parser.add_argument('--b2-arg', metavar='ARG', dest='b2_args',
-                        action='extend', nargs='*',
-                        help='additional b2 arguments, to be passed verbatim')
+    parser.add_argument(
+        '--b2-arg',
+        metavar='ARG',
+        dest='b2_args',
+        action='extend',
+        nargs='*',
+        help='additional b2 arguments, to be passed verbatim',
+    )
 
-    parser.add_argument('boost_dir', metavar='BOOST_DIR',
-                        type=normalize_path,
-                        help='root Boost directory')
-    parser.add_argument('libraries', metavar='LIBRARIES',
-                        action='extend', nargs='*',
-                        help='libraries to build (all libraries by default)')
+    parser.add_argument(
+        'boost_dir',
+        metavar='BOOST_DIR',
+        type=normalize_path,
+        help='root Boost directory',
+    )
+    parser.add_argument(
+        'libraries',
+        metavar='LIBRARIES',
+        action='extend',
+        nargs='*',
+        help='libraries to build (all libraries by default)',
+    )
 
     return parser.parse_args(argv)
 

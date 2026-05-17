@@ -68,7 +68,9 @@ class Platform(Enum):
                 # On Windows, use the host architecture.
                 return Platform.windows_native().address_model()
             # On Linux, assume that the target is x64.
-            raise RuntimeError('cannot determine address model unless the target platform is specified explicitly')
+            raise RuntimeError(
+                'cannot determine address model unless the target platform is specified explicitly'
+            )
         if self is Platform.X86:
             return 32
         if self is Platform.X64:
@@ -129,7 +131,9 @@ set(CMAKE_CXX_FLAGS -m{address_model})
                 return Platform.windows_native().msvc_arch()
             # I don't think the -A argument is supported on any generators
             # except the Visual Studio ones.
-            raise RuntimeError('-A parameter is only supported for Visual Studio generators')
+            raise RuntimeError(
+                '-A parameter is only supported for Visual Studio generators'
+            )
         if self is Platform.X86:
             return 'Win32'
         if self is Platform.X64:

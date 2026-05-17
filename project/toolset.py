@@ -80,7 +80,9 @@ class MSVCVersion(Enum):
         try:
             numeric = int(self.value)
         except ValueError as e:
-            raise RuntimeError(f'what? MSVC versions are supposed to be integers: {self.value}') from e
+            raise RuntimeError(
+                f'what? MSVC versions are supposed to be integers: {self.value}'
+            ) from e
         numeric = Decimal(numeric) / 10
         numeric = numeric.quantize(Decimal('1.0'))
         return str(numeric)
@@ -113,7 +115,9 @@ class VisualStudioVersion(Enum):
         try:
             return VisualStudioVersion(s)
         except ValueError as e:
-            raise argparse.ArgumentTypeError(f'invalid Visual Studio version: {s}') from e
+            raise argparse.ArgumentTypeError(
+                f'invalid Visual Studio version: {s}'
+            ) from e
 
     @staticmethod
     def all():
@@ -138,9 +142,7 @@ _msvc_to_vs_version = {
     MSVCVersion.VS2022: VisualStudioVersion.VS2022,
     MSVCVersion.VS2026: VisualStudioVersion.VS2026,
 }
-_vs_to_msvc_version = {
-    v: k for k, v in _msvc_to_vs_version.items()
-}
+_vs_to_msvc_version = {v: k for k, v in _msvc_to_vs_version.items()}
 
 
 class ToolsetType(Enum):
@@ -253,7 +255,13 @@ class ToolsetVersion:
 a list of all supported toolset versions:
 
 '''
-        max_name = max((len(str(hint) + str(version)) for hint in ToolsetType.all_versioned() for version in hint.all_versions()))
+        max_name = max(
+            (
+                len(str(hint) + str(version))
+                for hint in ToolsetType.all_versioned()
+                for version in hint.all_versions()
+            )
+        )
         for hint in ToolsetType.all_versioned():
             for version in hint.all_versions():
                 name = f'{hint}{version}'
@@ -270,7 +278,7 @@ a list of all supported toolset versions:
         for hint in sorted(ToolsetType.all_versioned(), key=str, reverse=True):
             prefix = f'{hint}'
             if s.startswith(prefix):
-                return ToolsetVersion(hint, hint.parse_version(s[len(prefix):]))
+                return ToolsetVersion(hint, hint.parse_version(s[len(prefix) :]))
         raise argparse.ArgumentTypeError(f'invalid toolset: {s}')
 
 
@@ -307,7 +315,10 @@ class Toolset(abc.ABC):
     def detect(version):
         if version.hint is ToolsetType.AUTO:
             return Auto
-        if version.hint is ToolsetType.MSVC or version.hint is ToolsetType.VISUAL_STUDIO:
+        if (
+            version.hint is ToolsetType.MSVC
+            or version.hint is ToolsetType.VISUAL_STUDIO
+        ):
             return MSVC
         if version.hint is ToolsetType.GCC:
             return GCC
@@ -560,7 +571,6 @@ class Clang(BoostCustom, CMakeCustom):
         options = GCC.b2_build_options()
         options += [
             ('cxxflags', '-DBOOST_USE_WINDOWS_H'),
-
             # Even with <warnings>off, the build might sometimes fail with the
             # following error:
             #
