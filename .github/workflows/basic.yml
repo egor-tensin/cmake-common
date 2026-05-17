@@ -20,6 +20,12 @@ jobs:
         uses: actions/checkout@v6
       - name: Run clang-format
         run: ./tools/project-clang-format.py
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: Run black
+        uses: psf/black@stable
 
   # Check that the most basic use-case works on different OSs.
   os:
