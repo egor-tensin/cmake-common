@@ -7,7 +7,7 @@ name = "cmake_common"
 description = "Utilities to help develop C++/CMake projects"
 license = {text = "MIT"}
 dynamic = ["version"]
-authors = [{name = "Egor Tensin", email = "Egor.Tensin@gmail.com"}]
+authors = [{name = "Egor Tensin", email = "egor@tensin.name"}]
 readme = "README.md"
 requires-python = ">=3.6"
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Egor Tensin <Egor.Tensin@gmail.com>
+# Copyright (c) 2020 Egor Tensin <egor@tensin.name>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
