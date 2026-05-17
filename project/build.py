@@ -92,6 +92,7 @@ class GenerationPhase:
         root = self.boost_dir
         root = os.path.join(root, self.platform.boost_installdir(self.configuration))
         args = [
+            f'-DBoost_ROOT={root}',
             f'-DBOOST_ROOT={root}',
         ]
         args += self.link.cmake_args_link()
