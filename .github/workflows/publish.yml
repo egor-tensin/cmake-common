@@ -1,0 +1,43 @@
+name: Publish
+
+on:
+  workflow_run:
+    workflows:
+      - Basic
+      - Boost (toolsets)
+      - Examples (toolsets)
+    types: [completed]
+
+jobs:
+  # Build a Python package and upload to PyPI.
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    name: Publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: Verify package can be installed
+        run: pip install -q .
+      - name: Install package builder
+        run: pip install -q --upgrade build
+      - name: Build package
+        run: python -m build
+      - name: Publish as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: '${{ secrets.PYPI_API_TOKEN }}'
