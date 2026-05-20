@@ -12,18 +12,23 @@ on:
 
 jobs:
   basic:
+    name: Basic usage
     uses: ./.github/workflows/basic.yml
 
   boost_download:
+    name: Boost (download)
     uses: ./.github/workflows/boost_download.yml
 
   boost_toolsets:
+    name: Boost (toolsets)
     uses: ./.github/workflows/boost_toolsets.yml
 
   example_toolsets:
+    name: Examples (toolsets)
     uses: ./.github/workflows/example_toolsets.yml
 
   msvc_versions:
+    name: Visual Studio versions
     uses: ./.github/workflows/msvc_versions.yml
 
   # Build a Python package and upload to PyPI.
