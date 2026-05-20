@@ -9,8 +9,17 @@ jobs:
     strategy:
       matrix:
         example: [simple]
-        toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
-        os: [ubuntu-latest, windows-2022, windows-2025]
+        toolset:
+          - auto
+          - clang
+          - clang-cl
+          - gcc
+          - mingw
+          - msvc
+        os:
+          - ubuntu-latest
+          - windows-2022
+          - windows-2025
 
         include:
           # Prettier run names.

@@ -8,9 +8,21 @@ jobs:
   build:
     strategy:
       matrix:
-        boost-version: [1.72.0, 1.80.0, 1.88.0]
-        toolset: [auto, clang, clang-cl, gcc, mingw, msvc]
-        os: [ubuntu-latest, windows-2022, windows-2025]
+        boost-version:
+          - 1.72.0
+          - 1.80.0
+          - 1.88.0
+        toolset:
+          - auto
+          - clang
+          - clang-cl
+          - gcc
+          - mingw
+          - msvc
+        os:
+          - ubuntu-latest
+          - windows-2022
+          - windows-2025
 
         include:
           # Prettier run names.

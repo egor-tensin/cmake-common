@@ -25,7 +25,14 @@ jobs:
   os:
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, windows-2025, macos-14, macos-15, macos-26]
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - windows-2022
+          - windows-2025
+          - macos-14
+          - macos-15
+          - macos-26
         include:
           - boost-version: 1.78.0
     runs-on: '${{ matrix.os }}'
@@ -59,7 +66,13 @@ jobs:
   python-versions:
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version:
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
         include:
           - os: ubuntu-latest
           - boost-version: 1.78.0
