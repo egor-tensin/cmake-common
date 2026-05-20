@@ -1,13 +1,7 @@
 name: Visual Studio versions
 
 on:
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-  schedule:
-    # Weekly, at 01:30 AM on Friday (somewhat randomly chosen).
-    - cron: '30 01 * * 5'
+  workflow_call:
   workflow_dispatch:
 
 jobs:

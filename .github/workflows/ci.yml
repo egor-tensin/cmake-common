@@ -1,18 +1,38 @@
-name: Publish
+name: CI
 
 on:
-  workflow_run:
-    workflows:
-      - Basic
-      - Boost (toolsets)
-      - Examples (toolsets)
-    types: [completed]
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+  schedule:
+    # Weekly, at 01:30 AM on Friday (somewhat randomly chosen).
+    - cron: '30 01 * * 5'
+  workflow_dispatch:
 
 jobs:
+  basic:
+    uses: ./.github/workflows/basic.yml
+
+  boost_download:
+    uses: ./.github/workflows/boost_download.yml
+
+  boost_toolsets:
+    uses: ./.github/workflows/boost_toolsets.yml
+
+  example_toolsets:
+    uses: ./.github/workflows/example_toolsets.yml
+
+  msvc_versions:
+    uses: ./.github/workflows/msvc_versions.yml
+
   # Build a Python package and upload to PyPI.
   publish:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    needs:
+      - basic
+      - boost_toolsets
+      - example_toolsets
     name: Publish
     steps:
       - name: Checkout
