@@ -1,7 +1,7 @@
 # Maintainer: Egor Tensin <Egor.Tensin@gmail.com>
 pkgname=cmake-common
 _name="${pkgname//-/_}"
-pkgver=6.0
+pkgver=6.0.2
 pkgrel=1
 pkgdesc='Utilities to help develop C++/CMake projects'
 arch=(any)
