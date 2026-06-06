@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.15)
+# oldstable as of May '26.
+cmake_minimum_required(VERSION 3.25)
 
 project(example_simple)
 
