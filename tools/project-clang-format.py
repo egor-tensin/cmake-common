@@ -88,7 +88,12 @@ class ClangFormat:
 
     @staticmethod
     def _show_diff(path, formatted):
-        original = read_file(path).split('\n')
+        original = read_file(path)
+        if original and not formatted:
+            # Assuming this file is ignored in .clang-format-ignore.
+            return True
+
+        original = original.split('\n')
         formatted = formatted.split('\n')
         original_lbl = f'{path} (original)'
         formatted_lbl = f'{path} (formatted)'
