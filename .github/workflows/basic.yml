@@ -75,7 +75,7 @@ jobs:
           - '3.14'
         include:
           - os: ubuntu-latest
-          - boost-version: 1.78.0
+          - boost-version: 1.82.0
     runs-on: '${{ matrix.os }}'
     name: 'Python ${{ matrix.python-version }}'
     defaults:
