@@ -10,8 +10,8 @@ jobs:
       matrix:
         boost-version:
           - 1.72.0
-          - 1.80.0
-          - 1.88.0
+          - 1.82.0
+          - 1.91.0
         toolset:
           - auto
           - clang
@@ -31,15 +31,15 @@ jobs:
           - {os: ubuntu-latest, name: Ubuntu}
           # Target platform.
           - {boost-version: 1.72.0, platform: x86}
-          - {boost-version: 1.80.0, platform: x64}
-          - {boost-version: 1.88.0, platform: x86}
+          - {boost-version: 1.82.0, platform: x64}
+          - {boost-version: 1.91.0, platform: x86}
           # Configuration.
           - {boost-version: 1.72.0, configuration: Debug}
-          - {boost-version: 1.80.0, configuration: Release}
-          - {boost-version: 1.88.0, configuration: RelWithDebInfo}
+          - {boost-version: 1.82.0, configuration: Release}
+          - {boost-version: 1.91.0, configuration: RelWithDebInfo}
 
           # Some Boost libraries commonly used by me.
-          - libraries: filesystem program_options regex system
+          - libraries: filesystem program_options regex
 
         exclude:
           # Ubuntu: no MSVC/clang-cl.
@@ -51,6 +51,9 @@ jobs:
           # against different Visual Studio versions.
           - {os: windows-2022, toolset: gcc}
           - {os: windows-2022, toolset: mingw}
+          # Boost only supports VS 2026 starting with 1.91, I think.
+          - {os: windows-2025, boost-version: 1.72.0}
+          - {os: windows-2025, boost-version: 1.82.0}
 
     runs-on: '${{ matrix.os }}'
 
@@ -64,7 +67,7 @@ jobs:
                 && (matrix.toolset == 'auto'
                     || matrix.toolset == 'clang-cl'
                     || matrix.toolset == 'msvc')
-                && matrix.boost-version < '1.80.0'
+                && matrix.boost-version < '1.82.0'
             )
         }}
 

@@ -11,16 +11,20 @@ jobs:
         toolset:
           - msvc143
           - vs2022
+          - msvc145
+          - vs2026
 
         include:
           # Runner image.
           - {toolset: msvc143, os: windows-2022}
-          - {toolset: vs2022, os: windows-2025}
+          - {toolset: vs2022, os: windows-2022}
+          - {toolset: msvc145, os: windows-2025}
+          - {toolset: vs2026, os: windows-2025}
 
           # Boost version.
-          - boost-version: 1.78.0
+          - boost-version: 1.91.0
           # Some Boost libraries commonly used by me.
-          - libraries: filesystem program_options regex system test
+          - libraries: filesystem program_options regex test
 
           # Build settings.
           - platform: x64

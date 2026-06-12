@@ -34,7 +34,7 @@ jobs:
           - macos-15
           - macos-26
         include:
-          - boost-version: 1.78.0
+          - boost-version: 1.91.0
     runs-on: '${{ matrix.os }}'
     name: 'Image: ${{ matrix.os }}'
     defaults:
