@@ -5,7 +5,7 @@ There're a bunch of useful one-liners in Makefile.
 
   * Make the package (this also updates .SRCINFO):
 
-      make package
+      make build
 
   * Commit the changes:
 
