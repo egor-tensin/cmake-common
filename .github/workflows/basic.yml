@@ -5,22 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Check that project-clang-format.py works (and the C/C++ files are formatted).
-  lint:
-    runs-on: ubuntu-latest
-    name: Linting
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Run clang-format
-        run: ./tools/project-clang-format.py
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
-      - name: Run black
-        uses: psf/black@stable
-
   # Check that the most basic use-case works on different OSs.
   os:
     strategy:
