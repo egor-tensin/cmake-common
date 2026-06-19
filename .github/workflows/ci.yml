@@ -37,10 +37,16 @@ jobs:
 
   # Build a Python package and upload to PyPI.
   publish:
-    name: Publish
+    name: Publish to PyYPI
     needs:
       - lint
       - basic
       - boost_toolsets
       - example_toolsets
     uses: ./.github/workflows/publish.yml
+
+  aur:
+    name: Publish to AUR
+    needs:
+      - publish
+    uses: ./.github/workflows/aur.yml
