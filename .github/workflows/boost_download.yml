@@ -15,9 +15,6 @@ jobs:
           - 1.91.0
     runs-on: ubuntu-latest
     name: 'Download: ${{ matrix.boost-version }}'
-    defaults:
-      run:
-        shell: pwsh
     steps:
       - name: Checkout
         uses: actions/checkout@v6
