@@ -38,7 +38,7 @@ def read_file(path):
         return fd.read()
 
 
-def run(cmd_line):
+def run(cmd_line, exit_codes=[0]):
     try:
         result = subprocess.run(
             cmd_line,
@@ -50,19 +50,28 @@ def run(cmd_line):
         assert result.returncode == 0
         return result.stdout
     except subprocess.CalledProcessError as e:
-        sys.stdout.write(e.output)
-        sys.exit(e.returncode)
+        if e.returncode not in exit_codes:
+            err(
+                f"Actual exit code {e.returncode} is not among the allowed codes {exit_codes}"
+            )
+            sys.stdout.write(e.output)
+            sys.exit(e.returncode)
+        return e.output
 
 
-def run_new_window(cmd_line):
+def run_new_window(cmd_line, exit_codes=[0]):
     try:
         result = subprocess.run(
             cmd_line, check=True, creationflags=subprocess.CREATE_NEW_CONSOLE
         )
         assert result.returncode == 0
-        return None
     except subprocess.CalledProcessError as e:
-        sys.exit(e.returncode)
+        if e.returncode not in exit_codes:
+            err(
+                f"Actual exit code {e.returncode} is not among the allowed codes {exit_codes}"
+            )
+            sys.exit(e.returncode)
+    return None
 
 
 def match(s, regex):
@@ -105,7 +114,7 @@ def run_actual_test_driver(args):
     run_func = run
     if args.new_window:
         run_func = run_new_window
-    output = run_func(cmd_line)
+    output = run_func(cmd_line, args.exit_codes)
     if args.new_window and (args.pass_regexes or args.fail_regexes):
         err("Cannot launch child process in a new window and capture its output")
     if output is not None:
@@ -148,6 +157,16 @@ def parse_args(argv=None):
         dest='fail_regexes',
         metavar='REGEX',
         help='fail if any of these regexes matches',
+    )
+    parser_run.add_argument(
+        '-e',
+        '--exit-code',
+        nargs='*',
+        type=int,
+        default=[0],
+        dest='exit_codes',
+        metavar='NUM',
+        help='allowed exit_codes (only 0 by default)',
     )
     parser_run.add_argument(
         '-n',
