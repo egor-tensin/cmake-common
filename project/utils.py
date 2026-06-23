@@ -47,9 +47,10 @@ def full_exe_name(exe):
 @contextmanager
 def setup_logging():
     logging.basicConfig(
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S%z',
         level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S%z',
+        # The 8 below is for "CRITICAL"
+        format='%(asctime)s | %(levelname)8s | %(message)s',
         # Log to stdout, because that's where subprocess's output goes (so that
         # they don't get interleaved).
         stream=sys.stdout,
