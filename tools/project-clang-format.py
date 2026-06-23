@@ -5,12 +5,12 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''clang-format all C/C++ files in the project
+"""clang-format all C/C++ files in the project
 
 This script feeds every C/C++ file in the repository to clang-format, either
 printing a unified diff between the original and the formatted versions, or
 formatting the files in-place.
-'''
+"""
 
 import argparse
 from contextlib import contextmanager
@@ -24,19 +24,19 @@ import sys
 @contextmanager
 def setup_logging():
     level_names = {
-        logging.DEBUG: 'DBG',
-        logging.INFO: 'INFO',
-        logging.WARNING: 'WARN',
-        logging.ERROR: 'ERR',
-        logging.CRITICAL: 'CRIT',
+        logging.DEBUG: "DBG",
+        logging.INFO: "INFO",
+        logging.WARNING: "WARN",
+        logging.ERROR: "ERR",
+        logging.CRITICAL: "CRIT",
     }
     for lvl, name in level_names.items():
         logging.addLevelName(lvl, name)
 
     logging.basicConfig(
         level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S%z',
-        format='%(asctime)s | %(levelname)4s | %(message)s',
+        datefmt="%Y-%m-%d %H:%M:%S%z",
+        format="%(asctime)s | %(levelname)4s | %(message)s",
     )
     try:
         yield
@@ -60,7 +60,7 @@ def normalize_path(entry):
 
 
 def run(cmd_line):
-    logging.debug('Running executable: %s', cmd_line)
+    logging.debug("Running executable: %s", cmd_line)
     try:
         return subprocess.run(
             cmd_line,
@@ -70,8 +70,8 @@ def run(cmd_line):
             stdout=subprocess.PIPE,
         )
     except subprocess.CalledProcessError as e:
-        logging.error('Process finished with exit code %d: %s', e.returncode, cmd_line)
-        logging.error('Its output was:\n%s', e.output)
+        logging.error("Process finished with exit code %d: %s", e.returncode, cmd_line)
+        logging.error("Its output was:\n%s", e.output)
         raise
 
 
@@ -86,10 +86,10 @@ class ClangFormat:
         self.style = style
 
     def _get_command_line(self, paths, in_place=False):
-        cmd_line = [self.path, f'-style={self.style}']
+        cmd_line = [self.path, f"-style={self.style}"]
         if in_place:
-            cmd_line.append('-i')
-        cmd_line.append('--')
+            cmd_line.append("-i")
+        cmd_line.append("--")
         cmd_line += list(paths)
         return cmd_line
 
@@ -103,17 +103,17 @@ class ClangFormat:
             # Assuming this file is ignored in .clang-format-ignore.
             return True
 
-        original = original.split('\n')
-        formatted = formatted.split('\n')
-        original_lbl = f'{path} (original)'
-        formatted_lbl = f'{path} (formatted)'
+        original = original.split("\n")
+        formatted = formatted.split("\n")
+        original_lbl = f"{path} (original)"
+        formatted_lbl = f"{path} (formatted)"
 
         diff = difflib.unified_diff(
             original,
             formatted,
             fromfile=original_lbl,
             tofile=formatted_lbl,
-            lineterm='',
+            lineterm="",
         )
 
         clean = True
@@ -131,17 +131,17 @@ class ClangFormat:
 
 
 def git_root_dir():
-    cmd_line = ['git', 'rev-parse', '--show-toplevel']
+    cmd_line = ["git", "rev-parse", "--show-toplevel"]
     root_dir = run(cmd_line).stdout
-    if root_dir[-1] != '\n':
-        raise RuntimeError('git rev-parse --show-toplevel should append a newline?')
+    if root_dir[-1] != "\n":
+        raise RuntimeError("git rev-parse --show-toplevel should append a newline?")
     return root_dir[:-1]
 
 
 def list_git_files():
-    cmd_line = ['git', 'ls-tree', '-r', '-z', '--name-only', 'HEAD']
+    cmd_line = ["git", "ls-tree", "-r", "-z", "--name-only", "HEAD"]
     repo_files = run(cmd_line).stdout
-    repo_files = repo_files.split('\0')
+    repo_files = repo_files.split("\0")
     return repo_files
 
 
@@ -163,7 +163,7 @@ def filter_files(paths, exclude):
 
 
 CPP_FILE_EXTENSIONS = set(
-    ('.c', '.h', '.cc', '.hh', '.cpp', '.hpp', '.cxx', '.hxx', '.cp', '.c++')
+    (".c", ".h", ".cc", ".hh", ".cpp", ".hpp", ".cxx", ".hxx", ".cp", ".c++")
 )
 
 
@@ -174,8 +174,8 @@ def list_cpp_files():
             yield path
 
 
-DEFAULT_VERSION = 'clang-format'
-DEFAULT_STYLE = 'file'
+DEFAULT_VERSION = "clang-format"
+DEFAULT_STYLE = "file"
 
 
 def process_cpp_files(
@@ -200,27 +200,27 @@ def parse_args(argv=None):
     )
 
     parser.add_argument(
-        '-b',
-        '--clang-format',
-        dest='version',
+        "-b",
+        "--clang-format",
+        dest="version",
         default=DEFAULT_VERSION,
-        help='clang-format executable file path',
+        help="clang-format executable file path",
     )
     parser.add_argument(
-        '-s',
-        '--style',
+        "-s",
+        "--style",
         default=DEFAULT_STYLE,
-        help='clang-format -style parameter argument',
+        help="clang-format -style parameter argument",
     )
     parser.add_argument(
-        '-i', '--in-place', action='store_true', help='edit the files in-place'
+        "-i", "--in-place", action="store_true", help="edit the files in-place"
     )
     parser.add_argument(
-        '-e',
-        '--exclude',
-        nargs='*',
+        "-e",
+        "--exclude",
+        nargs="*",
         type=normalize_path,
-        help='files or directories to exclude',
+        help="files or directories to exclude",
     )
 
     return parser.parse_args(argv)
@@ -232,5 +232,5 @@ def main(argv=None):
         process_cpp_files(**vars(args))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

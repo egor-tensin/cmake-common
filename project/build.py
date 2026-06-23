@@ -3,7 +3,7 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-R'''Build a CMake project.
+R"""Build a CMake project.
 
 This script works nicely with boost-build from this package - it will set the
 correct BOOST_ROOT value automatically.
@@ -18,7 +18,7 @@ Usage example:
 
     $ ./path/to/somewhere/bin/foo
     foo
-'''
+"""
 
 import argparse
 from contextlib import contextmanager
@@ -43,11 +43,11 @@ DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
 # _guessing_ that the build system is make and passing -j explicitly.  Plus it
 # works with older CMake versions, which don't support the --parallel flag.
 cmake_env = os.environ.copy()
-cmake_env['CMAKE_BUILD_PARALLEL_LEVEL'] = str(os.cpu_count())
+cmake_env["CMAKE_BUILD_PARALLEL_LEVEL"] = str(os.cpu_count())
 
 
 def run_cmake(cmake_args):
-    return run(['cmake'] + cmake_args, env=cmake_env)
+    return run(["cmake"] + cmake_args, env=cmake_env)
 
 
 class GenerationPhase:
@@ -92,23 +92,23 @@ class GenerationPhase:
         root = self.boost_dir
         root = os.path.join(root, self.platform.boost_installdir(self.configuration))
         args = [
-            f'-DBoost_ROOT={root}',
-            f'-DBOOST_ROOT={root}',
+            f"-DBoost_ROOT={root}",
+            f"-DBOOST_ROOT={root}",
         ]
         args += self.link.cmake_args_link()
         return args
 
     @staticmethod
     def _cmake_extra_args():
-        return ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
+        return ["-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"]
 
     def _cmake_dir_args(self):
         args = []
         if self.install_dir is not None:
-            args += [f'-DCMAKE_INSTALL_PREFIX={self.install_dir}']
+            args += [f"-DCMAKE_INSTALL_PREFIX={self.install_dir}"]
         # Important! -H must come as the last parameter, older CMake versions
         # don't like it when it's not.
-        args += [f'-B{self.build_dir}', f'-H{self.src_dir}']
+        args += [f"-B{self.build_dir}", f"-H{self.src_dir}"]
         return args
 
     def run(self, toolset):
@@ -122,11 +122,11 @@ class BuildPhase:
         self.configuration = configuration or DEFAULT_CONFIGURATION
 
     def _cmake_args(self, toolset):
-        result = ['--build', self.build_dir]
-        result += ['--config', str(self.configuration)]
+        result = ["--build", self.build_dir]
+        result += ["--config", str(self.configuration)]
         if self.install_dir is not None:
-            result += ['--target', 'install']
-        result += ['--'] + toolset.build_system_args()
+            result += ["--target", "install"]
+        result += ["--"] + toolset.build_system_args()
         return result
 
     def run(self, toolset):
@@ -162,13 +162,13 @@ class BuildParameters:
     @staticmethod
     def from_args(args):
         args = vars(args)
-        args.pop('help_toolsets', None)
+        args.pop("help_toolsets", None)
         return BuildParameters(**args)
 
     @contextmanager
     def create_build_dir(self):
         if self.build_dir is not None:
-            logging.info('Build directory: %s', self.build_dir)
+            logging.info("Build directory: %s", self.build_dir)
             mkdir_parent(self.build_dir)
             yield self.build_dir
             return
@@ -176,11 +176,11 @@ class BuildParameters:
         with tempfile.TemporaryDirectory(
             dir=os.path.dirname(self.src_dir)
         ) as build_dir:
-            logging.info('Build directory: %s', build_dir)
+            logging.info("Build directory: %s", build_dir)
             try:
                 yield build_dir
             finally:
-                logging.info('Removing build directory: %s', build_dir)
+                logging.info("Removing build directory: %s", build_dir)
 
 
 def build(params):
@@ -211,7 +211,7 @@ def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    if '--help-toolsets' in argv:
+    if "--help-toolsets" in argv:
         sys.stdout.write(ToolsetVersion.help_toolsets())
         sys.exit(0)
 
@@ -220,86 +220,86 @@ def _parse_args(argv=None):
     )
 
     parser.add_argument(
-        '--help-toolsets',
-        action='store_true',
-        help='show detailed info about supported toolsets',
+        "--help-toolsets",
+        action="store_true",
+        help="show detailed info about supported toolsets",
     )
 
     project.version.add_to_arg_parser(parser)
 
     parser.add_argument(
-        '--toolset',
-        metavar='TOOLSET',
-        dest='toolset_version',
+        "--toolset",
+        metavar="TOOLSET",
+        dest="toolset_version",
         type=ToolsetVersion.parse,
         default=DEFAULT_TOOLSET_VERSION,
-        help=f'toolset to use ({ToolsetVersion.usage()})',
+        help=f"toolset to use ({ToolsetVersion.usage()})",
     )
 
-    platform_options = '/'.join(map(str, Platform.all()))
-    configuration_options = '/'.join(map(str, Configuration.all()))
+    platform_options = "/".join(map(str, Platform.all()))
+    configuration_options = "/".join(map(str, Configuration.all()))
 
     parser.add_argument(
-        '--platform',
-        metavar='PLATFORM',
+        "--platform",
+        metavar="PLATFORM",
         type=Platform.parse,
-        help=f'target platform ({platform_options})',
+        help=f"target platform ({platform_options})",
     )
     parser.add_argument(
-        '--configuration',
-        metavar='CONFIG',
+        "--configuration",
+        metavar="CONFIG",
         type=Configuration.parse,
         default=DEFAULT_CONFIGURATION,
-        help=f'build configuration ({configuration_options})',
+        help=f"build configuration ({configuration_options})",
     )
 
     parser.add_argument(
-        '--boost',
-        metavar='DIR',
-        dest='boost_dir',
+        "--boost",
+        metavar="DIR",
+        dest="boost_dir",
         type=normalize_path,
-        help='set Boost directory path',
+        help="set Boost directory path",
     )
 
-    linkage_options = '/'.join(map(str, Linkage.all()))
+    linkage_options = "/".join(map(str, Linkage.all()))
     parser.add_argument(
-        '--link',
-        metavar='LINKAGE',
+        "--link",
+        metavar="LINKAGE",
         type=Linkage.parse,
         default=Linkage.default_link(),
-        help=f'how Boost libraries are linked ({linkage_options})',
+        help=f"how Boost libraries are linked ({linkage_options})",
     )
     parser.add_argument(
-        '--runtime-link',
-        metavar='LINKAGE',
+        "--runtime-link",
+        metavar="LINKAGE",
         type=Linkage.parse,
         default=Linkage.default_runtime_link(),
-        help=f'which runtime to link to ({linkage_options})',
+        help=f"which runtime to link to ({linkage_options})",
     )
 
     parser.add_argument(
-        '--install',
-        metavar='DIR',
-        dest='install_dir',
+        "--install",
+        metavar="DIR",
+        dest="install_dir",
         type=normalize_path,
-        help='install directory',
+        help="install directory",
     )
 
     parser.add_argument(
-        '--cmake-arg',
-        metavar='ARG',
-        dest='cmake_args',
-        action='extend',
-        nargs='*',
-        help='additional CMake arguments, to be passed verbatim',
+        "--cmake-arg",
+        metavar="ARG",
+        dest="cmake_args",
+        action="extend",
+        nargs="*",
+        help="additional CMake arguments, to be passed verbatim",
     )
 
-    parser.add_argument('src_dir', type=normalize_path, help='source directory')
+    parser.add_argument("src_dir", type=normalize_path, help="source directory")
     parser.add_argument(
-        'build_dir',
+        "build_dir",
         type=normalize_path,
-        nargs='?',
-        help='build directory (a temporary directory if omitted)',
+        nargs="?",
+        help="build directory (a temporary directory if omitted)",
     )
 
     return parser.parse_args(argv)
@@ -311,5 +311,5 @@ def main(argv=None):
         build(BuildParameters.from_args(args))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -3,7 +3,7 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-R'''Download & bootstrap Boost.
+R"""Download & bootstrap Boost.
 
 This script downloads and unpacks a Boost distribution archive.  Its main
 utility is that it's cross-platform & supports different Boost versions out of
@@ -16,7 +16,7 @@ Usage examples:
 
     $ boost-download --unpack ~/workspace/third-party/ 1.65.0
     ...
-'''
+"""
 
 import argparse
 from contextlib import contextmanager
@@ -37,7 +37,7 @@ class Download:
     ):
         if unpack_dir is None:
             if cache_dir is None:
-                unpack_dir = '.'
+                unpack_dir = "."
             else:
                 unpack_dir = cache_dir
 
@@ -75,7 +75,7 @@ class Download:
         return Download._download_url(url)
 
     def _try_url(self, url):
-        logging.info('Trying URL: %s', url)
+        logging.info("Trying URL: %s", url)
         try:
             if self.no_retry:
                 return self._download_url(url)
@@ -107,7 +107,7 @@ class Download:
     def download_if_necessary(self):
         path = self.storage.get_archive(self.version)
         if path is not None:
-            logging.info('Using existing Boost archive: %s', path)
+            logging.info("Using existing Boost archive: %s", path)
             yield path
             return
         with self._download_from_cdn() as path:
@@ -132,32 +132,32 @@ def _parse_args(argv=None):
     project.version.add_to_arg_parser(parser)
 
     parser.add_argument(
-        '--unpack',
-        metavar='DIR',
-        dest='unpack_dir',
+        "--unpack",
+        metavar="DIR",
+        dest="unpack_dir",
         type=normalize_path,
-        help='directory to unpack the archive to',
+        help="directory to unpack the archive to",
     )
     parser.add_argument(
-        '--cache',
-        metavar='DIR',
-        dest='cache_dir',
+        "--cache",
+        metavar="DIR",
+        dest="cache_dir",
         type=normalize_path,
-        help='download directory (temporary file unless specified)',
+        help="download directory (temporary file unless specified)",
     )
-    parser.add_argument('--no-retry', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument("--no-retry", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument(
-        'version',
-        metavar='VERSION',
+        "version",
+        metavar="VERSION",
         type=Version.from_string,
-        help='Boost version (in the MAJOR.MINOR.PATCH format)',
+        help="Boost version (in the MAJOR.MINOR.PATCH format)",
     )
     parser.add_argument(
-        'dest_path',
-        metavar='DIR',
-        nargs='?',
+        "dest_path",
+        metavar="DIR",
+        nargs="?",
         type=normalize_path,
-        help='rename the boost directory to DIR',
+        help="rename the boost directory to DIR",
     )
 
     return parser.parse_args(argv)
@@ -169,5 +169,5 @@ def _main(argv=None):
         download(Download.from_args(args))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()

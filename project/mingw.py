@@ -9,19 +9,19 @@ class MinGW:
         self.prefix = platform.mingw_prefix()
 
     def _get(self, what):
-        return f'{self.prefix}-w64-mingw32-{what}'
+        return f"{self.prefix}-w64-mingw32-{what}"
 
     def gcc(self):
-        return self._get('gcc')
+        return self._get("gcc")
 
     def gxx(self):
-        return self._get('g++')
+        return self._get("g++")
 
     def ar(self):
-        return self._get('gcc-ar')
+        return self._get("gcc-ar")
 
     def ranlib(self):
-        return self._get('gcc-ranlib')
+        return self._get("gcc-ranlib")
 
     def windres(self):
-        return self._get('windres')
+        return self._get("windres")

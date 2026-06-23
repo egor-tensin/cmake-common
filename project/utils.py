@@ -47,19 +47,19 @@ def full_exe_name(exe):
 @contextmanager
 def setup_logging():
     level_names = {
-        logging.DEBUG: 'DBG',
-        logging.INFO: 'INFO',
-        logging.WARNING: 'WARN',
-        logging.ERROR: 'ERR',
-        logging.CRITICAL: 'CRIT',
+        logging.DEBUG: "DBG",
+        logging.INFO: "INFO",
+        logging.WARNING: "WARN",
+        logging.ERROR: "ERR",
+        logging.CRITICAL: "CRIT",
     }
     for lvl, name in level_names.items():
         logging.addLevelName(lvl, name)
 
     logging.basicConfig(
         level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S%z',
-        format='%(asctime)s | %(levelname)4s | %(message)s',
+        datefmt="%Y-%m-%d %H:%M:%S%z",
+        format="%(asctime)s | %(levelname)4s | %(message)s",
         # Log to stdout, because that's where subprocess's output goes (so that
         # they don't get interleaved).
         stream=sys.stdout,
@@ -82,7 +82,7 @@ def cd(path):
 
 
 def run(cmd_line, **kwargs):
-    logging.info('Running executable: %s', cmd_line)
+    logging.info("Running executable: %s", cmd_line)
     return subprocess.run(cmd_line, check=True, **kwargs)
 
 
@@ -91,7 +91,7 @@ def delete_on_error(path):
     try:
         yield
     except:
-        logging.info('Removing temporary file: %s', path)
+        logging.info("Removing temporary file: %s", path)
         os.remove(path)
         raise
 
@@ -101,20 +101,20 @@ def delete(path):
     try:
         yield
     finally:
-        logging.info('Removing temporary file: %s', path)
+        logging.info("Removing temporary file: %s", path)
         os.remove(path)
 
 
 @contextmanager
 def temp_file(**kwargs):
-    '''Make NamedTemporaryFile usable on Windows.
+    """Make NamedTemporaryFile usable on Windows.
 
     It can't be opened a second time on Windows, hence this silliness.
-    '''
+    """
     tmp = tempfile.NamedTemporaryFile(delete=False, **kwargs)
     with tmp as file, delete_on_error(file.name):
         path = file.name
-        logging.info('Created temporary file: %s', path)
+        logging.info("Created temporary file: %s", path)
     with delete(path):
         yield path
 
@@ -132,7 +132,7 @@ def retry(exc_type, timeout=5, tries=3, backoff=2):
                     logging.exception(e)
                     current_try += 1
                     if current_try < tries:
-                        logging.error('Retrying after %d seconds', current_timeout)
+                        logging.error("Retrying after %d seconds", current_timeout)
                         time.sleep(current_timeout)
                         current_timeout *= backoff
                         continue

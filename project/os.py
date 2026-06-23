@@ -8,9 +8,9 @@ import platform
 
 
 class OS(Enum):
-    WINDOWS = 'Windows'
-    LINUX = 'Linux'
-    MACOS = 'macOS'
+    WINDOWS = "Windows"
+    LINUX = "Linux"
+    MACOS = "macOS"
 
     def __str__(self):
         return str(self.value)
@@ -19,12 +19,12 @@ class OS(Enum):
     def current():
         system = platform.system()
         mapping = {
-            'Windows': OS.WINDOWS,
-            'Linux': OS.LINUX,
-            'Darwin': OS.MACOS,
+            "Windows": OS.WINDOWS,
+            "Linux": OS.LINUX,
+            "Darwin": OS.MACOS,
         }
         if system not in mapping:
-            raise NotImplementedError(f'unsupported OS: {system}')
+            raise NotImplementedError(f"unsupported OS: {system}")
         return mapping[system]
 
 

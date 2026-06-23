@@ -25,8 +25,8 @@ class Archive:
     def unpack(self, dest_dir):
         path = os.path.join(dest_dir, self.dir_name)
         if os.path.exists(path):
-            raise RuntimeError(f'Boost directory already exists: {path}')
-        logging.info('Unpacking Boost to: %s', path)
+            raise RuntimeError(f"Boost directory already exists: {path}")
+        logging.info("Unpacking Boost to: %s", path)
         shutil.unpack_archive(self.path, dest_dir)
         return BoostDir(path)
 
@@ -58,10 +58,10 @@ class PermanentStorage(ArchiveStorage):
     @contextmanager
     def write_archive(self, version, contents):
         path = self._archive_path(version)
-        logging.info('Writing Boost archive: %s', path)
+        logging.info("Writing Boost archive: %s", path)
         if os.path.exists(path):
-            raise RuntimeError(f'cannot download Boost, file already exists: {path}')
-        with open(path, mode='w+b') as dest:
+            raise RuntimeError(f"cannot download Boost, file already exists: {path}")
+        with open(path, mode="w+b") as dest:
             dest.write(contents)
         yield path
 
@@ -76,9 +76,9 @@ class TemporaryStorage(ArchiveStorage):
     @contextmanager
     def write_archive(self, version, contents):
         tmp = temp_file(
-            prefix=f'boost_{version}_', suffix=version.archive_ext, dir=self._dir
+            prefix=f"boost_{version}_", suffix=version.archive_ext, dir=self._dir
         )
         with tmp as archive_path:
-            with open(archive_path, mode='wb') as fd:
+            with open(archive_path, mode="wb") as fd:
                 fd.write(contents)
             yield archive_path

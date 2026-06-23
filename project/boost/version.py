@@ -8,7 +8,7 @@ from functools import total_ordering
 import os.path
 import re
 
-_Version = namedtuple('_Version', ['major', 'minor', 'patch'])
+_Version = namedtuple("_Version", ["major", "minor", "patch"])
 
 
 @total_ordering
@@ -36,31 +36,31 @@ class Version:
 
     @staticmethod
     def from_string(s):
-        result = re.match(r'^(\d+)\.(\d+)\.(\d+)$', s)
+        result = re.match(r"^(\d+)\.(\d+)\.(\d+)$", s)
         if result is None:
-            raise ValueError(f'invalid Boost version: {s}')
+            raise ValueError(f"invalid Boost version: {s}")
         major = int(result.group(1))
         minor = int(result.group(2))
         patch = int(result.group(3))
         return Version(major, minor, patch)
 
     def __str__(self):
-        return f'{self.major}.{self.minor}.{self.patch}'
+        return f"{self.major}.{self.minor}.{self.patch}"
 
     @property
     def archive_ext(self):
-        return '.tar.gz'
+        return ".tar.gz"
 
     def dir_path(self, parent_dir):
         return os.path.join(parent_dir, self.dir_name)
 
     @property
     def dir_name(self):
-        return f'boost_{self.major}_{self.minor}_{self.patch}'
+        return f"boost_{self.major}_{self.minor}_{self.patch}"
 
     @property
     def archive_name(self):
-        return f'{self.dir_name}{self.archive_ext}'
+        return f"{self.dir_name}{self.archive_ext}"
 
     def get_download_url(self):
-        return f'https://archives.boost.io/release/{self}/source/{self.archive_name}'
+        return f"https://archives.boost.io/release/{self}/source/{self.archive_name}"

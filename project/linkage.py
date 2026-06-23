@@ -11,8 +11,8 @@ from project.os import on_linux_like
 
 
 class Linkage(Enum):
-    STATIC = 'static'
-    SHARED = 'shared'
+    STATIC = "static"
+    SHARED = "shared"
 
     def __str__(self):
         return str(self.value)
@@ -26,7 +26,7 @@ class Linkage(Enum):
         try:
             return Linkage(s)
         except ValueError as e:
-            raise argparse.ArgumentTypeError(f'invalid linkage: {s}') from e
+            raise argparse.ArgumentTypeError(f"invalid linkage: {s}") from e
 
     # For my development, I link everything statically (to be able to pull the
     # binaries from a CI, etc. and run them everywhere):
@@ -54,20 +54,20 @@ class Linkage(Enum):
         return link, runtime_link
 
     def b2_args_link(self):
-        return [f'link={self}']
+        return [f"link={self}"]
 
     def b2_args_runtime_link(self):
-        return [f'runtime-link={self}']
+        return [f"runtime-link={self}"]
 
     def cmake_args_link(self):
         if self is Linkage.STATIC:
-            return ['-DBoost_USE_STATIC_LIBS=ON']
+            return ["-DBoost_USE_STATIC_LIBS=ON"]
         return []
 
     def cmake_args_runtime_link(self):
         if self is Linkage.STATIC:
             return [
-                '-DBoost_USE_STATIC_RUNTIME=ON',
-                '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>',
+                "-DBoost_USE_STATIC_RUNTIME=ON",
+                "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>",
             ]
         return []

@@ -37,6 +37,3 @@ script-files = [
 ]
 
 [tool.setuptools_scm]
-
-[tool.black]
-skip-string-normalization = true

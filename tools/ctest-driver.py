@@ -5,7 +5,7 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Wrap your actual test driver to use with CTest
+"""Wrap your actual test driver to use with CTest
 
 CTest suffers from at least two issues, in particular with regard to its
 PASS_REGULAR_EXPRESSION feature:
@@ -14,7 +14,7 @@ PASS_REGULAR_EXPRESSION feature:
 2. The exit code of a test is ignored if one of the regexes matches.
 
 This script tries to fix them.
-'''
+"""
 
 import argparse
 import os
@@ -26,7 +26,7 @@ SCRIPT_NAME = os.path.basename(__file__)
 
 
 def dump(msg, **kwargs):
-    print(f'{SCRIPT_NAME}: {msg}', **kwargs)
+    print(f"{SCRIPT_NAME}: {msg}", **kwargs)
 
 
 def err(msg):
@@ -34,7 +34,7 @@ def err(msg):
 
 
 def read_file(path):
-    with open(path, mode='r') as fd:
+    with open(path, mode="r") as fd:
         return fd.read()
 
 
@@ -95,7 +95,7 @@ def match_pass_regexes(output, regexes):
             " regular expressions:"
         )
         for regex in regexes:
-            err(f'\t{regex}')
+            err(f"\t{regex}")
         sys.exit(1)
 
 
@@ -105,7 +105,7 @@ def match_fail_regexes(output, regexes):
     if match_any(output, regexes):
         err("Matched test program's output against some of the regular" " expressions:")
         for regex in regexes:
-            err(f'\t{regex}')
+            err(f"\t{regex}")
         sys.exit(1)
 
 
@@ -137,80 +137,80 @@ def parse_args(argv=None):
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = parser.add_subparsers(dest="command")
 
     parser_run = subparsers.add_parser(
-        'run', help='run an executable and check its output'
+        "run", help="run an executable and check its output"
     )
     parser_run.add_argument(
-        '-p',
-        '--pass-regex',
-        nargs='*',
-        dest='pass_regexes',
-        metavar='REGEX',
-        help='pass if all of these regexes match',
+        "-p",
+        "--pass-regex",
+        nargs="*",
+        dest="pass_regexes",
+        metavar="REGEX",
+        help="pass if all of these regexes match",
     )
     parser_run.add_argument(
-        '-f',
-        '--fail-regex',
-        nargs='*',
-        dest='fail_regexes',
-        metavar='REGEX',
-        help='fail if any of these regexes matches',
+        "-f",
+        "--fail-regex",
+        nargs="*",
+        dest="fail_regexes",
+        metavar="REGEX",
+        help="fail if any of these regexes matches",
     )
     parser_run.add_argument(
-        '-e',
-        '--exit-code',
-        nargs='*',
+        "-e",
+        "--exit-code",
+        nargs="*",
         type=int,
         default=[0],
-        dest='exit_codes',
-        metavar='NUM',
-        help='allowed exit_codes (only 0 by default)',
+        dest="exit_codes",
+        metavar="NUM",
+        help="allowed exit_codes (only 0 by default)",
     )
     parser_run.add_argument(
-        '-n',
-        '--new-window',
-        action='store_true',
-        help='launch child process in a new console window',
+        "-n",
+        "--new-window",
+        action="store_true",
+        help="launch child process in a new console window",
     )
     parser_run.add_argument(
-        'exe_path', metavar='PATH', help='path to the test executable'
+        "exe_path", metavar="PATH", help="path to the test executable"
     )
     # nargs='*' here would discard additional '--'s.
     parser_run.add_argument(
-        'exe_args',
-        metavar='ARG',
+        "exe_args",
+        metavar="ARG",
         nargs=argparse.REMAINDER,
-        help='test executable arguments',
+        help="test executable arguments",
     )
     parser_run.set_defaults(func=run_actual_test_driver)
 
     parser_grep = subparsers.add_parser(
-        'grep', help='check file contents for matching patterns'
+        "grep", help="check file contents for matching patterns"
     )
     parser_grep.add_argument(
-        '-p',
-        '--pass-regex',
-        nargs='*',
-        dest='pass_regexes',
-        metavar='REGEX',
-        help='pass if all of these regexes match',
+        "-p",
+        "--pass-regex",
+        nargs="*",
+        dest="pass_regexes",
+        metavar="REGEX",
+        help="pass if all of these regexes match",
     )
     parser_grep.add_argument(
-        '-f',
-        '--fail-regex',
-        nargs='*',
-        dest='fail_regexes',
-        metavar='REGEX',
-        help='fail if any of these regexes matches',
+        "-f",
+        "--fail-regex",
+        nargs="*",
+        dest="fail_regexes",
+        metavar="REGEX",
+        help="fail if any of these regexes matches",
     )
-    parser_grep.add_argument('path', metavar='PATH', help='text file path')
+    parser_grep.add_argument("path", metavar="PATH", help="text file path")
     parser_grep.set_defaults(func=grep_file)
 
     args = parser.parse_args(argv)
     if args.command is None:
-        parser.error('please specify a subcommand to run')
+        parser.error("please specify a subcommand to run")
     return args
 
 
@@ -219,5 +219,5 @@ def main(argv=None):
     args.func(args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

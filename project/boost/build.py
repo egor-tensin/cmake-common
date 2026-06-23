@@ -3,7 +3,7 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-R'''Build Boost.
+R"""Build Boost.
 
 The main utility of this script is setting the correct --prefix parameter value
 to avoid name clashes.
@@ -24,7 +24,7 @@ By default, only builds:
 * Debug & Release configurations,
 * static libraries,
 * statically linked to the runtime.
-'''
+"""
 
 import argparse
 from contextlib import contextmanager
@@ -47,8 +47,8 @@ DEFAULT_CONFIGURATIONS = (
     Configuration.RELEASE,
 )
 DEFAULT_TOOLSET_VERSION = ToolsetVersion.default()
-B2_QUIET = ['warnings=off', '-d0']
-B2_VERBOSE = ['warnings=all', '-d2', '--debug-configuration']
+B2_QUIET = ["warnings=off", "-d0"]
+B2_VERBOSE = ["warnings=all", "-d2", "--debug-configuration"]
 
 
 class BuildParameters:
@@ -94,7 +94,7 @@ class BuildParameters:
     @staticmethod
     def from_cmd_args(args):
         args = vars(args)
-        args.pop('help_toolsets', None)
+        args.pop("help_toolsets", None)
         return BuildParameters(**args)
 
     def enum_b2_args(self):
@@ -107,18 +107,18 @@ class BuildParameters:
     @contextmanager
     def _create_build_dir(self):
         if self.build_dir is not None:
-            logging.info('Build directory: %s', self.build_dir)
+            logging.info("Build directory: %s", self.build_dir)
             yield self.build_dir
             return
 
         with tempfile.TemporaryDirectory(
             dir=os.path.dirname(self.boost_dir)
         ) as build_dir:
-            logging.info('Build directory: %s', build_dir)
+            logging.info("Build directory: %s", build_dir)
             try:
                 yield build_dir
             finally:
-                logging.info('Removing build directory: %s', build_dir)
+                logging.info("Removing build directory: %s", build_dir)
             return
 
     @contextmanager
@@ -126,16 +126,16 @@ class BuildParameters:
         toolset = Toolset.make(self.toolset_version, platform)
         link, runtime_link = Linkage.validate_linkage(self.link, self.runtime_link)
         with toolset.b2_args() as result:
-            result.append(f'--build-dir={build_dir}')
-            result.append('--layout=system')
+            result.append(f"--build-dir={build_dir}")
+            result.append("--layout=system")
             result += platform.b2_args(configuration)
             result += configuration.b2_args()
             result += link.b2_args_link()
             result += runtime_link.b2_args_runtime_link()
             result += self.b2_args
             if self.libraries:
-                result += [f'--with-{lib}' for lib in self.libraries]
-            result += ['install']
+                result += [f"--with-{lib}" for lib in self.libraries]
+            result += ["install"]
             yield result
 
 
@@ -148,7 +148,7 @@ def _parse_args(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    if '--help-toolsets' in argv:
+    if "--help-toolsets" in argv:
         sys.stdout.write(ToolsetVersion.help_toolsets())
         sys.exit(0)
 
@@ -157,102 +157,102 @@ def _parse_args(argv=None):
     )
 
     parser.add_argument(
-        '--help-toolsets',
-        action='store_true',
-        help='show detailed info about supported toolsets',
+        "--help-toolsets",
+        action="store_true",
+        help="show detailed info about supported toolsets",
     )
 
     project.version.add_to_arg_parser(parser)
 
     parser.add_argument(
-        '-v',
-        '--verbose',
-        action='store_true',
-        help='verbose b2 invocation (quiet by default)',
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="verbose b2 invocation (quiet by default)",
     )
 
     parser.add_argument(
-        '--toolset',
-        metavar='TOOLSET',
-        dest='toolset_version',
+        "--toolset",
+        metavar="TOOLSET",
+        dest="toolset_version",
         type=ToolsetVersion.parse,
         default=DEFAULT_TOOLSET_VERSION,
-        help=f'toolset to use ({ToolsetVersion.usage()})',
+        help=f"toolset to use ({ToolsetVersion.usage()})",
     )
 
-    platform_options = '/'.join(map(str, Platform.all()))
-    configuration_options = '/'.join(map(str, Configuration.all()))
+    platform_options = "/".join(map(str, Platform.all()))
+    configuration_options = "/".join(map(str, Configuration.all()))
     # These are used to put the built libraries into proper installation
     # directory subdirectories (to avoid name clashes).
     parser.add_argument(
-        '--platform',
-        metavar='PLATFORM',
-        dest='platforms',
-        nargs='*',
+        "--platform",
+        metavar="PLATFORM",
+        dest="platforms",
+        nargs="*",
         type=Platform.parse,
         default=[],
-        help=f'target platform ({platform_options})',
+        help=f"target platform ({platform_options})",
     )
     parser.add_argument(
-        '--configuration',
-        metavar='CONFIGURATION',
-        dest='configurations',
-        nargs='*',
+        "--configuration",
+        metavar="CONFIGURATION",
+        dest="configurations",
+        nargs="*",
         type=Configuration.parse,
         default=[],
-        help=f'target configuration ({configuration_options})',
+        help=f"target configuration ({configuration_options})",
     )
 
-    linkage_options = '/'.join(map(str, Linkage.all()))
+    linkage_options = "/".join(map(str, Linkage.all()))
     # This is needed because the default behaviour on Linux and Windows is
     # different: static & dynamic libs are built on Linux, but only static libs
     # are built on Windows by default.
     parser.add_argument(
-        '--link',
-        metavar='LINKAGE',
+        "--link",
+        metavar="LINKAGE",
         type=Linkage.parse,
         default=Linkage.default_link(),
-        help=f'how the libraries are linked ({linkage_options})',
+        help=f"how the libraries are linked ({linkage_options})",
     )
     # This is used to omit runtime-link=static I'd have to otherwise use a lot,
     # plus the script validates the link= and runtime-link= combinations.
     parser.add_argument(
-        '--runtime-link',
-        metavar='LINKAGE',
+        "--runtime-link",
+        metavar="LINKAGE",
         type=Linkage.parse,
         default=Linkage.default_runtime_link(),
-        help=f'how the libraries link to the runtime ({linkage_options})',
+        help=f"how the libraries link to the runtime ({linkage_options})",
     )
 
     parser.add_argument(
-        '--build',
-        metavar='DIR',
-        dest='build_dir',
+        "--build",
+        metavar="DIR",
+        dest="build_dir",
         type=normalize_path,
-        help='Boost build directory (temporary directory unless specified)',
+        help="Boost build directory (temporary directory unless specified)",
     )
 
     parser.add_argument(
-        '--b2-arg',
-        metavar='ARG',
-        dest='b2_args',
-        action='extend',
-        nargs='*',
-        help='additional b2 arguments, to be passed verbatim',
+        "--b2-arg",
+        metavar="ARG",
+        dest="b2_args",
+        action="extend",
+        nargs="*",
+        help="additional b2 arguments, to be passed verbatim",
     )
 
     parser.add_argument(
-        'boost_dir',
-        metavar='BOOST_DIR',
+        "boost_dir",
+        metavar="BOOST_DIR",
         type=normalize_path,
-        help='root Boost directory',
+        help="root Boost directory",
     )
     parser.add_argument(
-        'libraries',
-        metavar='LIBRARIES',
-        action='extend',
-        nargs='*',
-        help='libraries to build (all libraries by default)',
+        "libraries",
+        metavar="LIBRARIES",
+        action="extend",
+        nargs="*",
+        help="libraries to build (all libraries by default)",
     )
 
     return parser.parse_args(argv)
@@ -264,5 +264,5 @@ def _main(argv=None):
         build(BuildParameters.from_cmd_args(args))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()

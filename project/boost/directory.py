@@ -27,7 +27,7 @@ class BoostDir:
 
     def _bootstrap_if_required(self, params):
         if os.path.isfile(self._b2_path()):
-            logging.info('Not going to bootstrap, b2 is already there')
+            logging.info("Not going to bootstrap, b2 is already there")
             return
         self.bootstrap(params)
 
@@ -41,14 +41,14 @@ class BoostDir:
 
     @staticmethod
     def _bootstrap_path():
-        return os.path.join('.', BoostDir._bootstrap_name())
+        return os.path.join(".", BoostDir._bootstrap_name())
 
     @staticmethod
     def _bootstrap_name():
-        ext = '.sh'
+        ext = ".sh"
         if on_windows():
-            ext = '.bat'
-        return f'bootstrap{ext}'
+            ext = ".bat"
+        return f"bootstrap{ext}"
 
     @staticmethod
     def _bootstrap_args(toolset_version):
@@ -59,11 +59,11 @@ class BoostDir:
 
     @staticmethod
     def _b2_path():
-        return os.path.join('.', BoostDir._b2_name())
+        return os.path.join(".", BoostDir._b2_name())
 
     @staticmethod
     def _b2_name():
-        ext = ''
+        ext = ""
         if on_windows():
-            ext = '.exe'
-        return f'b2{ext}'
+            ext = ".exe"
+        return f"b2{ext}"

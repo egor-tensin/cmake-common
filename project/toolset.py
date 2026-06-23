@@ -3,7 +3,7 @@
 # For details, see https://github.com/egor-tensin/cmake-common.
 # Distributed under the MIT License.
 
-'''Supported platform/build system/compiler combinations include, but are not
+"""Supported platform/build system/compiler combinations include, but are not
 limited to:
 
 | Platform | Build system | Compiler  |
@@ -17,7 +17,7 @@ limited to:
 
 1. Both GNU make and MinGW mingw32-make.
 2. clang-cl is supported by Boost 1.69.0 or higher only.
-'''
+"""
 
 # See docs/{boost,cmake}.md for a more thorough description of my pain.
 
@@ -39,14 +39,14 @@ from project.utils import full_exe_name, temp_file
 class MSVCVersion(Enum):
     # It's the MSVC "toolset" version, or whatever.
     # Source: https://cmake.org/cmake/help/latest/variable/MSVC_TOOLSET_VERSION.html
-    VS2010 = '100'
-    VS2012 = '110'
-    VS2013 = '120'
-    VS2015 = '140'
-    VS2017 = '141'
-    VS2019 = '142'
-    VS2022 = '143'
-    VS2026 = '145'
+    VS2010 = "100"
+    VS2012 = "110"
+    VS2013 = "120"
+    VS2015 = "140"
+    VS2017 = "141"
+    VS2019 = "142"
+    VS2022 = "143"
+    VS2026 = "145"
     # ^^^ Update the mappings below.
 
     def __str__(self):
@@ -54,15 +54,15 @@ class MSVCVersion(Enum):
 
     def help(self):
         if self in _msvc_to_vs_version:
-            return f'Visual Studio {_msvc_to_vs_version[self]}'
-        raise NotImplementedError(f'unsupported MSVC version: {self}')
+            return f"Visual Studio {_msvc_to_vs_version[self]}"
+        raise NotImplementedError(f"unsupported MSVC version: {self}")
 
     @staticmethod
     def parse(s):
         try:
             return MSVCVersion(s)
         except ValueError as e:
-            raise argparse.ArgumentTypeError(f'invalid MSVC version: {s}') from e
+            raise argparse.ArgumentTypeError(f"invalid MSVC version: {s}") from e
 
     @staticmethod
     def all():
@@ -74,32 +74,32 @@ class MSVCVersion(Enum):
     def to_visual_studio_version(self):
         if self in _msvc_to_vs_version:
             return _msvc_to_vs_version[self]
-        raise NotImplementedError(f'unsupported MSVC version: {self}')
+        raise NotImplementedError(f"unsupported MSVC version: {self}")
 
     def to_boost_msvc_version(self):
         try:
             numeric = int(self.value)
         except ValueError as e:
             raise RuntimeError(
-                f'what? MSVC versions are supposed to be integers: {self.value}'
+                f"what? MSVC versions are supposed to be integers: {self.value}"
             ) from e
         numeric = Decimal(numeric) / 10
-        numeric = numeric.quantize(Decimal('1.0'))
+        numeric = numeric.quantize(Decimal("1.0"))
         return str(numeric)
 
     def to_cmake_toolset(self):
-        return f'v{self}'
+        return f"v{self}"
 
 
 class VisualStudioVersion(Enum):
-    VS2010 = '2010'
-    VS2012 = '2012'
-    VS2013 = '2013'
-    VS2015 = '2015'
-    VS2017 = '2017'
-    VS2019 = '2019'
-    VS2022 = '2022'
-    VS2026 = '2026'
+    VS2010 = "2010"
+    VS2012 = "2012"
+    VS2013 = "2013"
+    VS2015 = "2015"
+    VS2017 = "2017"
+    VS2019 = "2019"
+    VS2022 = "2022"
+    VS2026 = "2026"
     # ^^^ Update the mappings below.
 
     def __str__(self):
@@ -108,7 +108,7 @@ class VisualStudioVersion(Enum):
     def help(self):
         if self in _vs_to_msvc_version:
             return f"Same as '{ToolsetType.MSVC}{_vs_to_msvc_version[self]}'"
-        raise NotImplementedError(f'unsupported Visual Studio version: {self}')
+        raise NotImplementedError(f"unsupported Visual Studio version: {self}")
 
     @staticmethod
     def parse(s):
@@ -116,7 +116,7 @@ class VisualStudioVersion(Enum):
             return VisualStudioVersion(s)
         except ValueError as e:
             raise argparse.ArgumentTypeError(
-                f'invalid Visual Studio version: {s}'
+                f"invalid Visual Studio version: {s}"
             ) from e
 
     @staticmethod
@@ -126,7 +126,7 @@ class VisualStudioVersion(Enum):
     def to_msvc_version(self):
         if self in _vs_to_msvc_version:
             return _vs_to_msvc_version[self]
-        raise NotImplementedError(f'unsupported Visual Studio version: {self}')
+        raise NotImplementedError(f"unsupported Visual Studio version: {self}")
 
     def to_visual_studio_version(self):
         return self
@@ -146,13 +146,13 @@ _vs_to_msvc_version = {v: k for k, v in _msvc_to_vs_version.items()}
 
 
 class ToolsetType(Enum):
-    AUTO = 'auto'
-    MSVC = 'msvc'
-    VISUAL_STUDIO = 'vs'
-    GCC = 'gcc'
-    MINGW = 'mingw'
-    CLANG = 'clang'
-    CLANG_CL = 'clang-cl'
+    AUTO = "auto"
+    MSVC = "msvc"
+    VISUAL_STUDIO = "vs"
+    GCC = "gcc"
+    MINGW = "mingw"
+    CLANG = "clang"
+    CLANG_CL = "clang-cl"
 
     def __str__(self):
         return str(self.value)
@@ -161,25 +161,25 @@ class ToolsetType(Enum):
         if self is ToolsetType.AUTO:
             return "Means 'gcc' on Linux and 'msvc' on Windows"
         if self is ToolsetType.MSVC:
-            return 'Use cl.exe'
+            return "Use cl.exe"
         if self is ToolsetType.VISUAL_STUDIO:
             return "Visual Studio; same as 'msvc'"
         if self is ToolsetType.GCC:
-            return 'Use gcc/g++'
+            return "Use gcc/g++"
         if self is ToolsetType.MINGW:
-            return 'Use gcc/g++ with the PLATFORM-w64-mingw32 prefix'
+            return "Use gcc/g++ with the PLATFORM-w64-mingw32 prefix"
         if self is ToolsetType.CLANG:
-            return 'Use clang/clang++'
+            return "Use clang/clang++"
         if self is ToolsetType.CLANG_CL:
-            return 'Use clang-cl.exe'
-        raise NotImplementedError(f'unsupported toolset: {self}')
+            return "Use clang-cl.exe"
+        raise NotImplementedError(f"unsupported toolset: {self}")
 
     @staticmethod
     def parse(s):
         try:
             return ToolsetType(s)
         except ValueError as e:
-            raise argparse.ArgumentTypeError(f'invalid toolset: {s}') from e
+            raise argparse.ArgumentTypeError(f"invalid toolset: {s}") from e
 
     @property
     def is_versioned(self):
@@ -222,7 +222,7 @@ class ToolsetVersion:
     def __str__(self):
         if self.version is None:
             return str(self.hint)
-        return f'{self.hint}{self.version}'
+        return f"{self.hint}{self.version}"
 
     @staticmethod
     def default():
@@ -230,31 +230,31 @@ class ToolsetVersion:
 
     @staticmethod
     def usage():
-        return '/'.join(map(str, ToolsetType.all()))
+        return "/".join(map(str, ToolsetType.all()))
 
     @staticmethod
     def help_toolsets():
-        return f'''{__doc__}
+        return f"""{__doc__}
 {ToolsetVersion.help_all_toolsets()}
-{ToolsetVersion.help_versioned_toolsets()}'''
+{ToolsetVersion.help_versioned_toolsets()}"""
 
     @staticmethod
     def help_all_toolsets():
-        s = '''All supported toolsets are listed below.
+        s = """All supported toolsets are listed below.
 
-'''
+"""
         max_name = max((len(str(hint)) for hint in ToolsetType.all()))
         for hint in ToolsetType.all():
-            name_padding = ' ' * (max_name - len(str(hint)))
-            s += f'  * {hint}{name_padding} \t{hint.help()}\n'
+            name_padding = " " * (max_name - len(str(hint)))
+            s += f"  * {hint}{name_padding} \t{hint.help()}\n"
         return s
 
     @staticmethod
     def help_versioned_toolsets():
-        s = '''Some toolsets support specifying a version using the VERSION suffix.  This is
+        s = """Some toolsets support specifying a version using the VERSION suffix.  This is
 a list of all supported toolset versions:
 
-'''
+"""
         max_name = max(
             (
                 len(str(hint) + str(version))
@@ -264,9 +264,9 @@ a list of all supported toolset versions:
         )
         for hint in ToolsetType.all_versioned():
             for version in hint.all_versions():
-                name = f'{hint}{version}'
-                name_padding = ' ' * (max_name - len(name))
-                s += f'  * {name}{name_padding} \t{version.help()}\n'
+                name = f"{hint}{version}"
+                name_padding = " " * (max_name - len(name))
+                s += f"  * {name}{name_padding} \t{version.help()}\n"
         return s
 
     @staticmethod
@@ -276,10 +276,10 @@ a list of all supported toolset versions:
         except ValueError:
             pass
         for hint in sorted(ToolsetType.all_versioned(), key=str, reverse=True):
-            prefix = f'{hint}'
+            prefix = f"{hint}"
             if s.startswith(prefix):
                 return ToolsetVersion(hint, hint.parse_version(s[len(prefix) :]))
-        raise argparse.ArgumentTypeError(f'invalid toolset: {s}')
+        raise argparse.ArgumentTypeError(f"invalid toolset: {s}")
 
 
 class Toolset(abc.ABC):
@@ -304,7 +304,7 @@ class Toolset(abc.ABC):
         args = []
         generator = self.cmake_generator()
         if generator is not None:
-            args += ['-G', generator]
+            args += ["-G", generator]
         return args
 
     @staticmethod
@@ -328,7 +328,7 @@ class Toolset(abc.ABC):
             return Clang
         if version.hint is ToolsetType.CLANG_CL:
             return ClangCL
-        raise NotImplementedError(f'unrecognized toolset: {version}')
+        raise NotImplementedError(f"unrecognized toolset: {version}")
 
     @staticmethod
     def make(version, platform):
@@ -368,12 +368,12 @@ class MSVC(Toolset):
 
     def b2_toolset(self):
         if self.version is not None:
-            return f'msvc-{self.version.to_msvc_version().to_boost_msvc_version()}'
-        return 'msvc'
+            return f"msvc-{self.version.to_msvc_version().to_boost_msvc_version()}"
+        return "msvc"
 
     @contextmanager
     def b2_args(self):
-        yield [f'toolset={self.b2_toolset()}']
+        yield [f"toolset={self.b2_toolset()}"]
 
     # Note: bootstrap.bat picks up MSVC by default.
 
@@ -381,22 +381,22 @@ class MSVC(Toolset):
         # This doesn't actually specify the generator of course, but I don't
         # want to implement VS detection logic.
         args = super().cmake_args(build_dir, platform)
-        args += ['-A', platform.msvc_arch()]
+        args += ["-A", platform.msvc_arch()]
         if self.version is not None:
-            args += ['-T', self.version.to_msvc_version().to_cmake_toolset()]
+            args += ["-T", self.version.to_msvc_version().to_cmake_toolset()]
         return args
 
 
 class BoostCustom(Toolset):
-    COMPILER_VERSION = 'custom'
+    COMPILER_VERSION = "custom"
 
     def __init__(self, compiler, path=None, build_options=None):
         if not compiler:
-            raise RuntimeError('compiler type is required (like gcc, clang, etc.)')
+            raise RuntimeError("compiler type is required (like gcc, clang, etc.)")
         self.compiler = compiler
         version = BoostCustom.COMPILER_VERSION
         self.version = version
-        path = path or ''
+        path = path or ""
         path = path and full_exe_name(path)
         self.path = path
         build_options = build_options or []
@@ -404,37 +404,37 @@ class BoostCustom(Toolset):
 
     def b2_toolset(self):
         if self.version:
-            return f'{self.compiler}-{self.version}'
+            return f"{self.compiler}-{self.version}"
         return self.compiler
 
     def b2_toolset_arg(self):
-        return f'toolset={self.b2_toolset()}'
+        return f"toolset={self.b2_toolset()}"
 
     @contextmanager
     def _b2_write_config(self):
-        config_file = temp_file(prefix='user_config_', suffix='.jam')
+        config_file = temp_file(prefix="user_config_", suffix=".jam")
         with config_file as config_path:
             config = self.b2_format_config()
-            logging.info('Using user config:\n%s', config)
-            with open(config_path, mode='w') as fd:
+            logging.info("Using user config:\n%s", config)
+            with open(config_path, mode="w") as fd:
                 fd.write(config)
             yield config_path
 
     def _b2_format_build_options(self):
-        return ''.join(f'\n    <{name}>{val}' for name, val in self.build_options)
+        return "".join(f"\n    <{name}>{val}" for name, val in self.build_options)
 
     def b2_format_config(self):
-        version = self.version and f'{self.version} '
-        path = self.path and f'{self.path} '
-        return f'''using {self.compiler} : {version}: {path}:{self._b2_format_build_options()}
-;'''
+        version = self.version and f"{self.version} "
+        path = self.path and f"{self.path} "
+        return f"""using {self.compiler} : {version}: {path}:{self._b2_format_build_options()}
+;"""
 
     @contextmanager
     def b2_args(self):
         with self._b2_write_config() as config_path:
             args = []
             args.append(self.b2_toolset_arg())
-            args.append(f'--user-config={config_path}')
+            args.append(f"--user-config={config_path}")
             yield args
 
 
@@ -447,25 +447,25 @@ class CMakeCustom(Toolset):
     @staticmethod
     def makefiles():
         if on_windows():
-            if shutil.which('mingw32-make'):
-                return 'MinGW Makefiles'
-            return 'Unix Makefiles'
+            if shutil.which("mingw32-make"):
+                return "MinGW Makefiles"
+            return "Unix Makefiles"
         # On Linux, make all the way:
-        return 'Unix Makefiles'
+        return "Unix Makefiles"
 
     @staticmethod
     def nmake_or_makefiles():
         if on_windows():
             # MinGW utilities like make might be unavailable, but NMake can
             # very much be there.
-            if shutil.which('nmake'):
-                return 'NMake Makefiles'
+            if shutil.which("nmake"):
+                return "NMake Makefiles"
         return CMakeCustom.cmake_generator()
 
     @staticmethod
     def _cmake_write_config(build_dir, contents):
-        path = os.path.join(build_dir, 'custom_toolchain.cmake')
-        with open(path, mode='w') as file:
+        path = os.path.join(build_dir, "custom_toolchain.cmake")
+        with open(path, mode="w") as file:
             file.write(contents)
         return path
 
@@ -478,7 +478,7 @@ class CMakeCustom(Toolset):
         config_path = self._cmake_write_config(build_dir, contents)
 
         return super().cmake_args(build_dir, platform) + [
-            f'-DCMAKE_TOOLCHAIN_FILE={config_path}',
+            f"-DCMAKE_TOOLCHAIN_FILE={config_path}",
         ]
 
 
@@ -487,31 +487,31 @@ class GCC(BoostCustom, CMakeCustom):
     # MinGW-flavoured GCC on Windows.
 
     def __init__(self):
-        BoostCustom.__init__(self, 'gcc', 'g++', self.b2_build_options())
+        BoostCustom.__init__(self, "gcc", "g++", self.b2_build_options())
         CMakeCustom.__init__(self)
 
     @staticmethod
     def bootstrap_bat_args():
-        return ['gcc']
+        return ["gcc"]
 
     @staticmethod
     def bootstrap_sh_args():
-        return ['--with-toolset=gcc']
+        return ["--with-toolset=gcc"]
 
     @staticmethod
     def b2_build_options():
         return []
 
     def cmake_format_config(self, platform):
-        return f'''
+        return f"""
 set(CMAKE_C_COMPILER   gcc)
 set(CMAKE_CXX_COMPILER g++)
-{platform.cmake_toolset_file()}'''
+{platform.cmake_toolset_file()}"""
 
 
 def _gcc_or_auto():
-    if shutil.which('gcc') is not None:
-        return ['gcc']
+    if shutil.which("gcc") is not None:
+        return ["gcc"]
     return []
 
 
@@ -522,7 +522,7 @@ class MinGW(BoostCustom, CMakeCustom):
 
     def __init__(self, platform):
         self.paths = project.mingw.MinGW(platform)
-        BoostCustom.__init__(self, 'gcc', self.paths.gxx(), self.b2_build_options())
+        BoostCustom.__init__(self, "gcc", self.paths.gxx(), self.b2_build_options())
         CMakeCustom.__init__(self)
 
     @staticmethod
@@ -539,19 +539,19 @@ class MinGW(BoostCustom, CMakeCustom):
         return GCC.b2_build_options()
 
     def cmake_format_config(self, platform):
-        return f'''
+        return f"""
 set(CMAKE_C_COMPILER   {self.paths.gcc()})
 set(CMAKE_CXX_COMPILER {self.paths.gxx()})
 set(CMAKE_AR           {self.paths.ar()})
 set(CMAKE_RANLIB       {self.paths.ranlib()})
 set(CMAKE_RC_COMPILER  {self.paths.windres()})
 set(CMAKE_SYSTEM_NAME  Windows)
-'''
+"""
 
 
 class Clang(BoostCustom, CMakeCustom):
     def __init__(self):
-        BoostCustom.__init__(self, 'clang', 'clang++', self.b2_build_options())
+        BoostCustom.__init__(self, "clang", "clang++", self.b2_build_options())
         CMakeCustom.__init__(self)
 
     @staticmethod
@@ -564,25 +564,25 @@ class Clang(BoostCustom, CMakeCustom):
     def bootstrap_sh_args():
         # bootstrap.sh, on the other hand, is very much aware of Clang, and
         # it can build b2 using this compiler.
-        return ['--with-toolset=clang']
+        return ["--with-toolset=clang"]
 
     @staticmethod
     def b2_build_options():
         options = GCC.b2_build_options()
         options += [
-            ('cxxflags', '-DBOOST_USE_WINDOWS_H'),
+            ("cxxflags", "-DBOOST_USE_WINDOWS_H"),
             # Even with <warnings>off, the build might sometimes fail with the
             # following error:
             #
             #     error: constant expression evaluates to -105 which cannot be narrowed to type 'boost::re_detail::cpp_regex_traits_implementation<char>::char_class_type' (aka 'unsigned int')
-            ('cxxflags', '-Wno-c++11-narrowing'),
+            ("cxxflags", "-Wno-c++11-narrowing"),
         ]
         if on_windows():
             # Prefer LLVM binutils:
-            if shutil.which('llvm-ar') is not None:
-                options.append(('archiver', 'llvm-ar'))
-            if shutil.which('llvm-ranlib') is not None:
-                options.append(('ranlib', 'llvm-ranlib'))
+            if shutil.which("llvm-ar") is not None:
+                options.append(("archiver", "llvm-ar"))
+            if shutil.which("llvm-ranlib") is not None:
+                options.append(("ranlib", "llvm-ranlib"))
         return options
 
     def b2_format_config(self):
@@ -592,7 +592,7 @@ class Clang(BoostCustom, CMakeCustom):
         #
         # [1]: https://github.com/Kitware/CMake/blob/v3.18.4/Modules/Platform/Windows-Clang.cmake
         # [2]: https://stackoverflow.com/questions/2715106/how-to-create-a-new-variant-in-bjam
-        return f'''project : requirements
+        return f"""project : requirements
     <target-os>windows:<define>_MT
     <target-os>windows,<variant>debug:<define>_DEBUG
     <target-os>windows,<runtime-link>static,<variant>debug:<cxxflags>"-Xclang -flto-visibility-public-std -Xclang --dependent-lib=libcmtd"
@@ -601,10 +601,10 @@ class Clang(BoostCustom, CMakeCustom):
     <target-os>windows,<runtime-link>shared,<variant>release:<cxxflags>"-D_DLL -Xclang --dependent-lib=msvcrt"
 ;
 {BoostCustom.b2_format_config(self)}
-'''
+"""
 
     def cmake_format_config(self, platform):
-        return f'''
+        return f"""
 if(CMAKE_VERSION VERSION_LESS "3.15" AND WIN32)
     set(CMAKE_C_COMPILER   clang-cl)
     set(CMAKE_CXX_COMPILER clang-cl)
@@ -612,7 +612,7 @@ else()
     set(CMAKE_C_COMPILER   clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-{platform.cmake_toolset_file()}'''
+{platform.cmake_toolset_file()}"""
 
     @staticmethod
     def cmake_generator():
@@ -623,8 +623,8 @@ class ClangCL(CMakeCustom):
     @contextmanager
     def b2_args(self):
         yield [
-            'toolset=clang-win',
-            'define=BOOST_USE_WINDOWS_H',
+            "toolset=clang-win",
+            "define=BOOST_USE_WINDOWS_H",
         ]
 
     # There's no point in building b2 using clang-cl; clang though, presumably
@@ -639,11 +639,11 @@ class ClangCL(CMakeCustom):
         return Clang.bootstrap_sh_args()
 
     def cmake_format_config(self, platform):
-        return f'''
+        return f"""
 set(CMAKE_C_COMPILER   clang-cl)
 set(CMAKE_CXX_COMPILER clang-cl)
 set(CMAKE_SYSTEM_NAME  Windows)
-{platform.cmake_toolset_file()}'''
+{platform.cmake_toolset_file()}"""
 
     @staticmethod
     def cmake_generator():
