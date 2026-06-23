@@ -23,10 +23,20 @@ import sys
 
 @contextmanager
 def setup_logging():
+    level_names = {
+        logging.DEBUG: 'DBG',
+        logging.INFO: 'INFO',
+        logging.WARNING: 'WARN',
+        logging.ERROR: 'ERR',
+        logging.CRITICAL: 'CRIT',
+    }
+    for lvl, name in level_names.items():
+        logging.addLevelName(lvl, name)
+
     logging.basicConfig(
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S%z',
         level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S%z',
+        format='%(asctime)s | %(levelname)4s | %(message)s',
     )
     try:
         yield
