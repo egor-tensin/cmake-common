@@ -12,7 +12,7 @@ jobs:
     continue-on-error: "${{ github.ref != 'refs/heads/master' }}"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Run clang-format
         run: ./tools/project-clang-format.py
       - name: Set up Python
