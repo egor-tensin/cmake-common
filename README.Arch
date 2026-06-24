@@ -11,6 +11,6 @@ There're a bunch of useful one-liners in Makefile.
 
       make commit
 
-  * Push to the AUR repository:
+  * Push to the AUR repository & the upstream:
 
       make push
