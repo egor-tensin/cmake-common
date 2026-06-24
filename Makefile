@@ -50,7 +50,6 @@ maintenance: pkgver
 		true; \
 	elif [ "$$git_status" = $$' M .SRCINFO\n M PKGBUILD' ]; then \
 		$(MAKE) commit && \
-		git push -q && \
 		$(MAKE) push ; \
 	else \
 		echo; \
