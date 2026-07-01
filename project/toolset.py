@@ -442,6 +442,7 @@ class CMakeCustom(Toolset):
     @staticmethod
     def cmake_generator():
         # The Visual Studio generator is the default on Windows, override it:
+        # FIXME: why? I don't remember anymore.
         return CMakeCustom.makefiles()
 
     @staticmethod
