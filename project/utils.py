@@ -82,7 +82,7 @@ def cd(path):
 
 
 def run(cmd_line, **kwargs):
-    logging.info("Running executable: %s", cmd_line)
+    logging.info("Running: %s", subprocess.list2cmdline(cmd_line))
     return subprocess.run(cmd_line, check=True, **kwargs)
 
 
