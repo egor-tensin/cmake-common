@@ -447,10 +447,8 @@ class CMakeCustom(Toolset):
 
     @staticmethod
     def makefiles():
-        if on_windows():
-            if shutil.which("mingw32-make"):
-                return "MinGW Makefiles"
-            return "Unix Makefiles"
+        if on_windows() and shutil.which("mingw32-make"):
+            return "MinGW Makefiles"
         # On Linux, make all the way:
         return "Unix Makefiles"
 
