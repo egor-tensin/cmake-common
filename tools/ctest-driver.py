@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021 Egor Tensin <egor@tensin.name>
 # This file is part of the "cmake-common" project.
-# For details, see https://github.com/egor-tensin/cmake-common.
+# For details, see https://github.com/egor-tensin/cmake-common
 # Distributed under the MIT License.
 
 """Wrap your actual test driver to use with CTest
