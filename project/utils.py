@@ -17,6 +17,11 @@ import time
 import project.os
 
 
+def read_file(path):
+    with open(path, encoding="utf-8") as fd:
+        return fd.read()
+
+
 def normalize_path(s):
     return os.path.abspath(os.path.normpath(s))
 

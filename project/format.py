@@ -15,12 +15,7 @@ import difflib
 import os
 import sys
 
-from project.utils import cd, normalize_path, run_capture, setup_logging
-
-
-def read_file(path):
-    with open(path) as file:
-        return file.read()
+from project import utils
 
 
 class ClangFormat:
@@ -37,11 +32,11 @@ class ClangFormat:
         return cmd_line
 
     def format_in_place(self, paths):
-        run_capture(self._get_command_line(paths, in_place=True))
+        utils.run_capture(self._get_command_line(paths, in_place=True))
 
     @staticmethod
     def _show_diff(path, formatted):
-        original = read_file(path)
+        original = utils.read_file(path)
         if original and not formatted:
             # Assuming this file is ignored in .clang-format-ignore.
             return True
@@ -68,14 +63,14 @@ class ClangFormat:
     def show_diff(self, paths):
         clean = True
         for path in paths:
-            formatted = run_capture(self._get_command_line([path]))
+            formatted = utils.run_capture(self._get_command_line([path]))
             clean = self._show_diff(path, formatted) and clean
         return clean
 
 
 def git_root_dir():
     cmd_line = ["git", "rev-parse", "--show-toplevel"]
-    root_dir = run_capture(cmd_line)
+    root_dir = utils.run_capture(cmd_line)
     if root_dir[-1] != "\n":
         raise RuntimeError("git rev-parse --show-toplevel should append a newline?")
     return root_dir[:-1]
@@ -83,13 +78,13 @@ def git_root_dir():
 
 def list_git_files():
     cmd_line = ["git", "ls-tree", "-r", "-z", "--name-only", "HEAD"]
-    repo_files = run_capture(cmd_line)
+    repo_files = utils.run_capture(cmd_line)
     repo_files = repo_files.split("\0")
     return repo_files
 
 
 def list_all_files():
-    return (normalize_path(path) for path in list_git_files())
+    return (utils.normalize_path(path) for path in list_git_files())
 
 
 def excluded(path, exclude):
@@ -121,17 +116,16 @@ DEFAULT_VERSION = "clang-format"
 DEFAULT_STYLE = "file"
 
 
-def process_cpp_files(
+def do_format(
     version=DEFAULT_VERSION, style=DEFAULT_STYLE, in_place=False, exclude=None
 ):
     clang_format = ClangFormat(version, style)
-    with cd(git_root_dir()):
+    with utils.cd(git_root_dir()):
         cpp_files = filter_files(list_cpp_files(), exclude)
         if in_place:
             clang_format.format_in_place(cpp_files)
-        else:
-            if not clang_format.show_diff(cpp_files):
-                sys.exit(1)
+            return 0
+        return 0 if clang_format.show_diff(cpp_files) else 1
 
 
 def parse_args(argv=None):
@@ -162,7 +156,7 @@ def parse_args(argv=None):
         "-e",
         "--exclude",
         nargs="*",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="files or directories to exclude",
     )
 
@@ -171,9 +165,9 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
-    with setup_logging():
-        process_cpp_files(**vars(args))
+    with utils.setup_logging():
+        return do_format(**vars(args))
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

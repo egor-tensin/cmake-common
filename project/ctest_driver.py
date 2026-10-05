@@ -23,11 +23,6 @@ import sys
 from project import utils
 
 
-def read_file(path):
-    with open(path, mode="r") as fd:
-        return fd.read()
-
-
 def _run_is_valid_code(actual, expected):
     if actual in expected:
         return True
@@ -104,7 +99,7 @@ def action_run(args):
 
 
 def action_grep(args):
-    contents = read_file(args.path)
+    contents = utils.read_file(args.path)
     return _match_output(contents, args.pass_regexes, args.fail_regexes)
 
 
