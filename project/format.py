@@ -12,7 +12,6 @@ formatting the files in-place.
 
 import argparse
 import difflib
-import logging
 import os
 import sys
 

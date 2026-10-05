@@ -31,10 +31,6 @@ boost-build = "project.boost.build:_main"
 boost-download = "project.boost.download:_main"
 project-build = "project.build:main"
 project-format = "project.format:main"
-
-[tool.setuptools]
-script-files = [
-    "tools/ctest-driver.py",
-]
+project-ctest-driver = "project.ctest_driver:main"
 
 [tool.setuptools_scm]

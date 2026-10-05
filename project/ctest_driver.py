@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2021 Egor Tensin <egor@tensin.name>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common
@@ -17,20 +15,12 @@ This script tries to fix them.
 """
 
 import argparse
-import os
+import logging
 import re
 import subprocess
 import sys
 
-SCRIPT_NAME = os.path.basename(__file__)
-
-
-def dump(msg, **kwargs):
-    print(f"{SCRIPT_NAME}: {msg}", **kwargs)
-
-
-def err(msg):
-    dump(msg, file=sys.stderr)
+from project import utils
 
 
 def read_file(path):
@@ -38,40 +28,28 @@ def read_file(path):
         return fd.read()
 
 
-def run(cmd_line, exit_codes=[0]):
-    try:
-        result = subprocess.run(
-            cmd_line,
-            check=True,
-            universal_newlines=True,
-            stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE,
-        )
-        assert result.returncode == 0
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        if e.returncode not in exit_codes:
-            err(
-                f"Actual exit code {e.returncode} is not among the allowed codes {exit_codes}"
-            )
-            sys.stdout.write(e.output)
-            sys.exit(e.returncode)
-        return e.output
+def _run_exit_if_invalid_code(actual, expected):
+    if actual in expected:
+        return
+    logging.error(
+        "Actual exit code %d is not among the allowed codes %s", actual, str(expected)
+    )
+    sys.exit(actual)
 
 
-def run_new_window(cmd_line, exit_codes=[0]):
+def run(cmd_line, exit_codes=(0,)):
     try:
-        result = subprocess.run(
-            cmd_line, check=True, creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
-        assert result.returncode == 0
+        return utils.run_capture(cmd_line)
     except subprocess.CalledProcessError as e:
-        if e.returncode not in exit_codes:
-            err(
-                f"Actual exit code {e.returncode} is not among the allowed codes {exit_codes}"
-            )
-            sys.exit(e.returncode)
-    return None
+        _run_exit_if_invalid_code(e.returncode, exit_codes)
+        return e.stdout
+
+
+def run_new_window(cmd_line, exit_codes=(0,)):
+    try:
+        utils.run(cmd_line, creationflags=subprocess.CREATE_NEW_CONSOLE)
+    except subprocess.CalledProcessError as e:
+        _run_exit_if_invalid_code(e.returncode, exit_codes)
 
 
 def match(s, regex):
@@ -90,12 +68,11 @@ def match_pass_regexes(output, regexes):
     if not regexes:
         return
     if not match_all(output, regexes):
-        err(
-            "Couldn't match test program's output against all of the"
-            " regular expressions:"
+        logging.error(
+            "Couldn't match test program's output against all of the regular expressions:"
         )
         for regex in regexes:
-            err(f"\t{regex}")
+            logging.error("    %s", regex)
         sys.exit(1)
 
 
@@ -103,9 +80,11 @@ def match_fail_regexes(output, regexes):
     if not regexes:
         return
     if match_any(output, regexes):
-        err("Matched test program's output against some of the regular" " expressions:")
+        logging.error(
+            "Matched test program's output against some of the regular expressions:"
+        )
         for regex in regexes:
-            err(f"\t{regex}")
+            logging.error("    %s", regex)
         sys.exit(1)
 
 
@@ -116,9 +95,10 @@ def run_actual_test_driver(args):
         run_func = run_new_window
     output = run_func(cmd_line, args.exit_codes)
     if args.new_window and (args.pass_regexes or args.fail_regexes):
-        err("Cannot launch child process in a new window and capture its output")
+        logging.error(
+            "Cannot launch child process in a new window and capture its output"
+        )
     if output is not None:
-        sys.stdout.write(output)
         match_pass_regexes(output, args.pass_regexes)
         match_fail_regexes(output, args.fail_regexes)
 
