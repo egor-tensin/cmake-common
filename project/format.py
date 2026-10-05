@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2020 Egor Tensin <egor@tensin.name>
 # This file is part of the "cmake-common" project.
 # For details, see https://github.com/egor-tensin/cmake-common
@@ -13,66 +11,12 @@ formatting the files in-place.
 """
 
 import argparse
-from contextlib import contextmanager
 import difflib
 import logging
 import os
-import subprocess
 import sys
 
-
-@contextmanager
-def setup_logging():
-    level_names = {
-        logging.DEBUG: "DBG",
-        logging.INFO: "INFO",
-        logging.WARNING: "WARN",
-        logging.ERROR: "ERR",
-        logging.CRITICAL: "CRIT",
-    }
-    for lvl, name in level_names.items():
-        logging.addLevelName(lvl, name)
-
-    logging.basicConfig(
-        level=logging.INFO,
-        datefmt="%Y-%m-%d %H:%M:%S%z",
-        format="%(asctime)s | %(levelname)4s | %(message)s",
-    )
-    try:
-        yield
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
-
-
-@contextmanager
-def cd(path):
-    cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
-def normalize_path(entry):
-    return os.path.abspath(entry)
-
-
-def run(cmd_line):
-    logging.debug("Running executable: %s", cmd_line)
-    try:
-        return subprocess.run(
-            cmd_line,
-            check=True,
-            universal_newlines=True,
-            stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE,
-        )
-    except subprocess.CalledProcessError as e:
-        logging.error("Process finished with exit code %d: %s", e.returncode, cmd_line)
-        logging.error("Its output was:\n%s", e.output)
-        raise
+from project.utils import cd, normalize_path, run_capture, setup_logging
 
 
 def read_file(path):
@@ -94,7 +38,7 @@ class ClangFormat:
         return cmd_line
 
     def format_in_place(self, paths):
-        run(self._get_command_line(paths, in_place=True))
+        run_capture(self._get_command_line(paths, in_place=True))
 
     @staticmethod
     def _show_diff(path, formatted):
@@ -125,14 +69,14 @@ class ClangFormat:
     def show_diff(self, paths):
         clean = True
         for path in paths:
-            formatted = run(self._get_command_line([path])).stdout
+            formatted = run_capture(self._get_command_line([path]))
             clean = self._show_diff(path, formatted) and clean
         return clean
 
 
 def git_root_dir():
     cmd_line = ["git", "rev-parse", "--show-toplevel"]
-    root_dir = run(cmd_line).stdout
+    root_dir = run_capture(cmd_line)
     if root_dir[-1] != "\n":
         raise RuntimeError("git rev-parse --show-toplevel should append a newline?")
     return root_dir[:-1]
@@ -140,7 +84,7 @@ def git_root_dir():
 
 def list_git_files():
     cmd_line = ["git", "ls-tree", "-r", "-z", "--name-only", "HEAD"]
-    repo_files = run(cmd_line).stdout
+    repo_files = run_capture(cmd_line)
     repo_files = repo_files.split("\0")
     return repo_files
 

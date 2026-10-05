@@ -7,6 +7,7 @@ from contextlib import contextmanager
 import functools
 import logging
 import os.path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -81,9 +82,32 @@ def cd(path):
         os.chdir(cwd)
 
 
-def run(cmd_line, **kwargs):
-    logging.info("Running: %s", subprocess.list2cmdline(cmd_line))
-    return subprocess.run(cmd_line, check=True, **kwargs)
+def run(cmd, **kwargs):
+    logging.info("Running: %s", shlex.join(cmd))
+    return subprocess.run(cmd, check=True, **kwargs)
+
+
+def _run_log_output(level, output):
+    if not output:
+        logging.log(level, "... No output")
+    logging.log(level, "Output (%d) characters):", len(output))
+    for line in output.splitlines():
+        logging.log(level, "    %s", line)
+
+
+def run_capture(cmd, **kwargs):
+    stdout = subprocess.PIPE
+    stderr = subprocess.STDOUT
+
+    try:
+        result = run(cmd, **kwargs, stdout=stdout, stderr=stderr, encoding="utf-8")
+    except subprocess.CalledProcessError as e:
+        logging.error("... Exited with code %d", e.returncode)
+        _run_log_output(logging.ERROR, e.output)
+        raise
+
+    _run_log_output(logging.DEBUG, result.stdout)
+    return result.stdout
 
 
 @contextmanager

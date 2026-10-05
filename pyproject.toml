@@ -30,11 +30,11 @@ classifiers = [
 boost-build = "project.boost.build:_main"
 boost-download = "project.boost.download:_main"
 project-build = "project.build:main"
+project-format = "project.format:main"
 
 [tool.setuptools]
 script-files = [
     "tools/ctest-driver.py",
-    "tools/project-clang-format.py",
 ]
 
 [tool.setuptools_scm]
