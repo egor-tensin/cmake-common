@@ -196,7 +196,8 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
-    args.func(args)
+    with utils.setup_logging(verbose=True):
+        args.func(args)
 
 
 if __name__ == "__main__":

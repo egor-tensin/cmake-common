@@ -46,7 +46,7 @@ def full_exe_name(exe):
 
 
 @contextmanager
-def setup_logging():
+def setup_logging(verbose=False):
     level_names = {
         logging.DEBUG: "DBG",
         logging.INFO: "INFO",
@@ -58,7 +58,7 @@ def setup_logging():
         logging.addLevelName(lvl, name)
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG if verbose else logging.INFO,
         datefmt="%Y-%m-%d %H:%M:%S%z",
         format="%(asctime)s | %(levelname)4s | %(message)s",
         # Log to stdout, because that's where subprocess's output goes (so that
