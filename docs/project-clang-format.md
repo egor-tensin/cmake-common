@@ -1,5 +1,7 @@
 `clang-format` all C/C++ files in the project.
 
     $ cd project/
-    $ python path/to/tools/project-clang-format.py      # Prints a diff
-    $ python path/to/tools/project-clang-format.py -i   # Edits files in-place
+    $ project-format      # Prints a diff
+    $ project-format -i   # Edits files in-place
+
+Alternatively, run it as a Python module: `python -m project.format`
