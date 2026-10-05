@@ -294,7 +294,11 @@ def _parse_args(argv=None):
         help="additional CMake arguments, to be passed verbatim",
     )
 
-    parser.add_argument("src_dir", type=normalize_path, help="source directory")
+    parser.add_argument(
+        "src_dir",
+        type=normalize_path,
+        help="source directory",
+    )
     parser.add_argument(
         "build_dir",
         type=normalize_path,

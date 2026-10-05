@@ -145,7 +145,11 @@ def _parse_args(argv=None):
         type=normalize_path,
         help="download directory (temporary file unless specified)",
     )
-    parser.add_argument("--no-retry", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--no-retry",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument(
         "version",
         metavar="VERSION",

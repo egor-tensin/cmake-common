@@ -156,7 +156,9 @@ def parse_args(argv=None):
         help="launch child process in a new console window",
     )
     parser_run.add_argument(
-        "exe_path", metavar="PATH", help="path to the test executable"
+        "exe_path",
+        metavar="PATH",
+        help="path to the test executable",
     )
     # nargs='*' here would discard additional '--'s.
     parser_run.add_argument(
@@ -186,7 +188,11 @@ def parse_args(argv=None):
         metavar="REGEX",
         help="fail if any of these regexes matches",
     )
-    parser_grep.add_argument("path", metavar="PATH", help="text file path")
+    parser_grep.add_argument(
+        "path",
+        metavar="PATH",
+        help="text file path",
+    )
     parser_grep.set_defaults(func=action_grep)
 
     args = parser.parse_args(argv)

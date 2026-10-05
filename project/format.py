@@ -153,7 +153,10 @@ def parse_args(argv=None):
         help="clang-format -style parameter argument",
     )
     parser.add_argument(
-        "-i", "--in-place", action="store_true", help="edit the files in-place"
+        "-i",
+        "--in-place",
+        action="store_true",
+        help="edit the files in-place",
     )
     parser.add_argument(
         "-e",
