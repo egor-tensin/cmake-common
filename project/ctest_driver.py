@@ -55,6 +55,8 @@ def match(s, regex):
 
 
 def match_pass_regexes(output, regexes):
+    if not regexes:
+        return True
     for regex in regexes:
         if match(output, regex):
             continue
@@ -66,6 +68,8 @@ def match_pass_regexes(output, regexes):
 
 
 def match_fail_regexes(output, regexes):
+    if not regexes:
+        return False
     for regex in regexes:
         if not match(output, regex):
             continue
