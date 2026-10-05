@@ -28,20 +28,21 @@ def read_file(path):
         return fd.read()
 
 
-def _run_exit_if_invalid_code(actual, expected):
+def _run_is_valid_code(actual, expected):
     if actual in expected:
-        return
+        return True
     logging.error(
         "Actual exit code %d is not among the allowed codes %s", actual, str(expected)
     )
-    sys.exit(actual)
+    return False
 
 
 def run(cmd_line, exit_codes=(0,)):
     try:
         return utils.run_capture(cmd_line)
     except subprocess.CalledProcessError as e:
-        _run_exit_if_invalid_code(e.returncode, exit_codes)
+        if not _run_is_valid_code(e.returncode, exit_codes):
+            raise
         return e.stdout
 
 
@@ -49,46 +50,45 @@ def run_new_window(cmd_line, exit_codes=(0,)):
     try:
         utils.run(cmd_line, creationflags=subprocess.CREATE_NEW_CONSOLE)
     except subprocess.CalledProcessError as e:
-        _run_exit_if_invalid_code(e.returncode, exit_codes)
+        if not _run_is_valid_code(e.returncode, exit_codes):
+            raise
 
 
 def match(s, regex):
     return re.search(regex, s, flags=re.MULTILINE)
 
 
-def match_any(s, regexes):
-    return any([match(s, regex) for regex in regexes])
-
-
-def match_all(s, regexes):
-    return all([match(s, regex) for regex in regexes])
-
-
 def match_pass_regexes(output, regexes):
-    if not regexes:
-        return
-    if not match_all(output, regexes):
+    for regex in regexes:
+        if match(output, regex):
+            continue
         logging.error(
-            "Couldn't match test program's output against all of the regular expressions:"
+            r"""Couldn't match test program's output against "pass" regex: %s""", regex
         )
-        for regex in regexes:
-            logging.error("    %s", regex)
-        sys.exit(1)
+        return False
+    return True
 
 
 def match_fail_regexes(output, regexes):
-    if not regexes:
-        return
-    if match_any(output, regexes):
+    for regex in regexes:
+        if not match(output, regex):
+            continue
         logging.error(
-            "Matched test program's output against some of the regular expressions:"
+            r"""Matched test program's output against "fail" regex: %s""", regex
         )
-        for regex in regexes:
-            logging.error("    %s", regex)
-        sys.exit(1)
+        return True
+    return False
 
 
-def run_actual_test_driver(args):
+def _match_output(output, pass_regexes, fail_regexes):
+    if not match_pass_regexes(output, pass_regexes):
+        return 1
+    if match_fail_regexes(output, fail_regexes):
+        return 1
+    return 0
+
+
+def action_run(args):
     cmd_line = [args.exe_path] + args.exe_args
     run_func = run
     if args.new_window:
@@ -98,15 +98,14 @@ def run_actual_test_driver(args):
         logging.error(
             "Cannot launch child process in a new window and capture its output"
         )
-    if output is not None:
-        match_pass_regexes(output, args.pass_regexes)
-        match_fail_regexes(output, args.fail_regexes)
+    if output is None:
+        return 0
+    return _match_output(output, args.pass_regexes, args.fail_regexes)
 
 
-def grep_file(args):
+def action_grep(args):
     contents = read_file(args.path)
-    match_pass_regexes(contents, args.pass_regexes)
-    match_fail_regexes(contents, args.fail_regexes)
+    return _match_output(contents, args.pass_regexes, args.fail_regexes)
 
 
 def parse_args(argv=None):
@@ -164,7 +163,7 @@ def parse_args(argv=None):
         nargs=argparse.REMAINDER,
         help="test executable arguments",
     )
-    parser_run.set_defaults(func=run_actual_test_driver)
+    parser_run.set_defaults(func=action_run)
 
     parser_grep = subparsers.add_parser(
         "grep", help="check file contents for matching patterns"
@@ -186,7 +185,7 @@ def parse_args(argv=None):
         help="fail if any of these regexes matches",
     )
     parser_grep.add_argument("path", metavar="PATH", help="text file path")
-    parser_grep.set_defaults(func=grep_file)
+    parser_grep.set_defaults(func=action_grep)
 
     args = parser.parse_args(argv)
     if args.command is None:
@@ -197,8 +196,8 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     with utils.setup_logging(verbose=True):
-        args.func(args)
+        return args.func(args)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
