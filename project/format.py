@@ -16,6 +16,7 @@ import os
 import sys
 
 from project import utils
+import project.version
 
 
 class ClangFormat:
@@ -135,6 +136,8 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+
+    project.version.add_to_arg_parser(parser)
 
     parser.add_argument(
         "-b",

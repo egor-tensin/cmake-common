@@ -21,6 +21,7 @@ import subprocess
 import sys
 
 from project import utils
+import project.version
 
 
 def _run_is_valid_code(actual, expected):
@@ -110,6 +111,8 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+
+    project.version.add_to_arg_parser(parser)
 
     subparsers = parser.add_subparsers(dest="command")
 
