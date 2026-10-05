@@ -12,7 +12,7 @@ Description
 
 This main goal of this project is to make it easier to build (potentially,
 cross-compile) Boost and CMake projects using different toolsets.
-It does so providing a set of command-line utilities that allow users to
+It does so by providing a set of command-line utilities that allow users to
 download/build Boost & use it in a CMake project in a consistent way &mdash; no
 matter the compiler or the target platform.
 
