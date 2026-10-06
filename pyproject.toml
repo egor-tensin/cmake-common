@@ -34,3 +34,8 @@ project-format = "project.format:main"
 project-ctest-driver = "project.ctest_driver:main"
 
 [tool.setuptools_scm]
+
+[tool.pylint."messages control"]
+disable = [
+    "missing-docstring",
+]
