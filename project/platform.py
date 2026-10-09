@@ -4,23 +4,20 @@
 # Distributed under the MIT License.
 
 import argparse
-from enum import Enum
+from enum import auto, StrEnum
 import os.path
 import platform
 
 from project.os import on_windows
 
 
-class Platform(Enum):
+class Platform(StrEnum):
     # I only build for x86(-64), so here it goes.
-    X86 = "x86"
-    X64 = "x64"
+    X86 = auto()
+    X64 = auto()
     # 'auto' means that no additional arguments will be passed to either
     # Boost's b2 nor CMake (except on Windows, see below).
-    AUTO = "auto"
-
-    def __str__(self):
-        return str(self.value)
+    AUTO = auto()
 
     @staticmethod
     def windows_native():

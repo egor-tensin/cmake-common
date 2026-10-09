@@ -4,19 +4,16 @@
 # Distributed under the MIT License.
 
 import argparse
-from enum import Enum
+from enum import auto, StrEnum
 
 
-class Configuration(Enum):
+class Configuration(StrEnum):
     """Correspond to CMake's default CMAKE_BUILD_TYPE values."""
 
-    DEBUG = "Debug"
-    MINSIZEREL = "MinSizeRel"
-    RELWITHDEBINFO = "RelWithDebInfo"
-    RELEASE = "Release"
-
-    def __str__(self):
-        return str(self.value)
+    DEBUG = auto()
+    MINSIZEREL = auto()
+    RELWITHDEBINFO = auto()
+    RELEASE = auto()
 
     @staticmethod
     def all():

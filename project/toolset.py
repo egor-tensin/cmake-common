@@ -25,7 +25,7 @@ import abc
 import argparse
 from contextlib import contextmanager
 from decimal import Decimal
-from enum import Enum
+from enum import auto, StrEnum
 import logging
 import os.path
 import shutil
@@ -36,7 +36,7 @@ from project.platform import Platform
 from project import utils
 
 
-class MSVCVersion(Enum):
+class MSVCVersion(StrEnum):
     # It's the MSVC "toolset" version, or whatever.
     # Source: https://cmake.org/cmake/help/latest/variable/MSVC_TOOLSET_VERSION.html
     VS2010 = "100"
@@ -48,9 +48,6 @@ class MSVCVersion(Enum):
     VS2022 = "143"
     VS2026 = "145"
     # ^^^ Update the mappings below.
-
-    def __str__(self):
-        return str(self.value)
 
     def help(self):
         if self in _msvc_to_vs_version:
@@ -91,7 +88,7 @@ class MSVCVersion(Enum):
         return f"v{self}"
 
 
-class VisualStudioVersion(Enum):
+class VisualStudioVersion(StrEnum):
     VS2010 = "2010"
     VS2012 = "2012"
     VS2013 = "2013"
@@ -101,9 +98,6 @@ class VisualStudioVersion(Enum):
     VS2022 = "2022"
     VS2026 = "2026"
     # ^^^ Update the mappings below.
-
-    def __str__(self):
-        return str(self.value)
 
     def help(self):
         if self in _vs_to_msvc_version:
@@ -145,17 +139,14 @@ _msvc_to_vs_version = {
 _vs_to_msvc_version = {v: k for k, v in _msvc_to_vs_version.items()}
 
 
-class ToolsetType(Enum):
-    AUTO = "auto"
-    MSVC = "msvc"
+class ToolsetType(StrEnum):
+    AUTO = auto()
+    MSVC = auto()
     VISUAL_STUDIO = "vs"
-    GCC = "gcc"
-    MINGW = "mingw"
-    CLANG = "clang"
+    GCC = auto()
+    MINGW = auto()
+    CLANG = auto()
     CLANG_CL = "clang-cl"
-
-    def __str__(self):
-        return str(self.value)
 
     def help(self):
         if self is ToolsetType.AUTO:

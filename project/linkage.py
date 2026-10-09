@@ -4,18 +4,15 @@
 # Distributed under the MIT License.
 
 import argparse
-from enum import Enum
+from enum import auto, StrEnum
 import logging
 
 from project.os import on_linux_like
 
 
-class Linkage(Enum):
-    STATIC = "static"
-    SHARED = "shared"
-
-    def __str__(self):
-        return str(self.value)
+class Linkage(StrEnum):
+    STATIC = auto()
+    SHARED = auto()
 
     @staticmethod
     def all():

@@ -3,17 +3,14 @@
 # For details, see https://github.com/egor-tensin/cmake-common
 # Distributed under the MIT License.
 
-from enum import Enum
+from enum import auto, StrEnum
 import platform
 
 
-class OS(Enum):
-    WINDOWS = "Windows"
-    LINUX = "Linux"
-    MACOS = "macOS"
-
-    def __str__(self):
-        return str(self.value)
+class OS(StrEnum):
+    WINDOWS = auto()
+    LINUX = auto()
+    MACOS = auto()
 
     @staticmethod
     def current():
