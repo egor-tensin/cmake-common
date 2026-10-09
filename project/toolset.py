@@ -25,7 +25,7 @@ import abc
 import argparse
 from contextlib import contextmanager
 from decimal import Decimal
-from enum import auto, StrEnum
+from enum import auto, nonmember, StrEnum
 import logging
 import os.path
 import shutil
@@ -47,7 +47,6 @@ class MSVCVersion(StrEnum):
     VS2019 = "142"
     VS2022 = "143"
     VS2026 = "145"
-    # ^^^ Update the mappings below.
 
     def help(self):
         if self in _msvc_to_vs_version:
@@ -97,7 +96,6 @@ class VisualStudioVersion(StrEnum):
     VS2019 = "2019"
     VS2022 = "2022"
     VS2026 = "2026"
-    # ^^^ Update the mappings below.
 
     def help(self):
         if self in _vs_to_msvc_version:
@@ -126,17 +124,8 @@ class VisualStudioVersion(StrEnum):
         return self
 
 
-_msvc_to_vs_version = {
-    MSVCVersion.VS2010: VisualStudioVersion.VS2010,
-    MSVCVersion.VS2012: VisualStudioVersion.VS2012,
-    MSVCVersion.VS2013: VisualStudioVersion.VS2013,
-    MSVCVersion.VS2015: VisualStudioVersion.VS2015,
-    MSVCVersion.VS2017: VisualStudioVersion.VS2017,
-    MSVCVersion.VS2019: VisualStudioVersion.VS2019,
-    MSVCVersion.VS2022: VisualStudioVersion.VS2022,
-    MSVCVersion.VS2026: VisualStudioVersion.VS2026,
-}
-_vs_to_msvc_version = {v: k for k, v in _msvc_to_vs_version.items()}
+_msvc_to_vs_version = {msvc: VisualStudioVersion[msvc.name] for msvc in MSVCVersion}
+_vs_to_msvc_version = {vs: MSVCVersion[vs.name] for vs in VisualStudioVersion}
 
 
 class ToolsetType(StrEnum):
@@ -148,21 +137,21 @@ class ToolsetType(StrEnum):
     CLANG = auto()
     CLANG_CL = "clang-cl"
 
+    _help_msg = nonmember(
+        {
+            AUTO: "Means 'gcc' on Linux and 'msvc' on Windows",
+            MSVC: "Use cl.exe",
+            VISUAL_STUDIO: "Visual Studio; same as 'msvc'",
+            GCC: "Use gcc/g++",
+            MINGW: "Use gcc/g++ with the PLATFORM-w64-mingw32 prefix",
+            CLANG: "Use clang/clang++",
+            CLANG_CL: "Use clang-cl.exe",
+        }
+    )
+
     def help(self):
-        if self is ToolsetType.AUTO:
-            return "Means 'gcc' on Linux and 'msvc' on Windows"
-        if self is ToolsetType.MSVC:
-            return "Use cl.exe"
-        if self is ToolsetType.VISUAL_STUDIO:
-            return "Visual Studio; same as 'msvc'"
-        if self is ToolsetType.GCC:
-            return "Use gcc/g++"
-        if self is ToolsetType.MINGW:
-            return "Use gcc/g++ with the PLATFORM-w64-mingw32 prefix"
-        if self is ToolsetType.CLANG:
-            return "Use clang/clang++"
-        if self is ToolsetType.CLANG_CL:
-            return "Use clang-cl.exe"
+        if self in ToolsetType._help_msg:
+            return ToolsetType._help_msg[self]
         raise NotImplementedError(f"unsupported toolset: {self}")
 
     @staticmethod
@@ -310,21 +299,17 @@ class Toolset(abc.ABC):
 
     @staticmethod
     def detect(version):
-        if version.hint is ToolsetType.AUTO:
-            return Auto
-        if (
-            version.hint is ToolsetType.MSVC
-            or version.hint is ToolsetType.VISUAL_STUDIO
-        ):
-            return MSVC
-        if version.hint is ToolsetType.GCC:
-            return GCC
-        if version.hint is ToolsetType.MINGW:
-            return MinGW
-        if version.hint is ToolsetType.CLANG:
-            return Clang
-        if version.hint is ToolsetType.CLANG_CL:
-            return ClangCL
+        classes = {
+            ToolsetType.AUTO: Auto,
+            ToolsetType.MSVC: MSVC,
+            ToolsetType.VISUAL_STUDIO: MSVC,
+            ToolsetType.GCC: GCC,
+            ToolsetType.MINGW: MinGW,
+            ToolsetType.CLANG: Clang,
+            ToolsetType.CLANG_CL: ClangCL,
+        }
+        if version.hint in classes:
+            return classes[version.hint]
         raise NotImplementedError(f"unrecognized toolset: {version}")
 
     @staticmethod
