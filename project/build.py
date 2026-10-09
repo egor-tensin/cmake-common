@@ -13,7 +13,7 @@ with the help from the --toolset and --platform parameters.
 
 Usage example:
 
-    $ project-build --configuration Release --install path/to/somewhere -- examples/simple build/
+    $ project-build --configuration release --install path/to/somewhere -- examples/simple build/
     ...
 
     $ ./path/to/somewhere/bin/foo

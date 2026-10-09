@@ -82,7 +82,7 @@ Pass the `--help` flag to view detailed usage information.
 
 Build (and optionally, install) a CMake project.
 
-    $ project-build --configuration Release --install path/to/somewhere --boost path/to/boost -- examples/simple build/
+    $ project-build --configuration release --install path/to/somewhere --boost path/to/boost -- examples/simple build/
     ...
 
     $ ./path/to/somewhere/bin/foo
