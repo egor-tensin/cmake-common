@@ -33,7 +33,7 @@ import shutil
 import project.mingw
 from project.os import on_windows
 from project.platform import Platform
-from project.utils import full_exe_name, temp_file
+from project import utils
 
 
 class MSVCVersion(Enum):
@@ -397,7 +397,7 @@ class BoostCustom(Toolset):
         version = BoostCustom.COMPILER_VERSION
         self.version = version
         path = path or ""
-        path = path and full_exe_name(path)
+        path = path and utils.full_exe_name(path)
         self.path = path
         build_options = build_options or []
         self.build_options = build_options
@@ -412,7 +412,7 @@ class BoostCustom(Toolset):
 
     @contextmanager
     def _b2_write_config(self):
-        config_file = temp_file(prefix="user_config_", suffix=".jam")
+        config_file = utils.temp_file(prefix="user_config_", suffix=".jam")
         with config_file as config_path:
             config = self.b2_format_config()
             logging.info("Using user config:\n%s", config)

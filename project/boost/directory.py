@@ -8,7 +8,7 @@ import os.path
 
 from project.os import on_windows
 from project.toolset import Toolset
-from project.utils import cd, run
+from project import utils
 
 
 class BoostDir:
@@ -18,7 +18,7 @@ class BoostDir:
         self.path = path
 
     def _go(self):
-        return cd(self.path)
+        return utils.cd(self.path)
 
     def build(self, params):
         with self._go():
@@ -33,11 +33,13 @@ class BoostDir:
 
     def bootstrap(self, params):
         with self._go():
-            run([self._bootstrap_path()] + self._bootstrap_args(params.toolset_version))
+            utils.run(
+                [self._bootstrap_path()] + self._bootstrap_args(params.toolset_version)
+            )
 
     def _b2(self, params):
         for b2_params in params.enum_b2_args():
-            run([self._b2_path()] + b2_params)
+            utils.run([self._b2_path()] + b2_params)
 
     @staticmethod
     def _bootstrap_path():

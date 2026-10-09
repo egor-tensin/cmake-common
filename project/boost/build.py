@@ -38,7 +38,7 @@ from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
 from project.toolset import Toolset, ToolsetVersion
-from project.utils import normalize_path, setup_logging
+from project import utils
 import project.version
 
 DEFAULT_PLATFORMS = (Platform.AUTO,)
@@ -66,10 +66,10 @@ class BuildParameters:
         b2_args=None,
     ):
 
-        boost_dir = normalize_path(boost_dir)
+        boost_dir = utils.normalize_path(boost_dir)
         libraries = libraries or []
         if build_dir is not None:
-            build_dir = normalize_path(build_dir)
+            build_dir = utils.normalize_path(build_dir)
         platforms = platforms or DEFAULT_PLATFORMS
         configurations = configurations or DEFAULT_CONFIGURATIONS
         link = link or Linkage.default_link()
@@ -228,7 +228,7 @@ def _parse_args(argv=None):
         "--build",
         metavar="DIR",
         dest="build_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="Boost build directory (temporary directory unless specified)",
     )
 
@@ -244,7 +244,7 @@ def _parse_args(argv=None):
     parser.add_argument(
         "boost_dir",
         metavar="BOOST_DIR",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="root Boost directory",
     )
     parser.add_argument(
@@ -260,7 +260,7 @@ def _parse_args(argv=None):
 
 def _main(argv=None):
     args = _parse_args(argv)
-    with setup_logging():
+    with utils.setup_logging():
         build(BuildParameters.from_cmd_args(args))
 
 

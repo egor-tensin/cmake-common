@@ -10,7 +10,7 @@ import os.path
 import shutil
 
 from project.boost.directory import BoostDir
-from project.utils import temp_file
+from project import utils
 
 
 class Archive:
@@ -75,7 +75,7 @@ class TemporaryStorage(ArchiveStorage):
 
     @contextmanager
     def write_archive(self, version, contents):
-        tmp = temp_file(
+        tmp = utils.temp_file(
             prefix=f"boost_{version}_", suffix=version.archive_ext, dir=self._dir
         )
         with tmp as archive_path:

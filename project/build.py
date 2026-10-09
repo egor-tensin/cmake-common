@@ -31,7 +31,7 @@ from project.configuration import Configuration
 from project.linkage import Linkage
 from project.platform import Platform
 from project.toolset import Toolset, ToolsetVersion
-from project.utils import normalize_path, mkdir_parent, run, setup_logging
+from project import utils
 import project.version
 
 DEFAULT_PLATFORM = Platform.AUTO
@@ -47,7 +47,7 @@ cmake_env["CMAKE_BUILD_PARALLEL_LEVEL"] = str(os.cpu_count())
 
 
 def run_cmake(cmake_args):
-    return run(["cmake"] + cmake_args, env=cmake_env)
+    return utils.run(["cmake"] + cmake_args, env=cmake_env)
 
 
 class GenerationPhase:
@@ -64,15 +64,15 @@ class GenerationPhase:
         cmake_args=None,
     ):
 
-        self.src_dir = normalize_path(src_dir)
-        self.build_dir = normalize_path(build_dir)
+        self.src_dir = utils.normalize_path(src_dir)
+        self.build_dir = utils.normalize_path(build_dir)
         self.platform = platform or DEFAULT_PLATFORM
         self.configuration = configuration or DEFAULT_CONFIGURATION
-        self.boost_dir = normalize_path(boost_dir) if boost_dir else None
+        self.boost_dir = utils.normalize_path(boost_dir) if boost_dir else None
         link = link or Linkage.default_link()
         runtime_link = runtime_link or Linkage.default_runtime_link()
         self.link, self.runtime_link = Linkage.validate_linkage(link, runtime_link)
-        self.install_dir = normalize_path(install_dir) if install_dir else None
+        self.install_dir = utils.normalize_path(install_dir) if install_dir else None
         self.cmake_args = cmake_args or []
 
     def _cmake_args(self, toolset):
@@ -117,7 +117,7 @@ class GenerationPhase:
 
 class BuildPhase:
     def __init__(self, build_dir, install_dir=None, configuration=None):
-        self.build_dir = normalize_path(build_dir)
+        self.build_dir = utils.normalize_path(build_dir)
         self.install_dir = install_dir
         self.configuration = configuration or DEFAULT_CONFIGURATION
 
@@ -148,12 +148,12 @@ class BuildParameters:
         cmake_args=None,
     ):
 
-        self.src_dir = normalize_path(src_dir)
-        self.build_dir = normalize_path(build_dir) if build_dir else None
-        self.install_dir = normalize_path(install_dir) if install_dir else None
+        self.src_dir = utils.normalize_path(src_dir)
+        self.build_dir = utils.normalize_path(build_dir) if build_dir else None
+        self.install_dir = utils.normalize_path(install_dir) if install_dir else None
         self.platform = platform or DEFAULT_PLATFORM
         self.configuration = configuration or DEFAULT_CONFIGURATION
-        self.boost_dir = normalize_path(boost_dir) if boost_dir else None
+        self.boost_dir = utils.normalize_path(boost_dir) if boost_dir else None
         self.link = link or Linkage.default_link()
         self.runtime_link = runtime_link or Linkage.default_runtime_link()
         self.toolset_version = toolset_version or DEFAULT_TOOLSET_VERSION
@@ -169,7 +169,7 @@ class BuildParameters:
     def create_build_dir(self):
         if self.build_dir is not None:
             logging.info("Build directory: %s", self.build_dir)
-            mkdir_parent(self.build_dir)
+            utils.mkdir_parent(self.build_dir)
             yield self.build_dir
             return
 
@@ -257,7 +257,7 @@ def _parse_args(argv=None):
         "--boost",
         metavar="DIR",
         dest="boost_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="set Boost directory path",
     )
 
@@ -281,7 +281,7 @@ def _parse_args(argv=None):
         "--install",
         metavar="DIR",
         dest="install_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="install directory",
     )
 
@@ -296,12 +296,12 @@ def _parse_args(argv=None):
 
     parser.add_argument(
         "src_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="source directory",
     )
     parser.add_argument(
         "build_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         nargs="?",
         help="build directory (a temporary directory if omitted)",
     )
@@ -311,7 +311,7 @@ def _parse_args(argv=None):
 
 def main(argv=None):
     args = _parse_args(argv)
-    with setup_logging():
+    with utils.setup_logging():
         build(BuildParameters.from_args(args))
 
 

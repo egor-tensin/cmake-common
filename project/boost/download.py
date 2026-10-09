@@ -27,7 +27,7 @@ import urllib.request
 
 from project.boost.archive import Archive, PermanentStorage, TemporaryStorage
 from project.boost.version import Version
-from project.utils import normalize_path, mkdir_parent, retry, setup_logging
+from project import utils
 import project.version
 
 
@@ -41,11 +41,11 @@ class Download:
             else:
                 unpack_dir = cache_dir
 
-        unpack_dir = normalize_path(unpack_dir)
-        mkdir_parent(unpack_dir)
+        unpack_dir = utils.normalize_path(unpack_dir)
+        utils.mkdir_parent(unpack_dir)
         if cache_dir is not None:
-            cache_dir = normalize_path(cache_dir)
-            mkdir_parent(cache_dir)
+            cache_dir = utils.normalize_path(cache_dir)
+            utils.mkdir_parent(cache_dir)
 
         self.version = version
         self.unpack_dir = unpack_dir
@@ -70,7 +70,7 @@ class Download:
             return request.read()
 
     @staticmethod
-    @retry(urllib.request.URLError)
+    @utils.retry(urllib.request.URLError)
     def _download_url_retry(url):
         return Download._download_url(url)
 
@@ -135,14 +135,14 @@ def _parse_args(argv=None):
         "--unpack",
         metavar="DIR",
         dest="unpack_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="directory to unpack the archive to",
     )
     parser.add_argument(
         "--cache",
         metavar="DIR",
         dest="cache_dir",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="download directory (temporary file unless specified)",
     )
     parser.add_argument(
@@ -160,7 +160,7 @@ def _parse_args(argv=None):
         "dest_path",
         metavar="DIR",
         nargs="?",
-        type=normalize_path,
+        type=utils.normalize_path,
         help="rename the boost directory to DIR",
     )
 
@@ -169,7 +169,7 @@ def _parse_args(argv=None):
 
 def _main(argv=None):
     args = _parse_args(argv)
-    with setup_logging():
+    with utils.setup_logging():
         download(Download.from_args(args))
 
 
