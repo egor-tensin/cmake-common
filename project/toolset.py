@@ -174,23 +174,29 @@ class ToolsetType(StrEnum):
 
     @property
     def is_versioned(self):
-        if self is ToolsetType.MSVC or self is ToolsetType.VISUAL_STUDIO:
-            return True
-        return False
+        match self:
+            case ToolsetType.MSVC | ToolsetType.VISUAL_STUDIO:
+                return True
+            case _:
+                return False
 
     def parse_version(self, s):
-        if self is ToolsetType.MSVC:
-            return MSVCVersion.parse(s)
-        if self is ToolsetType.VISUAL_STUDIO:
-            return VisualStudioVersion.parse(s)
-        raise RuntimeError(f"this toolset doesn't support versions: {self}")
+        match self:
+            case ToolsetType.MSVC:
+                return MSVCVersion.parse(s)
+            case ToolsetType.VISUAL_STUDIO:
+                return VisualStudioVersion.parse(s)
+            case _:
+                raise RuntimeError(f"this toolset doesn't support versions: {self}")
 
     def all_versions(self):
-        if self is ToolsetType.MSVC:
-            return MSVCVersion.all()
-        if self is ToolsetType.VISUAL_STUDIO:
-            return VisualStudioVersion.all()
-        raise RuntimeError(f"this toolset doesn't support versions: {self}")
+        match self:
+            case ToolsetType.MSVC:
+                return MSVCVersion.all()
+            case ToolsetType.VISUAL_STUDIO:
+                return VisualStudioVersion.all()
+            case _:
+                raise RuntimeError(f"this toolset doesn't support versions: {self}")
 
     @staticmethod
     def all():

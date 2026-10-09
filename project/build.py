@@ -123,7 +123,7 @@ class BuildPhase:
 
     def _cmake_args(self, toolset):
         result = ["--build", self.build_dir]
-        result += ["--config", str(self.configuration)]
+        result += ["--config", self.configuration]
         if self.install_dir is not None:
             result += ["--target", "install"]
         result += ["--"] + toolset.build_system_args()

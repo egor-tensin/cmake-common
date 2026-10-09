@@ -46,53 +46,61 @@ class Platform(StrEnum):
             raise argparse.ArgumentTypeError(f"invalid platform: {s}") from e
 
     def mingw_prefix(self):
-        if self is Platform.AUTO:
-            if on_windows():
+        match self:
+            case Platform.AUTO if on_windows():
                 # On Windows, use the host architecture.
                 return Platform.windows_native().mingw_prefix()
-            # On Linux, assume that the target is x64.
-            return Platform.X64.mingw_prefix()
-        if self is Platform.X86:
-            return "i686"
-        if self is Platform.X64:
-            return "x86_64"
-        raise NotImplementedError(f"unsupported platform: {self}")
+            case Platform.AUTO:
+                # On Linux, assume that the target is x64.
+                return Platform.X64.mingw_prefix()
+            case Platform.X86:
+                return "i686"
+            case Platform.X64:
+                return "x86_64"
+            case _:
+                raise NotImplementedError(f"unsupported platform: {self}")
 
     def address_model(self):
         """Maps to Boost's address-model."""
-        if self is Platform.AUTO:
-            if on_windows():
+        match self:
+            case Platform.AUTO if on_windows():
                 # On Windows, use the host architecture.
                 return Platform.windows_native().address_model()
-            # On Linux, assume that the target is x64.
-            raise RuntimeError(
-                "cannot determine address model unless the target platform is specified explicitly"
-            )
-        if self is Platform.X86:
-            return 32
-        if self is Platform.X64:
-            return 64
-        raise NotImplementedError(f"unsupported platform: {self}")
+            case Platform.AUTO:
+                # On Linux, assume that the target is x64.
+                # FIXME: the comment above doesn't seem to reflect the code?
+                raise RuntimeError(
+                    "cannot determine address model unless the target platform is specified explicitly"
+                )
+            case Platform.X86:
+                return 32
+            case Platform.X64:
+                return 64
+            case _:
+                raise NotImplementedError(f"unsupported platform: {self}")
 
     def installdir(self, configuration):
         """Path to the installation directory inside the Boost build directory."""
-        if self is Platform.AUTO:
-            if on_windows():
+        match self:
+            case Platform.AUTO if on_windows():
                 # On Windows, use the host architecture.
                 return Platform.windows_native().installdir(configuration)
             # On Linux, the libraries are stored in install_dir/auto/CONFIGURATION/lib.
-        return os.path.join("install_dir", str(self), str(configuration))
+            case _:
+                return os.path.join("install_dir", self, configuration)
 
     def boost_installdir(self, configuration):
         """Same as above, but for CMake."""
         return self.installdir(configuration)
 
     def b2_address_model(self):
-        if self is Platform.AUTO and not on_windows():
-            # On Linux, don't specify the architecture explicitly (it is
-            # assumed that the host architecture will be targeted).
-            return []
-        return [f"address-model={self.address_model()}"]
+        match self:
+            case Platform.AUTO if not on_windows():
+                # On Linux, don't specify the architecture explicitly (it is
+                # assumed that the host architecture will be targeted).
+                return []
+            case _:
+                return [f"address-model={self.address_model()}"]
 
     def b2_installdir(self, configuration):
         return [f"--prefix={self.installdir(configuration)}"]
@@ -106,33 +114,35 @@ class Platform(StrEnum):
     def cmake_toolset_file(self):
         # For Makefile generators, we make a special toolset file that
         # specifies the -m32/-m64 flags, etc.
-        if self is Platform.AUTO:
-            # Let the compiler decide.
-            return ""
-        if self is Platform.X86:
-            address_model = 32
-        elif self is Platform.X64:
-            address_model = 64
-        else:
-            raise NotImplementedError(f"unsupported platform: {self}")
-        return f"""
-set(CMAKE_C_FLAGS   -m{address_model})
-set(CMAKE_CXX_FLAGS -m{address_model})
+        template = """
+set(CMAKE_C_FLAGS   -m{bitness})
+set(CMAKE_CXX_FLAGS -m{bitness})
 """
+        match self:
+            case Platform.AUTO:
+                return ""
+            case Platform.X86:
+                return template.format(bitness=32)
+            case Platform.X64:
+                return template.format(bitness=64)
+            case _:
+                raise NotImplementedError(f"unsupported platform: {self}")
 
     def msvc_arch(self):
         """Maps to CMake's -A argument for MSVC."""
-        if self is Platform.AUTO:
-            if on_windows():
+        match self:
+            case Platform.AUTO if on_windows():
                 # On Windows, use the host architecture.
                 return Platform.windows_native().msvc_arch()
-            # I don't think the -A argument is supported on any generators
-            # except the Visual Studio ones.
-            raise RuntimeError(
-                "-A parameter is only supported for Visual Studio generators"
-            )
-        if self is Platform.X86:
-            return "Win32"
-        if self is Platform.X64:
-            return "x64"
-        raise NotImplementedError(f"unsupported platform: {self}")
+            case Platform.AUTO:
+                # I don't think the -A argument is supported on any generators
+                # except the Visual Studio ones.
+                raise RuntimeError(
+                    "-A parameter is only supported for Visual Studio generators"
+                )
+            case Platform.X86:
+                return "Win32"
+            case Platform.X64:
+                return "x64"
+            case _:
+                raise NotImplementedError(f"unsupported platform: {self}")

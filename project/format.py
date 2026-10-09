@@ -101,9 +101,18 @@ def filter_files(paths, exclude):
     return (path for path in paths if not excluded(path, exclude))
 
 
-CPP_FILE_EXTENSIONS = set(
-    (".c", ".h", ".cc", ".hh", ".cpp", ".hpp", ".cxx", ".hxx", ".cp", ".c++")
-)
+CPP_FILE_EXTENSIONS = {
+    ".c",
+    ".h",
+    ".cc",
+    ".hh",
+    ".cpp",
+    ".hpp",
+    ".cxx",
+    ".hxx",
+    ".cp",
+    ".c++",
+}
 
 
 def list_cpp_files():

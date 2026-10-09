@@ -22,7 +22,7 @@ class Configuration(StrEnum):
     @staticmethod
     def parse(s):
         try:
-            return Configuration(s)
+            return Configuration(s.lower())
         except ValueError as e:
             raise argparse.ArgumentTypeError(f"invalid configuration: {s}") from e
 
@@ -34,9 +34,11 @@ class Configuration(StrEnum):
         install_dir/PLATFORM/CONFIGURATION/lib, if CONFIGURATION is
         MinSizeRel/RelWithDebInfo.
         """
-        if self in (Configuration.MINSIZEREL, Configuration.RELWITHDEBINFO):
-            return Configuration.RELEASE.b2_variant()
-        return str(self).lower()
+        match self:
+            case Configuration.MINSIZEREL | Configuration.RELWITHDEBINFO:
+                return Configuration.RELEASE.b2_variant()
+            case _:
+                return self.lower()
 
     def b2_args(self):
         return [f"variant={self.b2_variant()}"]

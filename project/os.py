@@ -3,26 +3,22 @@
 # For details, see https://github.com/egor-tensin/cmake-common
 # Distributed under the MIT License.
 
-from enum import auto, StrEnum
+from enum import StrEnum
 import platform
 
 
 class OS(StrEnum):
-    WINDOWS = auto()
-    LINUX = auto()
-    MACOS = auto()
+    WINDOWS = "Windows"
+    LINUX = "Linux"
+    MACOS = "Darwin"
 
     @staticmethod
     def current():
         system = platform.system()
-        mapping = {
-            "Windows": OS.WINDOWS,
-            "Linux": OS.LINUX,
-            "Darwin": OS.MACOS,
-        }
-        if system not in mapping:
+        try:
+            return OS(system)
+        except ValueError:
             raise NotImplementedError(f"unsupported OS: {system}")
-        return mapping[system]
 
 
 def on_windows():
