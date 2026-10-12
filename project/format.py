@@ -11,6 +11,7 @@ formatting the files in-place.
 """
 
 import argparse
+from contextlib import chdir
 import difflib
 import os
 import sys
@@ -130,7 +131,7 @@ def do_format(
     version=DEFAULT_VERSION, style=DEFAULT_STYLE, in_place=False, exclude=None
 ):
     clang_format = ClangFormat(version, style)
-    with utils.cd(git_root_dir()):
+    with chdir(git_root_dir()):
         cpp_files = filter_files(list_cpp_files(), exclude)
         if in_place:
             clang_format.format_in_place(cpp_files)

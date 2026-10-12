@@ -3,6 +3,7 @@
 # For details, see https://github.com/egor-tensin/cmake-common
 # Distributed under the MIT License.
 
+from contextlib import chdir
 import logging
 import os.path
 
@@ -18,7 +19,7 @@ class BoostDir:
         self.path = path
 
     def _go(self):
-        return utils.cd(self.path)
+        return chdir(self.path)
 
     def build(self, params):
         with self._go():

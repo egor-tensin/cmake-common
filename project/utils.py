@@ -77,16 +77,6 @@ def setup_logging(verbose=False):
         sys.exit(1)
 
 
-@contextmanager
-def cd(path):
-    cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
 def run(cmd, **kwargs):
     logging.info("Running: %s", shlex.join(cmd))
     return subprocess.run(cmd, check=True, **kwargs)
