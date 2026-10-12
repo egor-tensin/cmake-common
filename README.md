@@ -19,22 +19,19 @@ matter the compiler or the target platform.
 Installation
 ------------
 
-* Via PyPI:
+* Python: [PyPI](https://pypi.org/project/cmake-common/)
+* Arch Linux: [AUR](https://aur.archlinux.org/packages/cmake-common)
 
-      pip install cmake-common
+Alternatively, you can simply checkout this repository or use it as a git
+submodule.
+All scripts provided by the PyPI package are thin wrappers around the `project`
+package modules:
 
-* As a submodule:
-
-      git submodule add https://github.com/egor-tensin/cmake-common.git
-
-  All the scripts provided by the PyPI package are thin wrappers around the
-  `project` package modules:
-
-  | Script         | Module
-  | -------------- | ------
-  | boost-download | `python -m project.boost.download`
-  | boost-build    | `python -m project.boost.build`
-  | project-build  | `python -m project.build`
+| Script         | Module
+| -------------- | ------
+| boost-download | `python -m project.boost.download`
+| boost-build    | `python -m project.boost.build`
+| project-build  | `python -m project.build`
 
 Toolsets
 --------
