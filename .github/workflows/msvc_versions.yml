@@ -4,6 +4,8 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build:
     strategy:
@@ -30,13 +32,15 @@ jobs:
           - platform: x64
           - configuration: Release
 
-    runs-on: '${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
 
-    name: '${{ matrix.toolset }}'
+    name: ${{ matrix.toolset }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Cache Boost
         uses: actions/cache@v6
@@ -49,9 +53,9 @@ jobs:
         if: runner.os == 'Windows'
 
       - name: Set common variables
-        uses: ./.github/actions/common-variables
+        uses: $/.github/actions/common-variables
         with:
-          toolset: '${{ matrix.toolset }}'
+          toolset: ${{ matrix.toolset }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -59,57 +63,57 @@ jobs:
           python-version: '3.x'
 
       - name: Set up software environment
-        uses: ./.github/actions/software-environment
+        uses: $/.github/actions/software-environment
         with:
-          toolset: '${{ matrix.toolset }}'
-          platform: '${{ matrix.platform }}'
+          toolset: ${{ matrix.toolset }}
+          platform: ${{ matrix.platform }}
 
       - name: Download Boost
-        uses: ./.github/actions/download-boost
+        uses: $/.github/actions/download-boost
         with:
-          boost-version: '${{ matrix.boost-version }}'
+          boost-version: ${{ matrix.boost-version }}
 
       - name: Build Boost
-        uses: ./.github/actions/build-boost
+        uses: $/.github/actions/build-boost
         with:
-          toolset: '${{ matrix.toolset }}'
-          libraries: '${{ matrix.libraries }}'
-          platform: '${{ matrix.platform }}'
-          configuration: '${{ matrix.configuration }}'
+          toolset: ${{ matrix.toolset }}
+          libraries: ${{ matrix.libraries }}
+          platform: ${{ matrix.platform }}
+          configuration: ${{ matrix.configuration }}
         continue-on-error: true
 
       - name: Check that Boost was bootstrapped
-        uses: ./.github/actions/check-boost-bootstrapped
+        uses: $/.github/actions/check-boost-bootstrapped
 
       - name: Check that Boost libraries were built
-        uses: ./.github/actions/check-boost-libraries
+        uses: $/.github/actions/check-boost-libraries
         with:
-          libraries: '${{ matrix.libraries }}'
-          platform: '${{ matrix.platform }}'
-          configuration: '${{ matrix.configuration }}'
+          libraries: ${{ matrix.libraries }}
+          platform: ${{ matrix.platform }}
+          configuration: ${{ matrix.configuration }}
 
       - name: Build examples/boost
         id: build_example
-        uses: ./.github/actions/build-example
+        uses: $/.github/actions/build-example
         with:
           src-dir: test/examples/boost
-          boost-dir: '${{ env.BOOST_DIR }}'
-          toolset: '${{ matrix.toolset }}'
-          platform: '${{ matrix.platform }}'
-          configuration: '${{ matrix.configuration }}'
+          boost-dir: ${{ env.BOOST_DIR }}
+          toolset: ${{ matrix.toolset }}
+          platform: ${{ matrix.platform }}
+          configuration: ${{ matrix.configuration }}
 
       - name: Verify runtime library linkage
-        uses: ./.github/actions/check-runtime-library
+        uses: $/.github/actions/check-runtime-library
         with:
-          path: '${{ steps.build_example.outputs.install-dir }}'
+          path: ${{ steps.build_example.outputs.install-dir }}
 
       - name: Verify architecture
-        uses: ./.github/actions/check-arch
+        uses: $/.github/actions/check-arch
         with:
-          path: '${{ steps.build_example.outputs.install-dir }}'
-          expected: '${{ matrix.platform }}'
+          path: ${{ steps.build_example.outputs.install-dir }}
+          expected: ${{ matrix.platform }}
 
       - name: Run examples/boost
-        uses: ./.github/actions/run-example-boost
+        uses: $/.github/actions/run-example-boost
         with:
-          path: '${{ steps.build_example.outputs.install-dir }}'
+          path: ${{ steps.build_example.outputs.install-dir }}

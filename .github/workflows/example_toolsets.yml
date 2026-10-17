@@ -4,6 +4,8 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build:
     strategy:
@@ -64,22 +66,24 @@ jobs:
           - {os: ubuntu-latest, toolset: msvc}
           - {os: ubuntu-latest, toolset: clang-cl}
 
-    runs-on: '${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
 
-    name: '${{ matrix.toolset }} / ${{ matrix.name }}'
+    name: ${{ matrix.toolset }} / ${{ matrix.name }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Clean up PATH
         uses: egor-tensin/cleanup-path@v5
         if: runner.os == 'Windows'
 
       - name: Set common variables
-        uses: ./.github/actions/common-variables
+        uses: $/.github/actions/common-variables
         with:
-          toolset: '${{ matrix.toolset }}'
+          toolset: ${{ matrix.toolset }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -89,62 +93,62 @@ jobs:
       - name: Install GCC
         uses: egor-tensin/setup-gcc@v2
         with:
-          platform: '${{ matrix.platform }}'
+          platform: ${{ matrix.platform }}
         if: env.CI_HOST_LINUX && (matrix.toolset == 'auto' || matrix.toolset == 'gcc')
 
       - name: Install Clang
         uses: egor-tensin/setup-clang@v2
         with:
-          platform: '${{ matrix.platform }}'
+          platform: ${{ matrix.platform }}
         if: matrix.toolset == 'clang' || matrix.toolset == 'clang-cl'
 
       - name: Install MinGW
         uses: egor-tensin/setup-mingw@v3
         with:
-          platform: '${{ matrix.platform }}'
+          platform: ${{ matrix.platform }}
         # toolset == 'clang' needs some kind of make, e.g. mingw32-make:
         if: env.CI_MINGW || (matrix.toolset == 'clang' && env.CI_HOST_WINDOWS)
 
       - name: Set up software environment
-        uses: ./.github/actions/software-environment
+        uses: $/.github/actions/software-environment
         with:
-          toolset: '${{ matrix.toolset }}'
-          platform: '${{ matrix.platform }}'
+          toolset: ${{ matrix.toolset }}
+          platform: ${{ matrix.platform }}
 
       - name: Set up Visual Studio
         uses: egor-tensin/vs-shell@v2
         with:
-          arch: '${{ matrix.platform }}'
+          arch: ${{ matrix.platform }}
         if: matrix.toolset == 'clang-cl' && env.CI_HOST_WINDOWS
 
       - name: Build example project
         id: build
-        uses: ./.github/actions/build-example
+        uses: $/.github/actions/build-example
         with:
           src-dir: 'test/examples/${{ matrix.example }}'
-          toolset: '${{ matrix.toolset }}'
-          platform: '${{ matrix.platform }}'
-          configuration: '${{ matrix.configuration }}'
+          toolset: ${{ matrix.toolset }}
+          platform: ${{ matrix.platform }}
+          configuration: ${{ matrix.configuration }}
 
       - name: Verify runtime library linkage
-        uses: ./.github/actions/check-runtime-library
+        uses: $/.github/actions/check-runtime-library
         with:
-          path: '${{ steps.build.outputs.install-dir }}'
+          path: ${{ steps.build.outputs.install-dir }}
 
       - name: Verify architecture
-        uses: ./.github/actions/check-arch
+        uses: $/.github/actions/check-arch
         with:
-          path: '${{ steps.build.outputs.install-dir }}'
-          expected: '${{ matrix.platform }}'
+          path: ${{ steps.build.outputs.install-dir }}
+          expected: ${{ matrix.platform }}
 
       - name: Run example project
-        uses: ./.github/actions/run-example
+        uses: $/.github/actions/run-example
         with:
-          path: '${{ steps.build.outputs.install-dir }}'
+          path: ${{ steps.build.outputs.install-dir }}
 
       #- name: Check symbols
-      #  uses: ./.github/actions/check-symbols
+      #  uses: $/.github/actions/check-symbols
       #  with:
-      #    path: '${{ steps.build.outputs.install-dir }}'
-      #    expected: '${{ toJson(matrix.symbols) }}'
+      #    path: ${{ steps.build.outputs.install-dir }}
+      #    expected: ${{ toJson(matrix.symbols) }}
       #  if: env.CI_TARGET_ELF

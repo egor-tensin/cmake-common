@@ -10,8 +10,11 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        $install_dir = '${{ inputs.path }}'
+    - env:
+        ARG_PATH: ${{ inputs.path }}
+        ARG_EXPECTED: ${{ inputs.expected }}
+      run: |
+        $install_dir = $env:ARG_PATH
         $bin_dir = Join-Path $install_dir 'bin'
         $lib_dir = Join-Path $install_dir 'lib'
 
@@ -21,7 +24,7 @@ runs:
             throw "Verifying symbols for PE executables is not implemented"
         }
 
-        ConvertFrom-Json '${{ inputs.expected }}' | %{
+        ConvertFrom-Json $env:ARG_EXPECTED | %{
             $target = $_.target
             $type = $_.type
 

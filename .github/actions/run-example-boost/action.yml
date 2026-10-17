@@ -7,8 +7,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        New-Variable path -Value '${{ inputs.path }}' -Option Constant
+    - env:
+        ARG_PATH: ${{ inputs.path }}
+      run: |
+        $path = $env:ARG_PATH
 
         if ($env:CI_HOST_LINUX -and -not $env:CI_TARGET_LINUX) {
             echo 'Not going to do that on Linux/MinGW'

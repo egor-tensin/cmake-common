@@ -11,7 +11,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: echo 'BOOST_VERSION=${{ inputs.boost-version }}' >> $env:GITHUB_ENV
+    - env:
+        ARG_BOOST_VERSION: ${{ inputs.boost-version }}
+      run: echo "BOOST_VERSION=$env:ARG_BOOST_VERSION" >> $env:GITHUB_ENV
       shell: pwsh
     - run: |
         $parent_dir = Split-Path $env:GITHUB_WORKSPACE
@@ -23,7 +25,9 @@ runs:
         $dir = Join-Path $env:BOOST_CACHE_DIR $dir_name
         echo "BOOST_DIR=$dir" >> $env:GITHUB_ENV
       shell: pwsh
-    - run: |
+    - env:
+        ARG_NO_RETRY: ${{ inputs.no-retry }}
+      run: |
         echo ''
         echo '----------------------------------------------------------------'
         echo "BOOST_VERSION:   $env:BOOST_VERSION"
@@ -35,7 +39,7 @@ runs:
         $python = 'python'
         $cache_dir = $env:BOOST_CACHE_DIR
 
-        $no_retry = '${{ inputs.no-retry }}' -eq '1'
+        $no_retry = $env:ARG_NO_RETRY -eq '1'
 
         $args = @()
         if ($no_retry) {

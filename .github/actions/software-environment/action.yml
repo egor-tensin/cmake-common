@@ -1,13 +1,5 @@
 name: Set up software environment
 description: Set up software paths and versions
-inputs:
-  toolset:
-    description: Toolset to use
-    required: true
-  platform:
-    description: Target platform
-    required: false
-    default: x64
 runs:
   using: composite
   steps:

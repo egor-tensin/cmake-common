@@ -22,15 +22,21 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
+    - env:
+        ARG_BOOST_DIR: ${{ inputs.boost-dir }}
+        ARG_LIBRARIES: ${{ inputs.libraries }}
+        ARG_TOOLSET: ${{ inputs.toolset }}
+        ARG_PLATFORM: ${{ inputs.platform }}
+        ARG_CONFIGURATION: ${{ inputs.configuration }}
+      run: |
         $python = 'python'
 
-        $boost_dir = '${{ inputs.boost-dir }}'
+        $boost_dir = $env:ARG_BOOST_DIR
         if (-not $boost_dir) {
             $boost_dir = $env:BOOST_DIR
         }
 
-        $libraries = '${{ inputs.libraries }}'
+        $libraries = $env:ARG_LIBRARIES
         $libraries = $libraries.Split(' ')
         if (-not $libraries) {
             Remove-Variable libraries
@@ -38,9 +44,9 @@ runs:
 
         & $python `
             -m project.boost.build `
-            --toolset '${{ inputs.toolset }}' `
-            --platform '${{ inputs.platform }}' `
-            --configuration '${{ inputs.configuration }}' `
+            --toolset $env:ARG_TOOLSET `
+            --platform $env:ARG_PLATFORM `
+            --configuration $env:ARG_CONFIGURATION `
             -- `
             $boost_dir `
             $libraries

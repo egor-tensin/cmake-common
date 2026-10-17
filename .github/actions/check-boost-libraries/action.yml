@@ -18,19 +18,21 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        $boost_dir = '${{ inputs.boost-dir }}'
+    - env:
+        ARG_BOOST_DIR: ${{ inputs.boost-dir }}
+        ARG_LIBRARIES: ${{ inputs.libraries }}
+        ARG_PLATFORM: ${{ inputs.platform }}
+        ARG_CONFIGURATION: ${{ inputs.configuration }}
+      run: |
+        $boost_dir = $env:ARG_BOOST_DIR
         if (-not $boost_dir) {
             $boost_dir = $env:BOOST_DIR
         }
 
-        $libraries = '${{ inputs.libraries }}'
-        $libraries = $libraries.Split(' ')
+        $libraries = $env:ARG_LIBRARIES.Split(' ')
+        $configuration = $env:ARG_CONFIGURATION.ToLower()
 
-        $configuration = '${{ inputs.configuration }}'
-        $configuration = $configuration.ToLower()
-
-        $installdir = Join-Path 'install_dir' '${{ inputs.platform }}' $configuration
+        $installdir = Join-Path 'install_dir' $env:ARG_PLATFORM $configuration
         $librarydir = Join-Path $boost_dir $installdir 'lib'
 
         function Get-FileStubs {

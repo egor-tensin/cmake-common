@@ -4,6 +4,8 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   publish:
     name: Publish to AUR
@@ -11,8 +13,7 @@ jobs:
     container:
       image: archlinux:base-devel
       env:
-        SSH_KEY: |
-          ${{ secrets.SSH_KEY }}
+        SSH_KEY: ${{ secrets.SSH_KEY }}
     steps:
       # This step must be done before actions/checkout. From the latter's
       # output:
@@ -25,8 +26,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          persist-credentials: false
           ref: aur
-          token: '${{ secrets.GH_TOKEN }}'
+          token: ${{ secrets.GH_TOKEN }}
       - name: Run maintenance
         run: |
           make -C "$GITHUB_WORKSPACE" ci

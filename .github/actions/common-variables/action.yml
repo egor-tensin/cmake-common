@@ -7,21 +7,21 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        New-Variable toolset -Value '${{ inputs.toolset }}' -Option Constant
+    - env:
+        ARG_TOOLSET: ${{ inputs.toolset }}
+      run: |
+        $toolset = $env:ARG_TOOLSET
 
-        New-Variable os -Value '${{ runner.os }}' -Option Constant
+        $host_linux = '${{ runner.os }}' -eq 'Linux'
+        $host_windows = '${{ runner.os }}' -eq 'Windows'
 
-        New-Variable host_linux -Value ($os -eq 'Linux') -Option Constant
-        New-Variable host_windows -Value ($os -eq 'Windows') -Option Constant
+        $mingw = $toolset -eq 'mingw' -or ($host_windows -and $toolset -eq 'gcc')
 
-        New-Variable mingw -Value ($toolset -eq 'mingw' -or ($host_windows -and $toolset -eq 'gcc')) -Option Constant
+        $target_linux = $host_linux -and !$mingw
+        $target_windows = $mingw -or $host_windows
 
-        New-Variable target_linux -Value ($host_linux -and !$mingw) -Option Constant
-        New-Variable target_windows -Value ($mingw -or $host_windows) -Option Constant
-
-        New-Variable target_pe -Value $target_windows -Option Constant
-        New-Variable target_elf -Value $target_linux -Option Constant
+        $target_pe = $target_windows
+        $target_elf = $target_linux
 
         function Set-BoolVar {
             param(

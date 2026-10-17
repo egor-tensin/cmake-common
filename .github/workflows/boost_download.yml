@@ -4,6 +4,8 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build:
     strategy:
@@ -18,14 +20,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: '3.x'
       - name: Download Boost
-        uses: ./.github/actions/download-boost
+        uses: $/.github/actions/download-boost
         with:
-          boost-version: '${{ matrix.boost-version }}'
+          boost-version: ${{ matrix.boost-version }}
           no-retry: 1
       - name: Check that Boost was downloaded
-        uses: ./.github/actions/check-boost-download
+        uses: $/.github/actions/check-boost-download

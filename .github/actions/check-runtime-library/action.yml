@@ -7,8 +7,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        New-Variable path -Value '${{ inputs.path }}' -Option Constant
+    - env:
+        ARG_PATH: ${{ inputs.path }}
+      run: |
+        $path = $env:ARG_PATH
 
         function Parse-DllLine {
             param(
