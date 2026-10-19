@@ -1,7 +1,7 @@
 name: Verify architecture
 description: Verify target architecture
 inputs:
-  path:
+  install_dir:
     description: Installation directory
     required: true
   expected:
@@ -11,16 +11,21 @@ runs:
   using: composite
   steps:
     - env:
-        ARG_PATH: ${{ inputs.path }}
+        ARG_INSTALL_DIR: ${{ inputs.install_dir }}
         ARG_EXPECTED: ${{ inputs.expected }}
       run: |
-        $script_path = if ($env:CI_TARGET_PE) {
-            Join-Path $env:GITHUB_WORKSPACE 'test' 'scripts' 'verify_arch.ps1'
+        $workspace = (Get-ChildItem env:GITHUB_WORKSPACE).Value
+        $install_dir = (Get-ChildItem env:ARG_INSTALL_DIR).Value
+        $expected = (Get-ChildItem env:ARG_EXPECTED).Value
+
+        $script_path = if ((Get-ChildItem env:CI_TARGET_PE).Value) {
+            Join-Path $workspace 'test' 'scripts' 'verify_arch.ps1'
         } else {
-            Join-Path $env:GITHUB_WORKSPACE 'test' 'scripts' 'verify_arch.sh'
+            Join-Path $workspace 'test' 'scripts' 'verify_arch.sh'
         }
 
-        $exe_path = (Join-Path $env:ARG_PATH 'bin' 'foo') + $env:CI_EXE_EXT
+        $name = 'foo' + (Get-ChildItem env:CI_EXE_EXT).Value
+        $path = Join-Path $install_dir 'bin' $name
 
-        & $script_path $exe_path $env:ARG_EXPECTED
+        & $script_path $path $expected
       shell: pwsh

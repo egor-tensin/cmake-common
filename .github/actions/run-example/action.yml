@@ -1,30 +1,31 @@
 name: Run example project
 description: Run example project
 inputs:
-  path:
+  install_dir:
     description: Installation directory
     required: true
 runs:
   using: composite
   steps:
     - env:
-        ARG_PATH: ${{ inputs.path }}
+        ARG_INSTALL_DIR: ${{ inputs.install_dir }}
       run: |
-        $path = $env:ARG_PATH
+        $install_dir = (Get-ChildItem env:ARG_INSTALL_DIR).Value
 
-        if ($env:CI_HOST_LINUX -and -not $env:CI_TARGET_LINUX) {
-            echo 'Not going to do that on Linux/MinGW'
+        if ((Get-ChildItem env:CI_HOST_LINUX).Value -and !(Get-ChildItem env:CI_TARGET_LINUX).Value) {
+            echo 'Not going to do that on Linux + MinGW'
             exit
         }
 
-        if ($env:CI_TARGET_LINUX) {
-            $lib = Join-Path $path 'lib'
+        if ((Get-ChildItem env:CI_TARGET_LINUX).Value) {
+            $lib = Join-Path $install_dir 'lib'
             if (Test-Path $lib) {
                 $lib = Resolve-Path $lib
                 $env:LD_LIBRARY_PATH = $lib
             }
         }
-        $exe_path = (Join-Path $path 'bin' 'foo') + $env:CI_EXE_EXT
-        echo "Executable path: $exe_path"
-        & $exe_path
+        $name = 'foo' + (Get-ChildItem env:CI_EXE_EXT).Value
+        $path = Join-Path $install_dir 'bin' $name
+        echo "Executable path: $path"
+        & $path
       shell: pwsh

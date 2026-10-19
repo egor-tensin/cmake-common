@@ -4,7 +4,7 @@ runs:
   using: composite
   steps:
     - run: |
-        if ($env:CI_HOST_WINDOWS) {
+        if ((Get-ChildItem env:CI_HOST_WINDOWS).Value) {
             echo 'C:\Program Files\CMake\bin' >> $env:GITHUB_PATH
         }
       shell: pwsh

@@ -76,14 +76,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v5
-        if: runner.os == 'Windows'
-
       - name: Set common variables
         uses: $/.github/actions/common-variables
         with:
           toolset: ${{ matrix.toolset }}
+
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v5
+        if: env.CI_HOST_WINDOWS
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -111,9 +111,6 @@ jobs:
 
       - name: Set up software environment
         uses: $/.github/actions/software-environment
-        with:
-          toolset: ${{ matrix.toolset }}
-          platform: ${{ matrix.platform }}
 
       - name: Set up Visual Studio
         uses: egor-tensin/vs-shell@v2
@@ -125,7 +122,7 @@ jobs:
         id: build
         uses: $/.github/actions/build-example
         with:
-          src-dir: 'test/examples/${{ matrix.example }}'
+          src_dir: 'test/examples/${{ matrix.example }}'
           toolset: ${{ matrix.toolset }}
           platform: ${{ matrix.platform }}
           configuration: ${{ matrix.configuration }}
@@ -133,22 +130,22 @@ jobs:
       - name: Verify runtime library linkage
         uses: $/.github/actions/check-runtime-library
         with:
-          path: ${{ steps.build.outputs.install-dir }}
+          install_dir: ${{ steps.build.outputs.install_dir }}
 
       - name: Verify architecture
         uses: $/.github/actions/check-arch
         with:
-          path: ${{ steps.build.outputs.install-dir }}
+          install_dir: ${{ steps.build.outputs.install_dir }}
           expected: ${{ matrix.platform }}
 
       - name: Run example project
         uses: $/.github/actions/run-example
         with:
-          path: ${{ steps.build.outputs.install-dir }}
+          install_dir: ${{ steps.build.outputs.install_dir }}
 
       #- name: Check symbols
       #  uses: $/.github/actions/check-symbols
       #  with:
-      #    path: ${{ steps.build.outputs.install-dir }}
+      #    install_dir: ${{ steps.build.outputs.install_dir }}
       #    expected: ${{ toJson(matrix.symbols) }}
       #  if: env.CI_TARGET_ELF

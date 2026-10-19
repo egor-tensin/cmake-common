@@ -1,7 +1,7 @@
 name: Check symbols
 description: Check debug symbols
 inputs:
-  path:
+  install_dir:
     description: Installation directory
     required: true
   expected:
@@ -11,31 +11,37 @@ runs:
   using: composite
   steps:
     - env:
-        ARG_PATH: ${{ inputs.path }}
+        ARG_INSTALL_DIR: ${{ inputs.install_dir }}
         ARG_EXPECTED: ${{ inputs.expected }}
       run: |
-        $install_dir = $env:ARG_PATH
+        $workspace = (Get-ChildItem env:GITHUB_WORKSPACE).Value
+        $install_dir = (Get-ChildItem env:ARG_INSTALL_DIR).Value
+        $expected = (Get-ChildItem env:ARG_EXPECTED).Value
+
         $bin_dir = Join-Path $install_dir 'bin'
         $lib_dir = Join-Path $install_dir 'lib'
 
-        $script_path = if ($env:CI_TARGET_ELF) {
-            Join-Path $env:GITHUB_WORKSPACE 'test' 'scripts' 'verify_symbols.sh'
+        $script_path = if ((Get-ChildItem env:CI_TARGET_ELF).Value) {
+            Join-Path $workspace 'test' 'scripts' 'verify_symbols.sh'
         } else {
             throw "Verifying symbols for PE executables is not implemented"
         }
 
-        ConvertFrom-Json $env:ARG_EXPECTED | %{
+        ConvertFrom-Json $expected | %{
             $target = $_.target
             $type = $_.type
 
             switch -Exact ($type) {
                 'exe' {
-                    $file = $target + $env:CI_EXE_EXT
+                    $ext = (Get-ChildItem env:CI_EXT_EXT).Value
+                    $file = $target + $ext
                     $path = Join-Path $bin_dir $file
                 }
                 'dll' {
-                    $file = $env:CI_DLL_PREFIX + $target + $env:CI_DLL_EXT
-                    $path = if ($env:CI_DLL_IN_BIN) {
+                    $prefix = (Get-ChildItem env:CI_DLL_PREFIX).Value
+                    $ext = (Get-ChildItem env:CI_DLL_EXT).Value
+                    $file = $prefix + $target + $ext
+                    $path = if ((Get-ChildItem env:CI_DLL_IN_BIN).Value) {
                         Join-Path $bin_dir $file
                     } else {
                         Join-Path $lib_dir $file

@@ -1,7 +1,7 @@
 name: Build Boost
 description: Build Boost
 inputs:
-  boost-dir:
+  boost_dir:
     description: Boost directory
     required: false
   toolset:
@@ -23,30 +23,30 @@ runs:
   using: composite
   steps:
     - env:
-        ARG_BOOST_DIR: ${{ inputs.boost-dir }}
+        ARG_BOOST_DIR: ${{ inputs.boost_dir }}
         ARG_LIBRARIES: ${{ inputs.libraries }}
         ARG_TOOLSET: ${{ inputs.toolset }}
         ARG_PLATFORM: ${{ inputs.platform }}
         ARG_CONFIGURATION: ${{ inputs.configuration }}
       run: |
-        $python = 'python'
-
-        $boost_dir = $env:ARG_BOOST_DIR
+        $boost_dir = (Get-ChildItem env:ARG_BOOST_DIR).Value
         if (-not $boost_dir) {
-            $boost_dir = $env:BOOST_DIR
+            $boost_dir = (Get-ChildItem env:BOOST_DIR).Value
         }
-
-        $libraries = $env:ARG_LIBRARIES
+        $libraries = (Get-ChildItem env:ARG_LIBRARIES).Value
         $libraries = $libraries.Split(' ')
         if (-not $libraries) {
             Remove-Variable libraries
         }
+        $toolset = (Get-ChildItem env:ARG_TOOLSET).Value
+        $platform = (Get-ChildItem env:ARG_PLATFORM).Value
+        $configuration = (Get-ChildItem env:ARG_CONFIGURATION).Value
 
-        & $python `
+        & python `
             -m project.boost.build `
-            --toolset $env:ARG_TOOLSET `
-            --platform $env:ARG_PLATFORM `
-            --configuration $env:ARG_CONFIGURATION `
+            --toolset $toolset `
+            --platform $platform `
+            --configuration $configuration `
             -- `
             $boost_dir `
             $libraries

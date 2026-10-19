@@ -10,7 +10,7 @@ runs:
     - env:
         ARG_TOOLSET: ${{ inputs.toolset }}
       run: |
-        $toolset = $env:ARG_TOOLSET
+        $toolset = (Get-ChildItem env:ARG_TOOLSET).Value
 
         $host_linux = '${{ runner.os }}' -eq 'Linux'
         $host_windows = '${{ runner.os }}' -eq 'Windows'

@@ -85,14 +85,14 @@ jobs:
           path: '${{ runner.workspace }}/boost/boost_*.tar.gz'
           key: 'boost_${{ matrix.boost-version }}'
 
-      - name: Clean up PATH
-        uses: egor-tensin/cleanup-path@v5
-        if: runner.os == 'Windows'
-
       - name: Set common variables
         uses: $/.github/actions/common-variables
         with:
           toolset: ${{ matrix.toolset }}
+
+      - name: Clean up PATH
+        uses: egor-tensin/cleanup-path@v5
+        if: env.CI_HOST_WINDOWS
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -120,9 +120,6 @@ jobs:
 
       - name: Set up software environment
         uses: $/.github/actions/software-environment
-        with:
-          toolset: ${{ matrix.toolset }}
-          platform: ${{ matrix.platform }}
 
       - name: Set up Visual Studio
         uses: egor-tensin/vs-shell@v2
@@ -158,8 +155,8 @@ jobs:
         id: build_example
         uses: $/.github/actions/build-example
         with:
-          src-dir: test/examples/boost
-          boost-dir: ${{ env.BOOST_DIR }}
+          src_dir: test/examples/boost
+          boost_dir: ${{ env.BOOST_DIR }}
           toolset: ${{ matrix.toolset }}
           platform: ${{ matrix.platform }}
           configuration: ${{ matrix.configuration }}
@@ -167,15 +164,15 @@ jobs:
       - name: Verify runtime library linkage
         uses: $/.github/actions/check-runtime-library
         with:
-          path: ${{ steps.build_example.outputs.install-dir }}
+          install_dir: ${{ steps.build_example.outputs.install_dir }}
 
       - name: Verify architecture
         uses: $/.github/actions/check-arch
         with:
-          path: ${{ steps.build_example.outputs.install-dir }}
+          install_dir: ${{ steps.build_example.outputs.install_dir }}
           expected: ${{ matrix.platform }}
 
       - name: Run examples/boost
         uses: $/.github/actions/run-example-boost
         with:
-          path: ${{ steps.build_example.outputs.install-dir }}
+          install_dir: ${{ steps.build_example.outputs.install_dir }}

@@ -1,7 +1,7 @@
 name: Check that Boost libraries were built
 description: Check that Boost libraries were built
 inputs:
-  boost-dir:
+  boost_dir:
     description: Boost directory
     required: false
   libraries:
@@ -19,21 +19,21 @@ runs:
   using: composite
   steps:
     - env:
-        ARG_BOOST_DIR: ${{ inputs.boost-dir }}
+        ARG_BOOST_DIR: ${{ inputs.boost_dir }}
         ARG_LIBRARIES: ${{ inputs.libraries }}
         ARG_PLATFORM: ${{ inputs.platform }}
         ARG_CONFIGURATION: ${{ inputs.configuration }}
       run: |
-        $boost_dir = $env:ARG_BOOST_DIR
+        $boost_dir = (Get-ChildItem env:ARG_BOOST_DIR).Value
         if (-not $boost_dir) {
-            $boost_dir = $env:BOOST_DIR
+            $boost_dir = (Get-ChildItem env:BOOST_DIR).Value
         }
+        $libraries = (Get-ChildItem env:ARG_LIBRARIES).Value.Split(' ')
+        $platform = (Get-ChildItem env:ARG_PLATFORM).Value
+        $configuration = (Get-ChildItem env:ARG_CONFIGURATION).Value.ToLower()
 
-        $libraries = $env:ARG_LIBRARIES.Split(' ')
-        $configuration = $env:ARG_CONFIGURATION.ToLower()
-
-        $installdir = Join-Path 'install_dir' $env:ARG_PLATFORM $configuration
-        $librarydir = Join-Path $boost_dir $installdir 'lib'
+        $install_dir = Join-Path 'install_dir' $platform $configuration
+        $lib_dir = Join-Path $boost_dir $install_dir 'lib'
 
         function Get-FileStubs {
             param(
@@ -48,11 +48,14 @@ runs:
             }
         }
 
+        $lib_prefix = (Get-ChildItem env:CI_LIB_PREFIX).Value
+        $lib_ext = (Get-ChildItem env:CI_LIB_EXT).Value
+
         $files = @()
         foreach ($lib in $libraries) {
             $stubs = Get-FileStubs $lib
             foreach ($stub in $stubs) {
-                $files += "${env:CI_LIB_PREFIX}boost_$stub${env:CI_LIB_EXT}"
+                $files += "${lib_prefix}boost_$stub$lib_ext"
             }
         }
         $files = $files | Sort-Object
@@ -66,12 +69,12 @@ runs:
         echo '----------------------------------------------------------------'
         echo 'Actual files'
         echo '----------------------------------------------------------------'
-        echo (Get-ChildItem $librarydir | Sort-Object Name).Name
+        echo (Get-ChildItem $lib_dir | Sort-Object Name).Name
 
         $missing = @()
 
         foreach ($file in $files) {
-            if (!(Test-Path (Join-Path $librarydir $file) -Type Leaf)) {
+            if (!(Test-Path (Join-Path $lib_dir $file) -Type Leaf)) {
                 $missing += $file
             }
         }

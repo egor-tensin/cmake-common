@@ -7,7 +7,7 @@ runs:
         echo '----------------------------------------------------------------'
         echo 'bootstrap.log'
         echo '----------------------------------------------------------------'
-        $path = Join-Path $env:BOOST_DIR 'bootstrap.log'
+        $path = Join-Path (Get-ChildItem env:BOOST_DIR).Value 'bootstrap.log'
         if (Test-Path $path -Type Leaf) {
             cat $path
         }
@@ -17,7 +17,7 @@ runs:
         echo '----------------------------------------------------------------'
         echo 'project-config.jam'
         echo '----------------------------------------------------------------'
-        $path = Join-Path $env:BOOST_DIR 'project-config.jam'
+        $path = Join-Path (Get-ChildItem env:BOOST_DIR).Value 'project-config.jam'
         if (Test-Path $path -Type Leaf) {
             cat $path
         }
@@ -28,17 +28,12 @@ runs:
         echo 'Checking that b2 executable was built'
         echo '----------------------------------------------------------------'
         $name = 'b2'
-        $path = Join-Path $env:BOOST_DIR $name
-
-        $exists_plain = Test-Path $path -Type Leaf
-        $exists_exe = Test-Path "${path}.exe" -Type Leaf
-        $exists = if ($env:CI_HOST_WINDOWS) {
-            $exists_exe
-        } else {
-            $exists_plain
+        if ((Get-ChildItem env:CI_HOST_WINDOWS).Value) {
+            $name += '.exe'
         }
+        $path = Join-Path (Get-ChildItem env:BOOST_DIR).Value $name
 
-        if (-not $exists) {
+        if (!(Test-Path $path -Type Leaf)) {
             throw "b2 executable wasn't found"
         }
       shell: pwsh

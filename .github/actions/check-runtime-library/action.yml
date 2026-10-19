@@ -1,16 +1,16 @@
 name: Verify runtime library linkage
 description: Verify runtime library linkage (static or shared)
 inputs:
-  path:
+  install_dir:
     description: Installation directory
     required: true
 runs:
   using: composite
   steps:
     - env:
-        ARG_PATH: ${{ inputs.path }}
+        ARG_INSTALL_DIR: ${{ inputs.install_dir }}
       run: |
-        $path = $env:ARG_PATH
+        $install_dir = (Get-ChildItem env:ARG_INSTALL_DIR).Value
 
         function Parse-DllLine {
             param(
@@ -87,14 +87,14 @@ runs:
             )
 
             $objdump = 'objdump'
-            if ($env:CI_HOST_WINDOWS) {
+            if ((Get-ChildItem env:CI_HOST_WINDOWS).Value) {
                 $objdump = Get-Objdump
             }
 
-            if ($env:CI_TARGET_PE) {
+            if ((Get-ChildItem env:CI_TARGET_PE).Value) {
                 & $objdump -x $ExePath | Parse-PeHeaders | echo
             }
-            if ($env:CI_TARGET_ELF) {
+            if ((Get-ChildItem env:CI_TARGET_ELF).Value) {
                 & $objdump -x $ExePath | Parse-ElfHeaders | echo
             }
         }
@@ -127,18 +127,18 @@ runs:
             )
 
             $windows_forbidden = @('msvcrt.dll')
-            if ($env:CI_MINGW) {
-                if (!$env:CI_HOST_WINDOWS) {
+            if ((Get-ChildItem env:CI_MINGW).Value) {
+                if (!(Get-ChildItem env:CI_HOST_WINDOWS).Value) {
                     $windows_forbidden = @()
                 }
             }
             $linux_forbidden = @()
 
-            if ($env:CI_TARGET_WINDOWS) {
+            if ((Get-ChildItem env:CI_TARGET_WINDOWS).Value) {
                 Do-ValidateLinkedLibraries `
                     -Actual $Actual `
                     -Forbidden $windows_forbidden
-            } elseif ($env:CI_TARGET_LINUX) {
+            } elseif ((Get-ChildItem env:CI_TARGET_LINUX).Value) {
                 Do-ValidateLinkedLibraries `
                     -Actual $Actual `
                     -Forbidden $linux_forbidden
@@ -147,7 +147,8 @@ runs:
             }
         }
 
-        $exe_path = (Join-Path $path 'bin' 'foo') + $env:CI_EXE_EXT
-        $libraries = Get-LinkedLibraries $exe_path
+        $name = 'foo' + (Get-ChildItem env:CI_EXE_EXT).Value
+        $path = Join-Path $install_dir 'bin' $name
+        $libraries = Get-LinkedLibraries $path
         Validate-LinkedLibraries $libraries
       shell: pwsh

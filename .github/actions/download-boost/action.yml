@@ -13,38 +13,28 @@ runs:
   steps:
     - env:
         ARG_BOOST_VERSION: ${{ inputs.boost-version }}
-      run: echo "BOOST_VERSION=$env:ARG_BOOST_VERSION" >> $env:GITHUB_ENV
-      shell: pwsh
-    - run: |
-        $parent_dir = Split-Path $env:GITHUB_WORKSPACE
-        $cache_dir = Join-Path $parent_dir 'boost'
-        echo "BOOST_CACHE_DIR=$cache_dir" >> $env:GITHUB_ENV
-      shell: pwsh
-    - run: |
-        $dir_name = "boost_$($env:BOOST_VERSION.Replace('.', '_'))"
-        $dir = Join-Path $env:BOOST_CACHE_DIR $dir_name
-        echo "BOOST_DIR=$dir" >> $env:GITHUB_ENV
-      shell: pwsh
-    - env:
         ARG_NO_RETRY: ${{ inputs.no-retry }}
       run: |
-        echo ''
-        echo '----------------------------------------------------------------'
-        echo "BOOST_VERSION:   $env:BOOST_VERSION"
-        echo "BOOST_CACHE_DIR: $env:BOOST_CACHE_DIR"
-        echo "BOOST_DIR:       $env:BOOST_DIR"
-        echo '----------------------------------------------------------------'
-        New-Item $env:BOOST_CACHE_DIR -Force -Type Directory | Out-Null
+        $workspace = (Get-ChildItem env:GITHUB_WORKSPACE).Value
+        $version = (Get-ChildItem env:ARG_BOOST_VERSION).Value
+        $no_retry = (Get-ChildItem env:ARG_NO_RETRY).Value -eq '1'
 
-        $python = 'python'
-        $cache_dir = $env:BOOST_CACHE_DIR
+        echo "BOOST_VERSION=$version" >> $env:GITHUB_ENV
 
-        $no_retry = $env:ARG_NO_RETRY -eq '1'
+        $parent_dir = Split-Path $workspace
+        $cache_dir = Join-Path $parent_dir 'boost'
+        echo "BOOST_CACHE_DIR=$cache_dir" >> $env:GITHUB_ENV
+
+        $dir_name = "boost_$($version.Replace('.', '_'))"
+        $dir = Join-Path $cache_dir $dir_name
+        echo "BOOST_DIR=$dir" >> $env:GITHUB_ENV
+
+        New-Item $cache_dir -Force -Type Directory | Out-Null
 
         $args = @()
         if ($no_retry) {
             $args += '--no-retry'
         }
 
-        & $python -m project.boost.download --cache $cache_dir $args -- $env:BOOST_VERSION
+        & python -m project.boost.download --cache $cache_dir $args -- $version
       shell: pwsh

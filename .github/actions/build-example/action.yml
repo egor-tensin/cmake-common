@@ -1,10 +1,10 @@
 name: Build example project
 description: Build example project
 inputs:
-  src-dir:
+  src_dir:
     description: Project directory
     required: true
-  boost-dir:
+  boost_dir:
     description: Boost directory
     required: false
   toolset:
@@ -20,43 +20,42 @@ inputs:
     required: false
     default: Debug
 outputs:
-  install-dir:
+  install_dir:
     description: Installation directory
-    value: ${{ steps.install-dir.outputs.path }}
+    value: ${{ steps.install_dir.outputs.path }}
 runs:
   using: composite
   steps:
-    - id: install-dir
+    - id: install_dir
       env:
-        ARG_SRC_DIR: ${{ inputs.src-dir }}
+        ARG_SRC_DIR: ${{ inputs.src_dir }}
       run: |
-        $src_dir = Resolve-Path $env:ARG_SRC_DIR
+        $workspace = (Get-ChildItem env:GITHUB_WORKSPACE).Value
+        $src_dir = Resolve-Path (Get-ChildItem env:ARG_SRC_DIR).Value
         $project_name = Split-Path $src_dir -Leaf
-        $install_dir = Join-Path (Split-Path $env:GITHUB_WORKSPACE) "install_$project_name"
+        $install_dir = Join-Path (Split-Path $workspace) "install_$project_name"
         echo "path=$install_dir" >> $env:GITHUB_OUTPUT
       shell: pwsh
     - env:
-        ARG_SRC_DIR: ${{ inputs.src-dir }}
-        ARG_BOOST_DIR: ${{ inputs.boost-dir }}
+        ARG_SRC_DIR: ${{ inputs.src_dir }}
+        ARG_BOOST_DIR: ${{ inputs.boost_dir }}
         ARG_TOOLSET: ${{ inputs.toolset }}
         ARG_PLATFORM: ${{ inputs.platform }}
         ARG_CONFIGURATION: ${{ inputs.configuration }}
-        INSTALL_DIR: ${{ steps.install-dir.outputs.path }}
+        INSTALL_DIR: ${{ steps.install_dir.outputs.path }}
       run: |
-        $python = 'python'
-        $src_dir = $env:ARG_SRC_DIR
-        $install_dir = $env:INSTALL_DIR
-        $boost_dir = $env:ARG_BOOST_DIR
+        $src_dir = (Get-ChildItem env:ARG_SRC_DIR).Value
+        $boost_dir = (Get-ChildItem env:ARG_BOOST_DIR).Value
+        $install_dir = (Get-ChildItem env:INSTALL_DIR).Value
+        $toolset = (Get-ChildItem env:ARG_TOOLSET).Value
+        $platform = (Get-ChildItem env:ARG_PLATFORM).Value
+        $configuration = (Get-ChildItem env:ARG_CONFIGURATION).Value
 
         $args = @(
-            '--install',
-            $install_dir,
-            '--platform',
-            $env:ARG_PLATFORM,
-            '--configuration',
-            $env:ARG_CONFIGURATION,
-            '--toolset',
-            $env:ARG_TOOLSET
+            '--install', $install_dir,
+            '--toolset', $toolset,
+            '--platform', $platform,
+            '--configuration', $configuration
         )
 
         if ($boost_dir) {
@@ -65,5 +64,5 @@ runs:
 
         $args += '--',$src_dir
         $env:VERBOSE = 1
-        & $python -m project.build $args
+        & python -m project.build $args
       shell: pwsh
