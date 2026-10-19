@@ -6,6 +6,10 @@ on:
 
 permissions: {}
 
+defaults:
+  run:
+    shell: pwsh
+
 jobs:
   # Check that the most basic use-case works on different OSs.
   os:
@@ -24,9 +28,6 @@ jobs:
           - boost-version: 1.91.0
     runs-on: ${{ matrix.os }}
     name: 'Image: ${{ matrix.os }}'
-    defaults:
-      run:
-        shell: pwsh
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -71,9 +72,6 @@ jobs:
           - boost-version: 1.82.0
     runs-on: '${{ matrix.os }}'
     name: 'Python ${{ matrix.python-version }}'
-    defaults:
-      run:
-        shell: pwsh
     steps:
       - name: Checkout
         uses: actions/checkout@v7
