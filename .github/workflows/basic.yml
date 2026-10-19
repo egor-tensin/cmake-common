@@ -48,8 +48,14 @@ jobs:
       - name: Build example project
         run: |
           python -m project.build --boost boost/ --install install/ -- test/examples/boost/ build/
+      - name: Set common variables
+        uses: $/.github/actions/common-variables
+        with:
+          toolset: auto
       - name: Run example project
-        run: ./test/examples/boost/run.ps1 ./install/bin/foo
+        uses: $/.github/actions/run-example-boost
+        with:
+          install_dir: install
 
   # Check that the most basic use-case works w/ different Python versions.
   python-versions:
@@ -97,5 +103,11 @@ jobs:
       - name: Build example project
         run: |
           project-build --boost boost/ --install install/ -- test/examples/boost/ build/
+      - name: Set common variables
+        uses: $/.github/actions/common-variables
+        with:
+          toolset: auto
       - name: Run example project
-        run: ./test/examples/boost/run.ps1 ./install/bin/foo
+        uses: $/.github/actions/run-example-boost
+        with:
+          install_dir: install

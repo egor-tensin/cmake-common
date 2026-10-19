@@ -20,7 +20,7 @@ runs:
         if ((Get-ChildItem env:CI_TARGET_LINUX).Value) {
             $lib = Join-Path $install_dir 'lib'
             if (Test-Path $lib) {
-                $lib = Resolve-Path $lib
+                $lib = (Resolve-Path $lib).Path
                 $env:LD_LIBRARY_PATH = $lib
             }
         }

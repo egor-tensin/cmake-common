@@ -22,6 +22,7 @@ runs:
 
         $name = 'foo' + (Get-ChildItem env:CI_EXE_EXT).Value
         $path = Join-Path $install_dir 'bin' $name
+        $path = (Resolve-Path $path).Path
 
         $actual = & $path $relative_test
 
