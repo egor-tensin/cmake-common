@@ -14,6 +14,8 @@ jobs:
       image: archlinux:base-devel
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
+    permissions:
+      contents: write
     steps:
       # This step must be done before actions/checkout. From the latter's
       # output:
@@ -26,9 +28,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          persist-credentials: false
+          persist-credentials: true
           ref: aur
-          token: ${{ secrets.GH_TOKEN }}
       - name: Run maintenance
         run: |
           make -C "$GITHUB_WORKSPACE" ci
